@@ -17,11 +17,11 @@ processing of sequencing runs of the same unfragmented library on Nanopore devic
 
 ## Features
 
-* [10xGenomics possorted_genome_bam.bam preprocessing]()
+* [10xGenomics possorted_genome_bam.bam preprocessing](#preprocessing)
 * [minimap2 mapping of Nanopore reads](#minimap2-mapping)
-* [Long reads SAM records Gene name tagging (GE) with dropseq.jar]()
+* [Long reads SAM records Gene name tagging (GE) with dropseq.jar](#gene-name-tagging)
 * [Long reads SAM records read sequence tagging (US)](#TagReadWithSequence)
-* [Short reads 10xGenomics attributes cell barocde (BC) and UMI (U8) association to Long reads]()
+* [Short reads 10xGenomics attributes cell barocde (BC) and UMI (U8) association to Long reads](#10x-attributes-association)
 * [Filtering of BC/U8 associated long reads records](#FilterGetBcUmiReads)
 * [Long reads Isoforms Expression assessment](#IsoformExpressionMatrix)
 * [Molecule Consensus sequence computation for long read error correction](#MoleculeConsensus)
@@ -29,14 +29,29 @@ processing of sequencing runs of the same unfragmented library on Nanopore devic
 * [SNPs calling, fusion transcript detection]()
 
 
+## preprocessing
+```bash
+
+```
+
 ## minimap2 mapping
 ```bash
 minimap2 -ax splice -t ... $BUILD.mmi nanopore_reads.fastq > minimap.sam
 ```
 
+## gene name tagging
+```bash
+
+```
+
 ## TagReadWithSequence
 ```bash
 java -jar -Xmx22g sicelor.jar TagReadWithSequence
+```
+
+## 10x attributes association
+```bash
+
 ```
 
 ## FilterGetBcUmiReads
