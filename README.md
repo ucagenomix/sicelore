@@ -1,6 +1,6 @@
 # Sicelore
 
-- authors: Kevin Lebrigand & Rainer Waldmann, UCAGenomiX genomics platform, Nice Sophia-Antipolis, France
+- authors: Kevin Lebrigand & Rainer Waldmann, <a href="http://www.genomique.eu">UCAGenomiX</a> genomics platform, Nice Sophia-Antipolis, France
 - current release: v0.1 (august 2018)
 
 # summary
