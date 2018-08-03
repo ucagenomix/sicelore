@@ -3,7 +3,7 @@ Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated to the 
 and exploration of highly multiplexed single cell droplets-based approach experiments sequenced with Oxford Nanopore 
 Technology long reads.
 
-[![GitHub license]()]()
+[![GitHub license]()]((https://github.com/hyeshik/poreplex/blob/master/LICENSE.txt))
 [![Twitter Follow](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand)
 
 ## Summary
