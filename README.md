@@ -1,15 +1,15 @@
 # Sicelore
 
-Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated to the bioinformatics processing, analysis 
-and exploration of highly multiplexed single cell droplets-based approach experiments sequenced with Oxford Nanopore 
-Technology long reads.
+Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated 
+to the bioinformatics processing, analysis and exploration of highly 
+multiplexed single cell droplets-based approach experiments sequenced 
+with Oxford Nanopore Technology long reads. Typically starting with a 
+possorted_genome.bam file from a 10xGenomics single cell cellranger pipeline, 
+the workflow integrate several sequential steps for standard analysis and 
+processing of sequencing runs of the same unfragmented library on Nanopore device.
 
 [![GitHub license]()]((https://github.com/hyeshik/poreplex/blob/master/LICENSE.txt))
 [![Twitter Follow](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand)
-
-## Summary
-
-Typically starting with a possorted_genome.bam file from a 10xGenomics single cell cellranger pipeline, the workflow integrate several sequential steps for standard analysis and processing of sequencing runs of the same unfragmented library on Nanopore device.
 
 ## Installation
 
@@ -28,34 +28,33 @@ Typically starting with a possorted_genome.bam file from a 10xGenomics single ce
 * [Mapping of molecule sequence to obtain molecular BAM file](#molecule-mapping)
 * [SNPs calling, fusion transcript detection]()
 
-...
 
-## minimap2 mapping
+### minimap2 mapping
 ```bash
 minimap2 -ax splice -t ... $BUILD.mmi nanopore_reads.fastq > minimap.sam
 ```
 
-## TagReadWithSequence
+### TagReadWithSequence
 ```bash
 java -jar -Xmx22g sicelor.jar TagReadWithSequence
 ```
 
-## FilterGetBcUmiReads
+### FilterGetBcUmiReads
 ```bash
 java -jar -Xmx22g sicelor.jar FilterGetBcUmiReads
 ```
 
-## IsoformExpressionMatrix
+### IsoformExpressionMatrix
 ```bash
 java -jar -Xmx22g sicelor.jar IsoformExpressionMatrix
 ```
 
-## MoleculeConsensus
+### MoleculeConsensus
 ```bash
 java -jar -Xmx22g sicelor.jar MoleculeConsensus
 ```
 
-## molecule mapping
+### molecule mapping
 ```bash
 minimap2 -ax splice -t ... $BUILD.mmi molecule_consensus.fasta > molecule.sam
 ```
