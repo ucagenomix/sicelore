@@ -29,32 +29,32 @@ processing of sequencing runs of the same unfragmented library on Nanopore devic
 * [SNPs calling, fusion transcript detection]()
 
 
-### minimap2 mapping
+## minimap2 mapping
 ```bash
 minimap2 -ax splice -t ... $BUILD.mmi nanopore_reads.fastq > minimap.sam
 ```
 
-### TagReadWithSequence
+## TagReadWithSequence
 ```bash
 java -jar -Xmx22g sicelor.jar TagReadWithSequence
 ```
 
-### FilterGetBcUmiReads
+## FilterGetBcUmiReads
 ```bash
 java -jar -Xmx22g sicelor.jar FilterGetBcUmiReads
 ```
 
-### IsoformExpressionMatrix
+## IsoformExpressionMatrix
 ```bash
 java -jar -Xmx22g sicelor.jar IsoformExpressionMatrix
 ```
 
-### MoleculeConsensus
+## MoleculeConsensus
 ```bash
 java -jar -Xmx22g sicelor.jar MoleculeConsensus
 ```
 
-### molecule mapping
+## molecule mapping
 ```bash
 minimap2 -ax splice -t ... $BUILD.mmi molecule_consensus.fasta > molecule.sam
 ```
