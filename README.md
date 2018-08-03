@@ -1,7 +1,7 @@
 # Sicelore
 
-authors: rainer waldmann & kevin Lebrigand, UCAGenomiX genomics platform, Nice Sophia-Antipolis, France
-current release: v0.1 (initial commit august 2018)
+- authors: rainer waldmann & kevin Lebrigand, UCAGenomiX genomics platform, Nice Sophia-Antipolis, France
+- current release: v0.1 (initial commit august 2018)
 
 # summary
 Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated to the bioinformatics processing, analysis 
