@@ -53,18 +53,16 @@ public class IsoformExpressionMatrix extends CommandLineProgram
 	
 	protected void process()
 	{
-		loadDTEcells();
-		log.info(new Object[] { "Cells number\t\t[" + DTEcells.size() + "]" });
+            loadDTEcells();
+            log.info(new Object[] { "Cells number\t\t[" + DTEcells.size() + "]" });
 		
-		// 4mn and 9.6Gb for 1.450.000 SAMrecords [747.000 molecules]
-		UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-		LongreadParser bam = new LongreadParser(INPUT);
-		MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
-		
-		Matrix matrix = dataset.DTEMatrix(model);
-        matrix.write(MATRIX, DTEcells);
-        
-        dataset.displayMetrics(METRICS);
+            // 4mn and 9.6Gb for 1.450.000 SAMrecords [747.000 molecules]
+            UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
+            LongreadParser bam = new LongreadParser(INPUT);
+            MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
+            Matrix matrix = dataset.DTEMatrix(model);
+            matrix.write(MATRIX, DTEcells);
+            dataset.displayMetrics(METRICS);
 	}
 	
 	public void loadDTEcells()
