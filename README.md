@@ -1,4 +1,4 @@
-# Sicelore
+# Sicelore2
 
 Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated 
 to the bioinformatics processing, analysis and exploration of highly 
