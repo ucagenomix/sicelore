@@ -1,6 +1,7 @@
 package org.ipmc.sicelore.utils;
 
 public class GTFParseException extends Exception {
+
     private static final long serialVersionUID = -7344433708122452513L;
 
     public GTFParseException() {

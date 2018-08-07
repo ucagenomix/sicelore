@@ -11,14 +11,14 @@ public enum Strand {
             return "-";
         }
     };
-    
+
     public static Strand fromString(String str) throws GTFParseException {
-        if(str.equalsIgnoreCase(Strand.FORWARD.toString())) {
+        if (str.equalsIgnoreCase(Strand.FORWARD.toString())) {
             return Strand.FORWARD;
-        } else if(str.equalsIgnoreCase(Strand.REVERSE.toString())) {
+        } else if (str.equalsIgnoreCase(Strand.REVERSE.toString())) {
             return Strand.REVERSE;
         } else {
-            throw new GTFParseException("Invalid strand '"+str+"'");
+            throw new GTFParseException("Invalid strand '" + str + "'");
         }
     }
 }

@@ -20,17 +20,18 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     private int[] exonEnds;
     private int[] exonFrames;
     private String geneId;
-    private List<int []> codingExons;
-    private List<int []> exons;
+    private List<int[]> codingExons;
+    private List<int[]> exons;
     private double rpkm;
 
-    private TranscriptRecord() {}
-    
+    private TranscriptRecord() {
+    }
+
     public int compareTo(TranscriptRecord tr) {
         // max exons to min
-    	return ((TranscriptRecord)tr).getExonCount() - this.exonCount;
-    	// min exons to max
-    	//return this.exonCount - ((TranscriptRecord)tr).getExonCount();
+        return ((TranscriptRecord) tr).getExonCount() - this.exonCount;
+        // min exons to max
+        //return this.exonCount - ((TranscriptRecord)tr).getExonCount();
     }
 
     public String toString() {
@@ -38,11 +39,12 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     }
 
     public static TranscriptRecord fromRefFlat(String[] fields) throws GTFParseException {
-        if (fields.length < 11)
+        if (fields.length < 11) {
             throw new RuntimeException(
                     "Invalid RefGene file. records should have at least 11 fields but found only: "
-                            + fields.length);
-        
+                    + fields.length);
+        }
+
         TranscriptRecord record = new TranscriptRecord();
 
         record.geneId = fields[0];
@@ -60,44 +62,48 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
             record.exonEnds = TranscriptRecord.toIntArray(fields[10]);
             //record.exonFrames = TranscriptRecord.toIntArray(fields[15]);
             record.exonBases = 0;
-            record.exons = new ArrayList<int []>();
-            record.codingExons = new ArrayList<int []>();
+            record.exons = new ArrayList<int[]>();
+            record.codingExons = new ArrayList<int[]>();
 
-            for(int i = 0; i < record.exonStarts.length; i++) {
+            for (int i = 0; i < record.exonStarts.length; i++) {
                 int start = record.exonStarts[i];
                 int end = record.exonEnds[i];
-                
-                record.exonBases += end-start;
-                record.exons.add(new int[]{start,end});
-                
-                // Compute coding exons
-                if(start > record.cdsEnd) continue;
-                if(end < record.cdsStart) continue; 
 
-                if(start >= record.cdsStart && end <= record.cdsEnd) {
-                    record.codingExons.add(new int[]{start,end});
-                    record.cdsExonBases += end-start;
-                } else if(start <= record.cdsStart && record.cdsStart <= end && end <= record.cdsEnd) {
-                    record.codingExons.add(new int[]{record.cdsStart,end});
-                    record.cdsExonBases += end-record.cdsStart;
-                } else if(start >= record.cdsStart && record.cdsStart <= end && end >= record.cdsEnd) {
-                    record.codingExons.add(new int[]{start,record.cdsEnd});
-                    record.cdsExonBases += record.cdsEnd-start;
-                } else if(start < record.cdsStart && end > record.cdsEnd) {
+                record.exonBases += end - start;
+                record.exons.add(new int[]{start, end});
+
+                // Compute coding exons
+                if (start > record.cdsEnd) {
+                    continue;
+                }
+                if (end < record.cdsStart) {
+                    continue;
+                }
+
+                if (start >= record.cdsStart && end <= record.cdsEnd) {
+                    record.codingExons.add(new int[]{start, end});
+                    record.cdsExonBases += end - start;
+                } else if (start <= record.cdsStart && record.cdsStart <= end && end <= record.cdsEnd) {
+                    record.codingExons.add(new int[]{record.cdsStart, end});
+                    record.cdsExonBases += end - record.cdsStart;
+                } else if (start >= record.cdsStart && record.cdsStart <= end && end >= record.cdsEnd) {
+                    record.codingExons.add(new int[]{start, record.cdsEnd});
+                    record.cdsExonBases += record.cdsEnd - start;
+                } else if (start < record.cdsStart && end > record.cdsEnd) {
                     record.codingExons.add(new int[]{record.cdsStart, record.cdsEnd});
-                    record.cdsExonBases += record.cdsEnd-record.cdsStart;
+                    record.cdsExonBases += record.cdsEnd - record.cdsStart;
                 }
             }
         } catch (NumberFormatException e) {
             throw new GTFParseException(
                     "Invalid RefGene file. Can't parse integer value: ", e);
         }
-        
+
         record.rpkm = 0.0;
 
         return record;
     }
-    
+
     public void setRPKM(double rpkm) {
         this.rpkm = rpkm;
     }
@@ -106,29 +112,29 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
         return this.rpkm;
     }
 
-    public List<int []> getCodingExons() {
+    public List<int[]> getCodingExons() {
         return this.codingExons;
     }
-    
-    public List<int []> getExons() {
+
+    public List<int[]> getExons() {
         return this.exons;
     }
-    
-    public List<int []> getExons(boolean cdsExonsOnly) {
+
+    public List<int[]> getExons(boolean cdsExonsOnly) {
         return cdsExonsOnly ? this.codingExons : this.exons;
     }
-    
-    private static int[] toIntArray(String str) throws NumberFormatException
-    {
+
+    private static int[] toIntArray(String str) throws NumberFormatException {
         str = StringUtils.stripEnd(str, ",");
         String[] vals = str.split(",");
         int[] numbers = new int[vals.length];
-        
-        for(int i = 0; i < vals.length; i++) {
+
+        for (int i = 0; i < vals.length; i++) {
             numbers[i] = Integer.valueOf(vals[i]);
         }
         return numbers;
     }
+
     /*
     public String toString() {
         String str = "[\n"; 
@@ -150,8 +156,8 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
         
         return str;
     }
-	*/
-    
+     */
+
     public String getTranscriptId() {
         return transcriptId;
     }
