@@ -2,8 +2,8 @@ package org.ipmc.sicelore.utils;
 
 import java.util.*;
 import java.io.*;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import htsjdk.samtools.util.Log;
 
 public class Matrix {

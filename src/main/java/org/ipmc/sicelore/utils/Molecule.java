@@ -7,7 +7,7 @@ import htsjdk.samtools.util.*;
 import org.biojava.nbio.core.sequence.DNASequence;
 import org.biojava.nbio.core.sequence.io.*;
 import java.util.concurrent.*;
-
+import org.apache.commons.lang3.*;
 import org.biojava.nbio.alignment.Alignments;
 import org.biojava.nbio.core.alignment.template.Profile;
 import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
@@ -128,28 +128,30 @@ public class Molecule implements Callable<String> {
             List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
 
             for (LongreadRecord lrr : longreadrecords) {
-                List list = junctionsFromExons(lrr.getExons());
-                for (TranscriptRecord transcriptrecord : transcripts) {
-                    List list1 = junctionsFromExons(transcriptrecord.getExons());
-                    if (map(list, list1, DELTA, SOFT)) {
-                        if ("undef".equals(this.transcriptId)) {
-                            this.transcriptId = transcriptrecord.getTranscriptId();
-                            this.geneId = transcriptrecord.getGeneId();
-                        }
+                TranscriptRecord transcriptrecord = getTranscript(transcripts, lrr, DELTA);
+                if (transcriptrecord != null) {
+                    if ("undef".equals(this.transcriptId)) {
+                        this.transcriptId = transcriptrecord.getTranscriptId();
+                        this.geneId = transcriptrecord.getGeneId();
                     }
                 }
             }
         }
     }
-    
-    public TranscriptRecord getTranscrpt(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA) {
-        List<List<int[]>> list_transcript_exon = new ArrayList();
+
+    public TranscriptRecord getTranscript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA) {
+        ArrayList<List<int[]>> list_transcript_exon = new ArrayList();
         for (TranscriptRecord transcript : transcriptrecord) {
-            List<int[]> exon = transcript.getExons();
+            List<int[]> exon = junctionsFromExons(transcript.getExons());
             list_transcript_exon.add(exon);
         }
-        List<List<int[]>> list_test = list_transcript_exon;
-        List<int[]> lrr_exons = lrr.getExons();
+
+        List<List<int[]>> list_test = new ArrayList<>();
+        for (int cpt = 0; cpt < list_transcript_exon.size(); cpt++) {
+            list_test.add(list_transcript_exon.get(cpt));
+        }
+
+        List<int[]> lrr_exons = junctionsFromExons(lrr.getExons());
         for (int[] exon_read : lrr_exons) {
             for (int i = 0; i < list_test.size(); i++) {
                 if (!isIn(exon_read, list_test.get(i), DELTA) == false) {
@@ -160,7 +162,14 @@ public class Molecule implements Callable<String> {
         if (list_test.isEmpty()) {
             return null;
         } else if (list_test.size() > 1) {
-            return null;
+            for (int i = 0; i < list_transcript_exon.size(); i++) {
+                return transcriptrecord.get(i);
+                /*for (int j = 0; j < list_test.size(); j++) {
+                    if (list_transcript_exon.get(i).equals(list_test.get(j))) {
+                        return transcriptrecord.get(i);
+                    }
+                }*/
+            }
         } else {
             for (int i = 0; i < list_transcript_exon.size(); i++) {
                 if (list_transcript_exon.get(i).equals(list_test.get(0))) {
@@ -170,7 +179,7 @@ public class Molecule implements Callable<String> {
         }
         return null;
     }
-    
+
     public List<int[]> junctionsFromExons(List<int[]> exons) {
         ArrayList localArrayList = new ArrayList();
 
@@ -234,7 +243,7 @@ public class Molecule implements Callable<String> {
     }
 
     private static int[] toIntArray(String paramString) throws NumberFormatException {
-        paramString = org.apache.commons.lang.StringUtils.stripEnd(paramString, ",");
+        paramString = StringUtils.stripEnd(paramString, ",");
         String[] arrayOfString = paramString.split(",");
         int[] arrayOfInt = new int[arrayOfString.length];
 
