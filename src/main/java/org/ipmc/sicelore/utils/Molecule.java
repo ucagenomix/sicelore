@@ -141,7 +141,38 @@ public class Molecule implements Callable<String> {
             }
         }
     }
-
+    
+    public TranscriptRecord getTranscrpt(List<TranscriptRecord> transcriptrecord,LongreadRecord lrr, int DELTA) {
+        List<List<int[]>> list_transcript_exon = new ArrayList();
+        for(TranscriptRecord transcript : transcriptrecord) {
+            List<int[]> exon = transcript.getExons();
+            list_transcript_exon.add(exon);
+        }
+        List<List<int[]>> list_test = list_transcript_exon;
+        List<int[]> lrr_exons = lrr.getExons();
+        for(int[] exon_read : lrr_exons) {
+           for(int i=0;i<list_test.size();i++) {
+               if(!isIn(exon_read, list_test.get(i), DELTA) == false) {
+                   list_test.remove(i);
+               }
+           }
+        }
+        if(list_test.isEmpty()) {
+            return null;
+        }
+        else if (list_test.size() > 1) {
+            return null;
+        } 
+        else {
+            for(int i=0;i<list_transcript_exon.size();i++) {
+                if(list_transcript_exon.get(i).equals(list_test.get(0))) {
+                    return transcriptrecord.get(i);
+                }
+            }
+        }
+        return null;
+    }
+    
     public List<int[]> junctionsFromExons(List<int[]> exons) {
         ArrayList localArrayList = new ArrayList();
 
@@ -179,7 +210,6 @@ public class Molecule implements Callable<String> {
                 bool = false;
             }
         }
-
         return bool;
     }
 

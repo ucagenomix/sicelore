@@ -104,7 +104,6 @@ public class MoleculeDataset {
         while (it.hasNext()) {
             String molkey = (String) it.next();
             molecule = (Molecule) this.mapMolecules.get(molkey);
-
             if ((l = mapGenes.get(molecule.getGeneId())) != null) {
                 l.add(molecule);
             } else {
@@ -112,21 +111,18 @@ public class MoleculeDataset {
                 l.add(molecule);
                 mapGenes.put(molecule.getGeneId(), l);
             }
-
             // stats
             int nn = molecule.getLongreads().size();
             if (nn > 10) {
                 nn = 10;
             }
             multiviews[nn]++;
-
         }
         log.info(new Object[]{"\tx-reads\t\t[1:" + multiviews[1] + ",2:" + multiviews[2] + ",3:" + multiviews[3] + ",4:" + multiviews[4] + ",5:" + multiviews[5] + ",6:" + multiviews[6] + ",7:" + multiviews[6] + ",8:" + multiviews[8] + ",9:" + multiviews[9] + ",10:" + multiviews[10] + "]"});
     }
 
     public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException {
         LongreadRecord record = LongreadRecord.fromSAMRecord(r);
-
         //if(record == null) { softclipped++; return null; }
         //if(record.getChrom().contains("_")) { chromstrange++; return null; }
         //if(record.getExonBases() == 0) { noexons++; return null; }
@@ -184,7 +180,6 @@ public class MoleculeDataset {
             if (xtimes >= 10) {
                 xtimes = 10;
             }
-
             count[xtimes]++;
             somme[xtimes] += pctId;
         }
@@ -197,10 +192,8 @@ public class MoleculeDataset {
                 if (count[ii] > 0) {
                     avg = somme[ii] / count[ii];
                 }
-
                 String dvres = String.format("%.3f", avg);
                 String sumres = String.format("%.2f", somme[ii]);
-
                 os.writeBytes("x" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres + "\n");
                 log.info(new Object[]{"\tx" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres});
             }
