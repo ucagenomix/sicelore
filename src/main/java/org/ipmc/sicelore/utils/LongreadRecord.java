@@ -110,20 +110,18 @@ public class LongreadRecord implements Comparable<LongreadRecord> {
                     }
 
                     // can not be a good record molecule if clipped on both sides !
-                    //if(record.sizeStartToClip > 0 && record.sizeEndToClip > 0){ return null; }
-                    /*
-					// Clip sequence if hard or soft clipped alignment on one side only otherwise return null, 
-					else if(record.sizeStartToClip > 0){
-						// case of ADAP-BC-UMI-TTTT map the genome....
-						if(record.sizeStartToClip >= record.cdna.length()){ return null; }
-						record.cdna = record.cdna.substring(record.sizeStartToClip, record.cdna.length());
-					}
-					else if(record.sizeEndToClip > 0){
-						// case of ADAP-BC-UMI-TTTT map the genome....
-						if(record.sizeStartToClip >= record.cdna.length()){ return null; }
-						record.cdna = record.cdna.substring(record.sizeEndToClip, record.cdna.length());
-					}
-                     */
+                    if(record.sizeStartToClip > 0 && record.sizeEndToClip > 0){ return null; }
+                    // Clip sequence if hard or soft clipped alignment on one side only otherwise return null, 
+                    else if(record.sizeStartToClip > 0){
+                        // case of ADAP-BC-UMI-TTTT map the genome....
+			if(record.sizeStartToClip >= record.cdna.length()){ return null; }
+			record.cdna = record.cdna.substring(record.sizeStartToClip, record.cdna.length());
+                    }
+                    else if(record.sizeEndToClip > 0){
+			// case of ADAP-BC-UMI-TTTT map the genome....
+			if(record.sizeStartToClip >= record.cdna.length()){ return null; }
+			record.cdna = record.cdna.substring(record.sizeEndToClip, record.cdna.length());
+                    }
                 }
             }
 

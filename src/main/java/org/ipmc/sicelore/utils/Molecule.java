@@ -279,7 +279,7 @@ public class Molecule implements Callable<String> {
         String bestRead = "";
 
         // should be an argument for consensus calling
-        int nb_max_best_reads = 4;
+        int nb_max_best_reads = 5;
 
         try {
             int nn = 0;
