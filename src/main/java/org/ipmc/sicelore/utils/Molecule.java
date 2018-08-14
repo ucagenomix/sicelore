@@ -257,7 +257,6 @@ public class Molecule implements Callable<String> {
         for (int i = 1; i < exons.size(); i++) {
             int j = ((int[]) exons.get(i - 1))[1];
             int k = ((int[]) exons.get(i))[0];
-
             localArrayList.add(new int[]{j, k});
         }
 
