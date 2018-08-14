@@ -128,13 +128,11 @@ public class Molecule implements Callable<String> {
             List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
             /*
             for (LongreadRecord lrr : longreadrecords) {
-                if (lrr.getExons().size() > 3) {
-                    TranscriptRecord transcriptrecord = getTranscript(transcripts, lrr, DELTA);
-                    if (transcriptrecord != null) {
-                        if ("undef".equals(this.transcriptId)) {
-                            this.transcriptId = transcriptrecord.getTranscriptId();
-                            this.geneId = transcriptrecord.getGeneId();
-                        }
+                TranscriptRecord transcriptrecord = getTranscript(transcripts, lrr, DELTA);
+                if (transcriptrecord != null) {
+                    if ("undef".equals(this.transcriptId)) {
+                        this.transcriptId = transcriptrecord.getTranscriptId();
+                        this.geneId = transcriptrecord.getGeneId();
                     }
                 }
             }
@@ -170,6 +168,9 @@ public class Molecule implements Callable<String> {
             list_test.add(list_transcript_junction.get(cpt));
         }
         List<int[]> lrr_exons = junctionsFromExons(lrr.getExons());
+        if (lrr_exons.size() < 2) {
+            return transcriptrecord.get(0);
+        }
         for (int i = 0; i < list_test.size();) {
             boolean test = false;
             for (int j = 0; j < list_test.get(i).size(); j++) {
@@ -204,7 +205,7 @@ public class Molecule implements Callable<String> {
     }
 
     public List<List<int[]>> create_rules(List<TranscriptRecord> transcripts, int DELTA) {
-        
+
         List<List<int[]>> list_junction_transcript = new ArrayList<>();
         for (int i = 0; i < transcripts.size(); i++) {
             list_junction_transcript.add(junctionsFromExons(transcripts.get(i).getExons()));
