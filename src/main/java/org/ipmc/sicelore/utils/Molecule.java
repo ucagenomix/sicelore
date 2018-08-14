@@ -128,11 +128,13 @@ public class Molecule implements Callable<String> {
             List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
             /*
             for (LongreadRecord lrr : longreadrecords) {
-                TranscriptRecord transcriptrecord = getTranscript(transcripts, lrr, DELTA);
-                if (transcriptrecord != null) {
-                    if ("undef".equals(this.transcriptId)) {
-                        this.transcriptId = transcriptrecord.getTranscriptId();
-                        this.geneId = transcriptrecord.getGeneId();
+                if (lrr.getExons().size() > 3) {
+                    TranscriptRecord transcriptrecord = getTranscript(transcripts, lrr, DELTA);
+                    if (transcriptrecord != null) {
+                        if ("undef".equals(this.transcriptId)) {
+                            this.transcriptId = transcriptrecord.getTranscriptId();
+                            this.geneId = transcriptrecord.getGeneId();
+                        }
                     }
                 }
             }
@@ -161,44 +163,91 @@ public class Molecule implements Callable<String> {
     }
 
     public TranscriptRecord getTranscript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA) {
-        ArrayList<List<int[]>> list_transcript_exon = new ArrayList();
-        for (TranscriptRecord transcript : transcriptrecord) {
-            List<int[]> exon = junctionsFromExons(transcript.getExons());
-            list_transcript_exon.add(exon);
-        }
+        List<List<int[]>> list_transcript_junction = create_rules(transcriptrecord, DELTA);
 
         List<List<int[]>> list_test = new ArrayList<>();
-        for (int cpt = 0; cpt < list_transcript_exon.size(); cpt++) {
-            list_test.add(list_transcript_exon.get(cpt));
+        for (int cpt = 0; cpt < list_transcript_junction.size(); cpt++) {
+            list_test.add(list_transcript_junction.get(cpt));
         }
-
         List<int[]> lrr_exons = junctionsFromExons(lrr.getExons());
-        for (int[] exon_read : lrr_exons) {
-            for (int i = 0; i < list_test.size(); i++) {
-                if (!isIn(exon_read, list_test.get(i), DELTA) == false) {
-                    list_test.remove(i);
+        for (int i = 0; i < list_test.size();) {
+            boolean test = false;
+            for (int j = 0; j < list_test.get(i).size(); j++) {
+                if (!isIn(list_test.get(i).get(j), lrr_exons, DELTA)) {
+                    test = true;
                 }
+            }
+            if (test == true) {
+                list_test.remove(i);
+            } else {
+                i++;
             }
         }
         if (list_test.isEmpty()) {
             return null;
         } else if (list_test.size() > 1) {
-            for (int i = 0; i < list_transcript_exon.size(); i++) {
-                return transcriptrecord.get(i);
-                /*for (int j = 0; j < list_test.size(); j++) {
-                    if (list_transcript_exon.get(i).equals(list_test.get(j))) {
+            for (int i = 0; i < list_transcript_junction.size(); i++) {
+                for (int j = 0; j < list_test.size(); j++) {
+                    if (list_transcript_junction.get(i).equals(list_test.get(j))) {
                         return transcriptrecord.get(i);
                     }
-                }*/
+                }
             }
         } else {
-            for (int i = 0; i < list_transcript_exon.size(); i++) {
-                if (list_transcript_exon.get(i).equals(list_test.get(0))) {
+            for (int i = 0; i < list_transcript_junction.size(); i++) {
+                if (list_transcript_junction.get(i).equals(list_test.get(0))) {
                     return transcriptrecord.get(i);
                 }
             }
         }
         return null;
+    }
+
+    public List<List<int[]>> create_rules(List<TranscriptRecord> transcripts, int DELTA) {
+        
+        List<List<int[]>> list_junction_transcript = new ArrayList<>();
+        for (int i = 0; i < transcripts.size(); i++) {
+            list_junction_transcript.add(junctionsFromExons(transcripts.get(i).getExons()));
+        }
+        int size_max = 0;
+        for (int cpt = 0; cpt < list_junction_transcript.size(); cpt++) {
+            if (list_junction_transcript.get(cpt).size() > size_max) {
+                size_max = list_junction_transcript.get(cpt).size();
+            }
+        }
+        for (int cpt = 0; cpt < list_junction_transcript.size(); cpt++) {
+            if (list_junction_transcript.get(cpt).size() < size_max) {
+                list_junction_transcript.remove(cpt);
+            }
+        }
+
+        for (int j = 0; j < list_junction_transcript.get(0).size(); j++) {
+            boolean is_remove = false;
+            int[] interval = list_junction_transcript.get(0).get(j);
+            for (int i = 1; i < list_junction_transcript.size(); i++) {
+                boolean is_in = false;
+                for (int k = 0; k < list_junction_transcript.get(i).size(); k++) {
+                    if ((Math.abs(interval[0] - list_junction_transcript.get(i).get(k)[0]) <= DELTA) && (Math.abs(interval[1] - list_junction_transcript.get(i).get(k)[1]) <= DELTA)) {
+                        is_in = true;
+                    }
+                }
+                if (is_in == true) {
+                    is_remove = true;
+                } else {
+                    is_remove = false;
+                }
+            }
+            if (is_remove == true) {
+                for (int i = 0; i < list_junction_transcript.size(); i++) {
+                    for (int k = 0; k < list_junction_transcript.get(i).size(); k++) {
+                        if ((Math.abs(interval[0] - list_junction_transcript.get(i).get(k)[0]) <= DELTA) && (Math.abs(interval[1] - list_junction_transcript.get(i).get(k)[1]) <= DELTA)) {
+                            list_junction_transcript.get(i).remove(k);
+                        }
+                    }
+                }
+            }
+        }
+        return list_junction_transcript;
     }
 
     public List<int[]> junctionsFromExons(List<int[]> exons) {
@@ -269,13 +318,11 @@ public class Molecule implements Callable<String> {
 
     public boolean isIn(int[] paramArrayOfInt, List<int[]> paramList, int paramInt) {
         boolean bool = false;
-
         for (int[] arrayOfInt : paramList) {
             if ((Math.abs(arrayOfInt[0] - paramArrayOfInt[0]) <= paramInt) && (Math.abs(arrayOfInt[1] - paramArrayOfInt[1]) <= paramInt)) {
                 bool = true;
             }
         }
-
         return bool;
     }
 
