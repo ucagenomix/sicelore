@@ -9,7 +9,9 @@ public class LongreadParser implements LongreadModelParser {
 
     private final Log log;
     private htsjdk.samtools.util.ProgressLogger pl;
-
+    
+    //private int clippedBothSides = 0;
+    
     HashMap<String, Longread> mapLongreads;
 
     public LongreadParser(File bam) {
@@ -54,13 +56,14 @@ public class LongreadParser implements LongreadModelParser {
     public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException {
         LongreadRecord record = LongreadRecord.fromSAMRecord(r);
 
-        //if(record == null) { softclipped++; return null; }
+        //if(record == null) { return null; }
         //if(record.getChrom().contains("_")) { chromstrange++; return null; }
         //if(record.getExonBases() == 0) { noexons++; return null; }
         //if(record.getGeneId() == null) { nogeneid++; return null; }
         //if(record.getBarcode() == null) { nobarcode++; return null; }
         //if(record.getUmi() == null) { noumi++; return null; }
-        //if(record.getIsSoftClipped()) { softclipped++; return null; }
+        //else if(record.getSizeStartToClip() > 0 && record.getSizeEndToClip() > 0){ clippedBothSides++; return null; }
+   
         //if(record.getGeneId().substring(0,2).equals("Gm")) { genegm++; return null; }
         return record;
     }

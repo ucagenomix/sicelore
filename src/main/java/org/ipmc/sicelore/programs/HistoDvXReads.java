@@ -21,17 +21,17 @@ public class HistoDvXReads extends CommandLineProgram {
 
     private final Log log;
     private ProgressLogger pl;
-    @Argument(shortName = "I", doc = "The input molecule SAM or BAM file to analyze")
+    @Argument(shortName = "I", doc = "The input retag molecule SAM or BAM file to analyze")
     public File INPUT;
     @Argument(shortName = "O", doc = "The output histogram.txt")
     public File OUTPUT;
 
-    HashMap<Integer, List<Float>> map;
+    HashMap<Integer, List<Double>> map;
 
     public HistoDvXReads() {
         log = Log.getInstance(HistoReadsPerMolecule.class);
         pl = new ProgressLogger(log);
-        map = new HashMap<Integer, List<Float>>();
+        map = new HashMap<Integer, List<Double>>();
     }
 
     protected int doWork() {
@@ -42,22 +42,25 @@ public class HistoDvXReads extends CommandLineProgram {
 
         htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
         try {
-            List<Float> l =null;
+            List<Double> l =null;
             
             log.info(new Object[]{"Parsing bam file\t\tstart..."});
             for (SAMRecord r : inputSam) {
                 pl.record(r);
+                
                 String read_name = r.getReadName();
-                String[] info = read_name.split("\\|");
+                String BC = (String)r.getAttribute("BC");
+                String U8 = (String)r.getAttribute("U8");
+                int NN = ((Integer) r.getAttribute("NN") != null) ? (Integer) r.getAttribute("NN") : 0;
                 Float dv = (Float) r.getAttribute("dv");
                 
-                info[3] = info[3].replaceAll("x","");
+                double pctId = 1.0 - dv;
                 
                 //System.out.println(read_name + "\t" + dv);
-                if((l = (List<Float>)map.get(new Integer(info[3]))) == null)
-                    map.put(new Integer(info[3]), new ArrayList<Float>());
+                if((l = (List<Double>)map.get(new Integer(NN))) == null)
+                    map.put(new Integer(NN), new ArrayList<Double>());
 
-                ((List<Float>)map.get(new Integer(info[3]))).add(dv);
+                ((List<Double>)map.get(new Integer(NN))).add(pctId);
             }
             inputSam.close();
             log.info(new Object[]{"Parsing bam file\t\t...end"});
@@ -65,15 +68,15 @@ public class HistoDvXReads extends CommandLineProgram {
             os = new DataOutputStream(new FileOutputStream(OUTPUT));
             os.writeBytes("xreads\tnumber\tdv\n");
             for (int i=1; i<20; i++) {
-                if((l = (List<Float>)map.get(new Integer(i))) == null){
+                if((l = (List<Double>)map.get(new Integer(i))) == null){
                     os.writeBytes(i + "\t0\t0\t0\n");
                     log.info(new Object[]{ i + "\t0\t0\t0" });
                 }
                 else{
-                    int number = ((List<Float>)map.get(new Integer(i))).size();
+                    int number = ((List<Double>)map.get(new Integer(i))).size();
                     float sum = 0;
-                    for(Float f : ((List<Float>)map.get(new Integer(i))))
-                        sum += f.floatValue();
+                    for(Double f : ((List<Double>)map.get(new Integer(i))))
+                        sum += f.doubleValue();
                     
                     float avg = sum / number;
                     os.writeBytes(i + "\t" + number + "\t" + sum + "\t"  +avg + "\n");

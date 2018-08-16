@@ -38,8 +38,7 @@ public class LongreadRecord implements Comparable<LongreadRecord> {
     private int sizeEndToClip;
     private boolean is_associated = false;
 
-    private LongreadRecord() {
-    }
+    private LongreadRecord() { }
 
     public int compareTo(LongreadRecord lr) {
         Float obj1 = new Float(((LongreadRecord) lr).getDv());
@@ -77,31 +76,31 @@ public class LongreadRecord implements Comparable<LongreadRecord> {
             String cigar = r.getCigarString();
             String[] cigartype = cigar.split("[0-9]+");
             String[] cigarsize = cigar.split("[A-Z]");
-
+            cigar = cigar.replaceAll("[0-9]+[IDS]","");
+            
             // detect large softclipping starting or ending reads
             if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])) {
-                if (new Integer(cigarsize[0]).intValue() > 450) {
+                if (new Integer(cigarsize[0]).intValue() > 250) {
                     record.isSoftOrHardClipped = true;
                     record.sizeStartToClip = new Integer(cigarsize[0]).intValue();
                     //System.out.println(record.name+"\t"+ r.isSecondaryOrSupplementary() +"\tstart\t"+cigarsize[0]+"\t"+cigartype[1]);
                 }
             }
             if ("H".equals(cigartype[cigartype.length - 1]) || "S".equals(cigartype[cigartype.length - 1])) {
-                if (new Integer(cigarsize[cigarsize.length - 1]).intValue() > 450) {
+                if (new Integer(cigarsize[cigarsize.length - 1]).intValue() > 250) {
                     record.isSoftOrHardClipped = true;
                     record.sizeEndToClip = new Integer(cigarsize[cigarsize.length - 1]).intValue();
                     //System.out.println(record.name+"\t"+r.isSecondaryOrSupplementary()+"\tend\t"+cigarsize[cigarsize.length-1]+"\t"+cigartype[cigartype.length-1]);
                 }
             }
 
-            // if we don't have a IG / BC / U8 we do not init cDNA
+            // if we have a IG / BC / U8 we do init cDNA
             if (record.geneId != null && record.barcode != null && record.umi != null) {
                 record.is_associated = true;
-
-                // get the read sequence but not as record attribute,will set the cDNA sequence instead.
+                // get the read sequence but not as record attribute, will set the cDNA sequence instead.
                 //need to be record.is_associated = true !!!
                 String readSequence = (String) r.getAttribute("US");
-                if (readSequence != null && record.is_associated) {
+                if(readSequence != null) {
                     if (record.orientation == null) {
                         record.cdna = readSequence.substring(record.umiEnd, (record.tsoEnd != 0) ? record.tsoEnd : readSequence.length());
                         record.cdna = complementWC(record.cdna);
@@ -110,26 +109,43 @@ public class LongreadRecord implements Comparable<LongreadRecord> {
                     }
 
                     // can not be a good record molecule if clipped on both sides !
-                    if(record.sizeStartToClip > 0 && record.sizeEndToClip > 0){ return null; }
+                    if(record.sizeStartToClip > 0 && record.sizeEndToClip > 0){
+                        return null;
+                        //System.out.println("clipped on both sides: "+ record.name+"["+record.sizeStartToClip+","+record.sizeEndToClip+"]");
+                    }
                     // Clip sequence if hard or soft clipped alignment on one side only otherwise return null, 
                     else if(record.sizeStartToClip > 0){
                         // case of ADAP-BC-UMI-TTTT map the genome....
 			if(record.sizeStartToClip >= record.cdna.length()){ return null; }
+                        //System.out.println(record.name+"\tstart="+ record.sizeStartToClip +"\t"+ record.cdna);
 			record.cdna = record.cdna.substring(record.sizeStartToClip, record.cdna.length());
+                        //System.out.println(record.name +"\t"+ record.cdna + "\n");
                     }
                     else if(record.sizeEndToClip > 0){
 			// case of ADAP-BC-UMI-TTTT map the genome....
-			if(record.sizeStartToClip >= record.cdna.length()){ return null; }
+			if(record.sizeEndToClip >= record.cdna.length()){ return null; }
+                        //System.out.println(record.name+"\tend="+ record.sizeEndToClip +"\t"+ record.cdna);
 			record.cdna = record.cdna.substring(record.sizeEndToClip, record.cdna.length());
+                        //System.out.println(record.name +"\t"+ record.cdna + "\n");
                     }
                 }
             }
+            
+            cigar = cigar.replaceAll("[0-9]+[IDS]","");
+            cigartype = cigar.split("[0-9]+");
+            cigarsize = cigar.split("[A-Z]");
+            /*if(r.getReadNegativeStrandFlag()){
+               ArrayUtils.reverse(cigartype);
+               ArrayUtils.reverse(cigarsize);
+            }*/
+            
+            //System.out.println(blocks.size() + "\t" + cigartype.length + "\t" + cigarsize.length);
 
             // init exons
             int block_index = 0;
             int s = blocks.get(0).getReferenceStart();
             int e = blocks.get(0).getLength();
-            for (int i = 0; i < cigartype.length - 2; i++) {
+            for (int i = 0; i < cigarsize.length - 1; i++) {
                 AlignmentBlock currBlock = blocks.get(block_index);
 
                 if ("M".equals(cigartype[i + 1])) {
@@ -137,13 +153,19 @@ public class LongreadRecord implements Comparable<LongreadRecord> {
                 } else if ("N".equals(cigartype[i + 1])) {
                     exon_starts += s + ",";
                     exon_ends += e + ",";
+                    
+                    //System.out.println("add exon " + s + "-" + e);
+                    
                     s = currBlock.getReferenceStart();
                 }
                 e = currBlock.getReferenceStart() + currBlock.getLength();
             }
             exon_starts += s + ",";
             exon_ends += e + ",";
-
+            
+            //System.out.println(exon_starts + "\n" +exon_ends);
+            //System.exit(0);
+            
             record.exonStarts = LongreadRecord.toIntArray(exon_starts);
             record.exonEnds = LongreadRecord.toIntArray(exon_ends);
             record.exonBases = 0;
@@ -228,7 +250,15 @@ public class LongreadRecord implements Comparable<LongreadRecord> {
     public float getDv() {
         return this.dv;
     }
-
+    
+    public int getSizeStartToClip(){
+        return sizeStartToClip;
+    }
+    
+    public int getSizeEndToClip(){
+        return sizeEndToClip;
+    }
+    
     public boolean getIsSoftOrHardClipped() {
         return isSoftOrHardClipped;
     }

@@ -36,12 +36,12 @@ public class ReTagReadWithBarcodes extends CommandLineProgram {
                 pl.record(r);
                 String str = r.getReadName();
                 String[] info = str.split("\\|");
-                info[3] = info[3].replaceAll("x", "");
 
                 r.setAttribute("IG", info[0]);
-                r.setAttribute("BC", info[1]);
-                r.setAttribute("U8", info[2]);
-                r.setAttribute("NN", new Integer(info[3]).intValue());
+                r.setAttribute("IT", info[1]);
+                r.setAttribute("BC", info[2]);
+                r.setAttribute("U8", info[3]);
+                r.setAttribute("NN", new Integer(info[4]).intValue());
 
                 localSAMFileWriter.addAlignment(r);
             }

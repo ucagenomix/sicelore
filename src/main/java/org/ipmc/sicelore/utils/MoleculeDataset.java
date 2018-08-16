@@ -70,12 +70,15 @@ public class MoleculeDataset {
             if (remove_the_molecule) {
                 it.remove();
             }
+            // if we keep it, clean the cjhimeria reads based on length of cDNA
+            // of associated records, no more than 10% deviation to average
+            // TODO !
+            else{
+                molecule.cleanYourChimeriaReads();
+            }
         }
         log.info(new Object[]{"\tGI/BC/U8 Molecules\t[" + this.mapMolecules.size() + "]"});
-
-        // 3. clean chimeria reads from molecules based on US length deviation
-        // eventually remove the molecule if no more supporting reads.
-        // TODO !
+     
         // 4. set final geneId and transcriptId without picking one random in the list
         // should be possible if we have here the model file and select all transcripts from the x genes annotatng the molecule
         // TODO ! or NOT, if need the model, we will need it everytime....
@@ -98,7 +101,9 @@ public class MoleculeDataset {
 
         // 5. magGenes initialization for rapid Molecule retrieval
         List<Molecule> l;
-        int[] multiviews = new int[12];
+        int[] xreads = new int[21];
+        int[] xreads_iso = new int[21];
+        int[] xreads_undef = new int[21];
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
         while (it.hasNext()) {
@@ -113,12 +118,16 @@ public class MoleculeDataset {
             }
             // stats
             int nn = molecule.getLongreads().size();
-            if (nn > 10) {
-                nn = 10;
-            }
-            multiviews[nn]++;
+            if (nn > 20) { nn = 20; }
+            xreads[nn]++;
+            if("undef".equals(molecule.getTranscriptId()))
+                xreads_undef[nn]++;
+            else
+                xreads_iso[nn]++;
         }
-        log.info(new Object[]{"\tx-reads\t\t[1:" + multiviews[1] + ",2:" + multiviews[2] + ",3:" + multiviews[3] + ",4:" + multiviews[4] + ",5:" + multiviews[5] + ",6:" + multiviews[6] + ",7:" + multiviews[6] + ",8:" + multiviews[8] + ",9:" + multiviews[9] + ",10:" + multiviews[10] + "]"});
+        for(int i=1;i<21;i++){
+            log.info(new Object[]{"\t"+i+" reads molecules\t" + xreads_iso[i] + "\t" + xreads_undef[i]+ "\t" + xreads[i]});
+        }
     }
 
     public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException {
@@ -195,7 +204,7 @@ public class MoleculeDataset {
                 String dvres = String.format("%.3f", avg);
                 String sumres = String.format("%.2f", somme[ii]);
                 os.writeBytes("x" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres + "\n");
-                log.info(new Object[]{"\tx" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres});
+                //log.info(new Object[]{"\tx" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres});
             }
             os.close();
         } catch (Exception e) {
