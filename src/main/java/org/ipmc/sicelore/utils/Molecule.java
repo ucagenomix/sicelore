@@ -101,7 +101,7 @@ public class Molecule implements Callable<String> {
     }
 
     public String getLabel() {
-        return this.geneId + "|" + this.barcode + "|" + this.umi + "|x" + this.longreads.size();
+        return this.geneId + "|" + this.transcriptId + "|" + this.barcode + "|" + this.umi + "|" + this.longreads.size();
     }
 
     public void addLongread(Longread lr) {
@@ -126,7 +126,7 @@ public class Molecule implements Callable<String> {
     public void setIsoform(List<TranscriptRecord> transcripts, int DELTA, boolean SOFT) {
         for (Longread lr : this.longreads) {
             List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
-
+            /*
             for (LongreadRecord lrr : longreadrecords) {
                 TranscriptRecord transcriptrecord = getTranscript(transcripts, lrr, DELTA);
                 if (transcriptrecord != null) {
@@ -135,6 +135,27 @@ public class Molecule implements Callable<String> {
                         this.geneId = transcriptrecord.getGeneId();
                     }
                 }
+            }
+            */
+            for(LongreadRecord lrr : longreadrecords){
+                List list = junctionsFromExons(lrr.getExons());
+                /*
+                System.out.println(lrr.getName());
+                this.print(lrr.getExons());
+                this.print(list);
+                */
+		for(TranscriptRecord transcriptrecord: transcripts){
+                    List list1 = junctionsFromExons(transcriptrecord.getExons());
+		    
+                    //System.out.println(transcriptrecord.getTranscriptId());
+                    
+                    if(map(list, list1, DELTA, SOFT)){
+		        if("undef".equals(this.transcriptId)){
+                            this.transcriptId = transcriptrecord.getTranscriptId();
+		            this.geneId = transcriptrecord.getGeneId();
+		        }
+		    }
+		}
             }
         }
     }
@@ -192,10 +213,15 @@ public class Molecule implements Callable<String> {
 
         return localArrayList;
     }
+    public void print(List<int[]> junctions) {
+        for (int i = 0; i < junctions.size(); i++)
+            System.out.println(junctions.get(i)[0] + "-" + junctions.get(i)[1]);
+    }
 
     public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA, boolean SOFT) {
         boolean bool = true;
-
+        
+        
         if (SOFT) {
             if (tr_exons.size() <= lrr_exons.size()) {
                 for (int i = 0; i < tr_exons.size(); i++) {
@@ -211,15 +237,26 @@ public class Molecule implements Callable<String> {
                 for (int i = 0; i < tr_exons.size(); i++) {
                     if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
                         bool = false;
+                        
+                        //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
+
                     }
                 }
             } else {
                 bool = false;
+                //System.out.println("not same exons size");
             }
         }
+        
+        //System.out.println(tr_exons.size() + "\t" + lrr_exons.size() + "-->"+bool);
+        
         return bool;
     }
-
+    
+    public void cleanYourChimeriaReads(){
+        
+    }
+    
     public boolean isAlreadyIn(int[] paramArrayOfInt, List<int[]> paramList) {
         boolean bool = false;
         for (int[] arrayOfInt : paramList) {
@@ -279,7 +316,7 @@ public class Molecule implements Callable<String> {
         String bestRead = "";
 
         // should be an argument for consensus calling
-        int nb_max_best_reads = 5;
+        int nb_max_best_reads = 10;
 
         try {
             int nn = 0;
@@ -291,7 +328,7 @@ public class Molecule implements Callable<String> {
             while (iterator.hasNext() && nn < nb_max_best_reads) {
                 Longread lr = (Longread) iterator.next();
                 LongreadRecord lrr = lr.getAssociatedRecord();
-
+                
                 // in case we don't have an associated read, should not be possible 
                 // now that we remove unassociated molecule at new MoleculeDataset(bam) step
                 if (lrr != null) {
