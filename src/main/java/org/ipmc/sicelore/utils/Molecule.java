@@ -190,7 +190,6 @@ public class Molecule implements Callable<String> {
                 map_result.put(key, iii);
             }
         }
-
         List<int[]> list_lrr = junctionsFromExons(lrr.getExons());
         for (int j = 0; j < list_lrr.size(); j++) {
             Set<String> keys = map_result.keySet();

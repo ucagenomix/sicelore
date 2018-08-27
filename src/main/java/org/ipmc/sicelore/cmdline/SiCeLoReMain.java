@@ -2,6 +2,7 @@ package org.ipmc.sicelore.cmdline;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.ipmc.sicelore.programs.IlluminaOxfordBCUmiMerger;
 import picard.cmdline.PicardCommandLine;
 
 public class SiCeLoReMain extends PicardCommandLine {
@@ -18,6 +19,11 @@ public class SiCeLoReMain extends PicardCommandLine {
     }
 
     public static void main(String[] args) {
-        System.exit(new SiCeLoReMain().instanceMain(args, getPackageList(), COMMAND_LINE_NAME));
+        if(args.length > 0 && args[0].equals("IlluminaOxfordBCUmiMerger")) {
+            new IlluminaOxfordBCUmiMerger(args);
+        }
+        else {
+            System.exit(new SiCeLoReMain().instanceMain(args, getPackageList(), COMMAND_LINE_NAME));
+        }
     }
 }
