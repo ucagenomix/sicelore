@@ -127,8 +127,9 @@ public class Molecule implements Callable<String> {
         for (Longread lr : this.longreads) {
             List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
             if (SOFT) {
+                LinkedHashMap<String,Integer> map_result = create_rules(transcripts,DELTA);
                 for (LongreadRecord lrr : longreadrecords) {
-                    TranscriptRecord transcriptrecord = create_rules(transcripts, lrr, DELTA);
+                    TranscriptRecord transcriptrecord = asign_transcript(transcripts,lrr,DELTA,map_result);
                     if (transcriptrecord != null) {
                         if ("undef".equals(this.transcriptId)) {
                             this.transcriptId = transcriptrecord.getTranscriptId();
@@ -139,16 +140,19 @@ public class Molecule implements Callable<String> {
             } else {
                 for (LongreadRecord lrr : longreadrecords) {
                     List list = junctionsFromExons(lrr.getExons());
-
+                    
                     //System.out.println(lrr.getName());
                     //this.print(lrr.getExons());
                     //this.print(list);
 
                     for (TranscriptRecord transcriptrecord : transcripts) {
+                        
                         List list1 = junctionsFromExons(transcriptrecord.getExons());
-
                         //System.out.println(transcriptrecord.getTranscriptId());
-                        if (map(list, list1, DELTA, SOFT)) {
+                        int start_abs = Math.abs(transcriptrecord.getTxStart() - lrr.getTxStart());
+                        int  end_abs = Math.abs(transcriptrecord.getTxEnd() - lrr.getTxEnd());
+                        
+                        if (map(list, list1, DELTA, SOFT) && start_abs < DELTA && end_abs < DELTA) {
                             if ("undef".equals(this.transcriptId)) {
                                 this.transcriptId = transcriptrecord.getTranscriptId();
                                 this.geneId = transcriptrecord.getGeneId();
@@ -159,8 +163,7 @@ public class Molecule implements Callable<String> {
             }
         }
     }
-
-    public TranscriptRecord create_rules(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA) {
+    public LinkedHashMap<String,Integer> create_rules(List<TranscriptRecord> transcriptrecord,int DELTA) {
         LinkedHashMap<String, Integer> map_result = new LinkedHashMap<>();
         List<List<int[]>> list_transcript = new ArrayList<>();
         for (int cpt = 0; cpt < transcriptrecord.size(); cpt++) {
@@ -190,6 +193,9 @@ public class Molecule implements Callable<String> {
                 map_result.put(key, iii);
             }
         }
+        return map_result;
+    }
+    public TranscriptRecord asign_transcript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA, LinkedHashMap<String,Integer> map_result) {
         List<int[]> list_lrr = junctionsFromExons(lrr.getExons());
         for (int j = 0; j < list_lrr.size(); j++) {
             Set<String> keys = map_result.keySet();
@@ -223,7 +229,7 @@ public class Molecule implements Callable<String> {
 
     public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA, boolean SOFT) {
         boolean bool = true;
-
+        
         if (SOFT) {
             if (tr_exons.size() <= lrr_exons.size()) {
                 for (int i = 0; i < tr_exons.size(); i++) {

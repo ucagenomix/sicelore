@@ -3,6 +3,7 @@ package org.ipmc.sicelore.cmdline;
 import java.util.ArrayList;
 import java.util.List;
 import org.ipmc.sicelore.programs.IlluminaOxfordBCUmiMerger;
+import org.ipmc.sicelore.programs.BamReader;
 import picard.cmdline.PicardCommandLine;
 
 public class SiCeLoReMain extends PicardCommandLine {
@@ -19,16 +20,23 @@ public class SiCeLoReMain extends PicardCommandLine {
     }
 
     public static void main(String[] args) {
-        if(args.length > 0 && args[0].equals("IlluminaOxfordBCUmiMerger")) {
-            String[] argument = new String[args.length-1];
+        if (args.length > 0 && args[0].equals("IlluminaOxfordBCUmiMerger")) {
+            String[] argument = new String[args.length - 1];
             int j = 0;
-            for(int i=1; i< args.length;i++) {
+            for (int i = 1; i < args.length; i++) {
                 argument[j] = args[i];
                 j++;
             }
             new IlluminaOxfordBCUmiMerger(argument);
-        }
-        else {
+        } else if (args.length > 0 && args[0].equals("BamReader")) {
+            String[] argument = new String[args.length - 1];
+            int j = 0;
+            for (int i = 1; i < args.length; i++) {
+                argument[j] = args[i];
+                j++;
+            }
+            new BamReader(argument);
+        } else {
             System.exit(new SiCeLoReMain().instanceMain(args, getPackageList(), COMMAND_LINE_NAME));
         }
     }

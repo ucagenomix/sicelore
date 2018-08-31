@@ -21,7 +21,7 @@ import picard.cmdline.CommandLineProgram;
  * @author rainer
  *
  */
-@CommandLineProgramProperties(summary = "Test", oneLineSummary = "Test", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Premiere classe de Rainer", oneLineSummary = "Premiere classe de Rainer", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IlluminaOxfordBCUmiMerger extends CommandLineProgram {
 
