@@ -10,6 +10,7 @@ public class Matrix {
 
     private final Log log;
     private HashMap<String, HashMap<String, Integer>> matrice;
+    private HashMap<String, CellMetrics> cellMetrics;
 
     private HashSet<String> molecules;
     private HashSet<String> cells;
@@ -20,26 +21,42 @@ public class Matrix {
     private int total_remove = 0;
     private int total_isoform_def = 0;
     private int total_isoform_undef = 0;
-
-    public Matrix() {
+    
+    private boolean is_gene_level = false;
+    
+    public Matrix(boolean is_gene_level)
+    {
         log = Log.getInstance(Matrix.class);
         this.matrice = new HashMap<String, HashMap<String, Integer>>();
+        this.cellMetrics = new HashMap<String, CellMetrics>();
+        
         this.cells = new HashSet<String>();
         this.bcumi = new HashSet<String>();
+        this.is_gene_level = is_gene_level;
     }
 
-    public void addMolecule(Molecule molecule) {
+    public void addMolecule(Molecule molecule)
+    {
         HashMap mapCell = null;
         HashSet setUmi = null;
-        String isokey = molecule.getGeneId() + "\t" + molecule.getTranscriptId();
+        
         String molkey = molecule.getBarcode() + ":" + molecule.getUmi();
-
-        if (this.bcumi.contains(molkey)) {
+        String isokey = molecule.getGeneId() + "\t" + molecule.getTranscriptId();
+        if(this.is_gene_level)
+            isokey = molecule.getGeneId() + "\tundef";
+            
+        if (this.bcumi.contains(molkey)){
             System.out.println(molkey + " already in matrix !!!");
         }
 
         this.bcumi.add(molkey);
-
+        
+        if(! cellMetrics.containsKey(molecule.getBarcode())){    
+            cells.add(molecule.getBarcode());
+            cellMetrics.put(molecule.getBarcode(), new CellMetrics());
+        }
+        ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(),molecule.getTranscriptId());
+        
         if ("undef".equals(molecule.getTranscriptId())) {
             total_isoform_undef++;
         } else {
@@ -54,7 +71,6 @@ public class Matrix {
             } else {
                 setUmi = new HashSet();
                 setUmi.add(molecule.getUmi());
-                cells.add(molecule.getBarcode());
                 mapCell.put(molecule.getBarcode(), setUmi);
             }
         } else {
@@ -65,7 +81,8 @@ public class Matrix {
         }
     }
 
-    public void write(java.io.File paramFile, HashSet<String> authorizedCells) {
+    public void writeMatrix(java.io.File paramFile, HashSet<String> authorizedCells)
+    {
         DataOutputStream os = null;
         HashSet setUmi = null;
         try {
@@ -112,47 +129,39 @@ public class Matrix {
                 System.err.println("can not close stream");
             }
         }
-
-        this.displayMetrics();
     }
 
-    public void displayMetrics() {
+    public void writeMetrics(java.io.File paramFile, HashSet<String> authorizedCells)
+    {
+        DataOutputStream os = null;
+        
+        try {
+            os = new DataOutputStream(new java.io.FileOutputStream(paramFile));
+            os.writeBytes("cell\tisoform_total\tisoform_known\tisoform_undef\n");
+            Iterator<String> itcell = authorizedCells.iterator();
+            while (itcell.hasNext()) {
+                String cell_barcode = (String) itcell.next();
+                CellMetrics m = this.cellMetrics.get(cell_barcode);
+                if(m != null){
+                    int total = m.getIsoform_known_count() + m.getIsoform_undef_count();
+                    os.writeBytes(cell_barcode+"\t"+total+"\t"+m.getIsoform_known_count()+"\t" +m.getIsoform_undef_count()+"\n");
+                }
+                else{
+                    os.writeBytes(cell_barcode+"\t0\t0\t0\n");
+                }
+            }
+            
+            os.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+
+
         log.info(new Object[]{"\t\tMatrix cells\t\t[" + cells.size() + "]"});
         log.info(new Object[]{"\t\tMatrix gene isoforms\t[" + matrice.size() + "]"});
         log.info(new Object[]{"\t\tMatrix total counts\t[" + total_count + "]"});
         log.info(new Object[]{"\t\tMatrix isoform found\t[" + total_isoform_def + "]"});
         log.info(new Object[]{"\t\tMatrix isoform unknown\t[" + total_isoform_undef + "]"});
-        /*
-    	
-    	log.info(new Object[] { "\tMatrix molecules\t[" + molecules.size() + "]"});
-    	log.info(new Object[] { "\tMatrix molecule2isoform\t[" + molecule2isoform.size() + "]"});
-    	
-    	int nb=0;
-    	int ok=0;
-        Iterator it = molecule2isoform.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            String molkey = (String)pair.getKey();
-            String isokey = (String)pair.getValue();
-        	String[] dat = molkey.split("_");
-        	
-        	
-        	if(! this.features.contains(isokey)){
-        		System.out.println(isokey + " not found"); 
-        	}
-        	if(! this.cells.contains(dat[0])){
-        		System.out.println(dat[0] + " not found"); 
-        	}
-        	
-        	if(((HashSet)((HashMap)matrice.get(isokey)).get(dat[0])).contains(dat[1])){
-        		ok++;
-        		System.out.println(ok + "\tin\t" + isokey + "\t" + dat[0] + "\t" + dat[1]);
-        	}
-        	else{
-        		nb++;
-        		System.out.println(nb + "\tout\t" + isokey + "\t" + dat[0] + "\t" + dat[1]);
-        	}
-        }
-         */
     }
 }
