@@ -25,7 +25,7 @@ public class ExecuteCmd {
     public boolean run() {
         boolean bool = true;
         try {
-            System.out.println(commande[2]);
+            //System.out.println(commande[2]);
             commande[2] = commande[2].replaceAll("\\)", "\\\\)");
             commande[2] = commande[2].replaceAll("\\(", "\\\\(");
 
