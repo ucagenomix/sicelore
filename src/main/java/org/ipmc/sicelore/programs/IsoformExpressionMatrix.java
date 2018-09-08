@@ -15,20 +15,22 @@ import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Produce Isoforms Expression Matrix", oneLineSummary = "Produce Isoforms Expression Matrix", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class IsoformExpressionMatrix extends CommandLineProgram {
-
+public class IsoformExpressionMatrix extends CommandLineProgram
+{
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
     @Argument(shortName = "REFFLAT", doc = "The refFlat gene model file")
     public File REFFLAT;
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;
-    @Argument(shortName = "MATRIX", doc = "The transcripts count matrix file")
+    @Argument(shortName = "MATRIX", doc = "The count matrix file")
     public File MATRIX;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
     public int DELTA = 10;
     @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
     public boolean SOFT = false;
+    @Argument(shortName = "GENE", doc = "Wheter or not generate a count matrix per genes instead of per isoforms (default=false)")
+    public boolean GENE = false;
     @Argument(shortName = "METRICS", doc = "The output metrics file")
     public File METRICS;
 
@@ -57,9 +59,12 @@ public class IsoformExpressionMatrix extends CommandLineProgram {
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT);
         MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
-        Matrix matrix = dataset.DTEMatrix(model);
-        matrix.write(MATRIX, DTEcells);
-        dataset.displayMetrics(METRICS);
+        
+        Matrix matrix = dataset.produceMatrix(model, GENE);
+        matrix.writeMatrix(MATRIX, DTEcells);
+        matrix.writeMetrics(METRICS, DTEcells);
+        
+        //dataset.displayMetrics(METRICS);
     }
 
     public void loadDTEcells() {
