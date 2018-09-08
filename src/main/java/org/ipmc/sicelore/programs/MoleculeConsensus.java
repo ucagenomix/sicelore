@@ -25,6 +25,10 @@ public class MoleculeConsensus extends CommandLineProgram {
     public File REFFLAT;
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
+    @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
+    public int DELTA = 10;
+    @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
+    public boolean SOFT = false;
 
     public MoleculeConsensus() {
         log = Log.getInstance(MoleculeConsensus.class);
@@ -38,7 +42,7 @@ public class MoleculeConsensus extends CommandLineProgram {
 
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT);
-        MoleculeDataset dataset = new MoleculeDataset(bam, model, 10, false);
+        MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
 
         dataset.callConsensus(OUTPUT, nThreads);
 
