@@ -41,7 +41,12 @@ public class ReTagReadWithBarcodes extends CommandLineProgram {
                 r.setAttribute("IT", info[1]);
                 r.setAttribute("BC", info[2]);
                 r.setAttribute("U8", info[3]);
-                r.setAttribute("NN", new Integer(info[4]).intValue());
+                // molecule longreads
+                r.setAttribute("R1", new Integer(info[4]).intValue());
+                // molecule clean reads
+                r.setAttribute("R2", new Integer(info[5]).intValue());
+                // molecule consensus reads
+                r.setAttribute("R3", new Integer(info[6]).intValue());
 
                 localSAMFileWriter.addAlignment(r);
             }
