@@ -1,9 +1,13 @@
 package org.ipmc.sicelore.utils;
 
 import java.util.*;
-import org.ipmc.sicelore.utils.*;
+import org.ipmc.common.utils.ExecuteCmd;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import org.biojava.nbio.core.sequence.DNASequence;
 import org.biojava.nbio.core.sequence.io.*;
 import java.util.concurrent.*;
@@ -27,7 +31,10 @@ public class Molecule implements Callable<String> {
     private String consensus = "";
     private String geneId = "undef";
     private String transcriptId = "undef";
-
+    private int nbReads = 0;
+    private int nbCleanReads = 0;
+    private int nbConsensusReads = 0;
+    
     private final static HashMap<Character, Integer> encode;
     private final static char[] decode;
 
@@ -99,9 +106,19 @@ public class Molecule implements Callable<String> {
     public String getTranscriptId() {
         return this.transcriptId;
     }
-
+    
     public String getLabel() {
-        return this.geneId + "|" + this.transcriptId + "|" + this.barcode + "|" + this.umi + "|" + this.longreads.size();
+        return this.geneId + "|" + this.transcriptId + "|" + this.barcode + "|" + this.umi + "|" + this.nbReads + "|" + this.nbCleanReads + "|" + this.nbConsensusReads;
+    }
+    
+    public int getNbReads() {
+        return nbReads;
+    }
+    public int getNbCleanReads() {
+        return nbCleanReads;
+    }
+    public int getNbConsensusReads() {
+        return nbConsensusReads;
     }
 
     public void addLongread(Longread lr) {
@@ -123,12 +140,17 @@ public class Molecule implements Callable<String> {
         }
     }
 
-    public void setIsoform(List<TranscriptRecord> transcripts, int DELTA, boolean SOFT) {
+    public void setIsoform(List<TranscriptRecord> transcripts, int DELTA, boolean SOFT)
+    {
+        Collections.sort(this.longreads);
+        
         for (Longread lr : this.longreads) {
-            List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
-            if (SOFT) {
+            //List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
+            LongreadRecord lrr = lr.getAssociatedRecord();
+            
+            if (SOFT){
                 LinkedHashMap<String,Integer> map_result = create_rules(transcripts,DELTA);
-                for (LongreadRecord lrr : longreadrecords) {
+                //for (LongreadRecord lrr : longreadrecords) {
                     TranscriptRecord transcriptrecord = asign_transcript(transcripts,lrr,DELTA,map_result);
                     if (transcriptrecord != null) {
                         if ("undef".equals(this.transcriptId)) {
@@ -136,34 +158,30 @@ public class Molecule implements Callable<String> {
                             this.geneId = transcriptrecord.getGeneId();
                         }
                     }
-                }
-            } else {
-                for (LongreadRecord lrr : longreadrecords) {
+                //}
+            }
+            else { // ############### standard attribution here ###############
+                //for (LongreadRecord lrr : longreadrecords) {
                     List list = junctionsFromExons(lrr.getExons());
-                    
-                    //System.out.println(lrr.getName());
-                    //this.print(lrr.getExons());
-                    //this.print(list);
-
-                    for (TranscriptRecord transcriptrecord : transcripts) {
-                        
+                    for (TranscriptRecord transcriptrecord : transcripts)
+                    {                        
                         List list1 = junctionsFromExons(transcriptrecord.getExons());
-                        //System.out.println(transcriptrecord.getTranscriptId());
-                        int start_abs = Math.abs(transcriptrecord.getTxStart() - lrr.getTxStart());
-                        int  end_abs = Math.abs(transcriptrecord.getTxEnd() - lrr.getTxEnd());
-                        
-                        if (map(list, list1, DELTA, SOFT) && start_abs < DELTA && end_abs < DELTA) {
+                        if (map(list, list1, DELTA)) {
                             if ("undef".equals(this.transcriptId)) {
                                 this.transcriptId = transcriptrecord.getTranscriptId();
                                 this.geneId = transcriptrecord.getGeneId();
                             }
+                            //else if(!this.transcriptId.equals(transcriptrecord.getTranscriptId())){
+                            //    System.out.println("Other reads saying other transcriptId\t"+this.transcriptId+" --> "+transcriptrecord.getTranscriptId());
+                            //}
                         }
                     }
-                }
+                //}
             }
         }
     }
-    public LinkedHashMap<String,Integer> create_rules(List<TranscriptRecord> transcriptrecord,int DELTA) {
+    public LinkedHashMap<String,Integer> create_rules(List<TranscriptRecord> transcriptrecord,int DELTA)
+    {
         LinkedHashMap<String, Integer> map_result = new LinkedHashMap<>();
         List<List<int[]>> list_transcript = new ArrayList<>();
         for (int cpt = 0; cpt < transcriptrecord.size(); cpt++) {
@@ -195,7 +213,8 @@ public class Molecule implements Callable<String> {
         }
         return map_result;
     }
-    public TranscriptRecord asign_transcript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA, LinkedHashMap<String,Integer> map_result) {
+    public TranscriptRecord asign_transcript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA, LinkedHashMap<String,Integer> map_result)
+    {
         List<int[]> list_lrr = junctionsFromExons(lrr.getExons());
         for (int j = 0; j < list_lrr.size(); j++) {
             Set<String> keys = map_result.keySet();
@@ -227,40 +246,51 @@ public class Molecule implements Callable<String> {
         }
     }
 
-    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA, boolean SOFT) {
+    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA)
+    {
         boolean bool = true;
-        
-        if (SOFT) {
-            if (tr_exons.size() <= lrr_exons.size()) {
-                for (int i = 0; i < tr_exons.size(); i++) {
-                    if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
-                        bool = false;
-                    }
+        if (tr_exons.size() == lrr_exons.size()) {
+            for (int i = 0; i < tr_exons.size(); i++) {
+                if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
+                    bool = false;
+                    //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
                 }
-            } else {
-                bool = false;
             }
         } else {
-            if (tr_exons.size() == lrr_exons.size()) {
-                for (int i = 0; i < tr_exons.size(); i++) {
-                    if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
-                        bool = false;
-
-                        //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
-                    }
-                }
-            } else {
-                bool = false;
-                //System.out.println("not same exons size");
-            }
+            bool = false;
+            //System.out.println("not same exons size");
         }
-
         //System.out.println(tr_exons.size() + "\t" + lrr_exons.size() + "-->"+bool);
         return bool;
     }
 
-    public void cleanYourChimeriaReads() {
-
+    public void removeChimeriaReads()
+    {
+        double min_pct = 0.90;
+        double max_pct = 1.10;
+        
+        this.nbReads = this.longreads.size();
+        Collections.sort(this.longreads);
+        // this order to get the better a the last one
+        Collections.reverse(this.longreads);
+        
+        int median = this.getMedianCna();
+        
+        Iterator<Longread> it = this.longreads.iterator();
+        while (it.hasNext()){
+            Longread lr = (Longread) it.next();
+            LongreadRecord lrr = lr.getAssociatedRecord();
+                
+            // require to be longer than 90% length of median ExonBases of molecules records
+            //if(lrr.getExonBases() > (max_pct * medianExonBases) || lrr.getExonBases() < (min_pct * medianExonBases)){
+            if(lrr.getCdna().length() > (max_pct * median) || lrr.getCdna().length() < (min_pct * median)){
+                if(this.longreads.size() > 1){
+                    it.remove();
+                }
+            }
+        }
+        this.nbCleanReads = this.longreads.size();
+        Collections.sort(this.longreads);
     }
 
     public boolean isAlreadyIn(int[] paramArrayOfInt, List<int[]> paramList) {
@@ -314,45 +344,46 @@ public class Molecule implements Callable<String> {
         return getCharForIndex(retVal);
     }
 
-    public String call() throws Exception {
-        int nb = 0;
+    public String call() throws Exception
+    {
         double dvMin = 1.0;
         String bestRead = "";
+        //int maxExonBases=0;
+        double min_pct = 0.90;
+        double max_pct = 1.10;
+        List<DNASequence> lst = new ArrayList<DNASequence>();
 
         // should be an argument for consensus calling
         int nb_max_best_reads = 10;
 
         try {
-            int nn = 0;
-            String str = "";
             Collections.sort(this.longreads);
-            List<DNASequence> lst = new ArrayList<DNASequence>();
-
+            int medianExonBases = this.getMedianExonBases();
+            
             Iterator<Longread> iterator = this.longreads.iterator();
-            while (iterator.hasNext() && nn < nb_max_best_reads) {
+            while (iterator.hasNext() && lst.size() < nb_max_best_reads) {
                 Longread lr = (Longread) iterator.next();
                 LongreadRecord lrr = lr.getAssociatedRecord();
-
-                // in case we don't have an associated read, should not be possible 
-                // now that we remove unassociated molecule at new MoleculeDataset(bam) step
-                if (lrr != null) {
+                
+                //if(maxExonBases == 0)
+                //    maxExonBases = lrr.getExonBases();
+                
+                // require to be longer than 90% length of median ExonBases of molecules records
+                if(lrr.getExonBases() > (min_pct * medianExonBases) && lrr.getExonBases() < (max_pct * medianExonBases))
+                {
                     if (lrr.getDv() < dvMin) {
                         dvMin = lrr.getDv();
                         bestRead = lrr.getCdna();
                     }
                     lst.add(new DNASequence(lrr.getCdna()));
-                    nn++;
-                    str += "," + lrr.getDv();
                 }
             }
 
-            if (lst.size() < 3) {
-                this.consensus = bestRead;
-            } else {
-
-                //if(lst.size() > 3){
-                //  System.out.println(lst.size() + "\t" + str);
-                //}
+            //if("ACACCAAGTCGCGTGT".equals(this.barcode) && "CTGGGATTAC".equals(this.umi))
+            //    System.out.println(this.longreads.size()+"|"+lst.size());
+            this.nbConsensusReads = lst.size();
+            if (lst.size() < 3) { this.consensus = bestRead; }
+            else{
                 //SimpleGapPenalty gapP = new SimpleGapPenalty((short) 5, (short) 2);
                 //System.out.printf("Number of sequence to align\t" + lst.size() + "(" + getSizesOfSequence(lst) + ")\n");
                 Profile<DNASequence, NucleotideCompound> profile = Alignments.getMultipleSequenceAlignment(lst);
@@ -363,9 +394,7 @@ public class Molecule implements Callable<String> {
                 int nSeqLength = profile.getLength();
                 int nSeq = alignedSequence.size();
 
-                for (int x = 0; x < nSeqLength; x++) {
-                    posConsVector.add(new int[5]);
-                }
+                for (int x = 0; x < nSeqLength; x++) { posConsVector.add(new int[5]); }
 
                 for (int i = 0; i < nSeq; i++) {
                     String s = ((AlignedSequence) alignedSequence.get(i)).getSequenceAsString();
@@ -374,17 +403,131 @@ public class Molecule implements Callable<String> {
                     }
                 }
                 //ConcurrencyTools.shutdown();
-
                 for (int x = 0; x < nSeqLength; x++) {
                     this.consensus += getConsensusBase(((int[]) posConsVector.get(x)));
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        } catch (Exception e) { e.printStackTrace(); }
+        
         this.consensus = this.consensus.replaceAll("-", "");
-        //System.out.println(">"+this.getLabel()+"\n"+this.consensus);
+        
+        /*
+            Now need to polish the consensus with racon
+        */
+        if (lst.size() > 2) {
+            DataOutputStream os=null;
+            try{
+                String prefix = this.barcode + "" + this.umi;
+                os = new DataOutputStream(new FileOutputStream("/share/data/scratch/sicelore/"+prefix+"_consensus.fa"));
+                os.writeBytes(">"+this.barcode + this.umi+"\n"+this.consensus+"\n");
+                os.close();
+
+                os = new DataOutputStream(new FileOutputStream("/share/data/scratch/sicelore/"+prefix+"_reads.fa"));
+                Iterator<Longread> iterator = this.longreads.iterator();
+                while(iterator.hasNext()){
+                    Longread lr = (Longread) iterator.next();
+                    LongreadRecord lrr = lr.getAssociatedRecord();
+                    os.writeBytes(">"+lrr.getName()+"\n"+lrr.getCdna()+"\n");
+                }
+                os.close();
+
+                String[] commande = {"bash", "-c" , ""};
+                commande[2] = "/share/apps/local/minimap2/minimap2 --secondary=no -ax map-ont "+prefix+"_consensus.fa "+prefix+"_reads.fa > "+prefix+"_overlap.sam";
+                ExecuteCmd executeCmd = new ExecuteCmd(commande, new String[0], "/share/data/scratch/sicelore/");
+                executeCmd.run();
+
+                commande[2] = "/share/apps/local/racon/bin/racon "+prefix+"_reads.fa "+prefix+"_overlap.sam "+prefix+"_consensus.fa > "+prefix+"_corrected_consensus.fa";
+                executeCmd = new ExecuteCmd(commande, new String[0], "/share/data/scratch/sicelore/");
+                executeCmd.run();
+
+                BufferedReader fichier = new BufferedReader(new FileReader("/share/data/scratch/sicelore/"+prefix+"_corrected_consensus.fa"));
+                String line = fichier.readLine();
+                //System.out.println(this.getLabel() + "\n" + this.consensus);
+                this.consensus = fichier.readLine();
+                //System.out.println(this.getLabel() + "\n" + this.consensus);
+                fichier.close();
+
+                commande[2] = "rm "+prefix+"_reads.fa "+prefix+"_overlap.sam "+prefix+"_consensus.fa "+prefix+"_corrected_consensus.fa";
+                executeCmd = new ExecuteCmd(commande, new String[0], "/share/data/scratch/sicelore/");
+                executeCmd.run();
+           }
+            catch(Exception e){ e.printStackTrace(); }
+            finally { try { os.close(); } catch (Exception e) { System.err.println("can not close stream"); } }
+        }
+        
         return ">" + this.getLabel() + "\n" + this.consensus + "\n";
     }
+    
+    public int getMedianExonBases()
+    {
+        int[] numArray = new int[this.longreads.size()];
+        int i=0;
+        Iterator<Longread> iterator = this.longreads.iterator();
+        while (iterator.hasNext()) {
+            Longread lr = (Longread) iterator.next();
+            LongreadRecord lrr = lr.getAssociatedRecord();
+            
+            numArray[i++] = lrr.getExonBases();
+        }
+        
+        Arrays.sort(numArray);
+        int median;
+        if (numArray.length % 2 == 0)
+            median = ((int)numArray[numArray.length/2] + (int)numArray[numArray.length/2 - 1])/2;
+        else
+            median = (int) numArray[numArray.length/2];
+        
+        return median;
+    }
+    
+    public int getMedianCna()
+    {
+        int[] numArray = new int[this.longreads.size()];
+        int i=0;
+        Iterator<Longread> iterator = this.longreads.iterator();
+        while (iterator.hasNext()) {
+            Longread lr = (Longread) iterator.next();
+            LongreadRecord lrr = lr.getAssociatedRecord();
+            
+            numArray[i++] = lrr.getCdna().length();
+        }
+        
+        Arrays.sort(numArray);
+        int median;
+        if (numArray.length % 2 == 0)
+            median = ((int)numArray[numArray.length/2] + (int)numArray[numArray.length/2 - 1])/2;
+        else
+            median = (int) numArray[numArray.length/2];
+        
+        return median;
+    }
+    
+    public String getExonBasesString()
+    {
+        String exonBasesList = "";
+        Iterator<Longread> iterator = this.longreads.iterator();
+        while (iterator.hasNext()) {
+            Longread lr = (Longread) iterator.next();
+            LongreadRecord lrr = lr.getAssociatedRecord();
+            
+            exonBasesList += new Integer(lrr.getExonBases()).toString() + ",";
+        }
+                
+        return exonBasesList;
+    }
+
+    public String getCdnaString()
+    {
+        String str = "";
+        Iterator<Longread> iterator = this.longreads.iterator();
+        while (iterator.hasNext()) {
+            Longread lr = (Longread) iterator.next();
+            LongreadRecord lrr = lr.getAssociatedRecord();
+            
+            str += new Integer(lrr.getCdna().length()).toString() + ",";
+        }
+                
+        return str;
+    }
+    
 }
