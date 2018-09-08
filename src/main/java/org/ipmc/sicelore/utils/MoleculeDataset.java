@@ -28,7 +28,8 @@ public class MoleculeDataset {
     private DataOutputStream os;
     private Iterator itglobal;
 
-    public MoleculeDataset(LongreadParser bam, UCSCRefFlatParser model, int DELTA, boolean SOFT) {
+    public MoleculeDataset(LongreadParser bam, UCSCRefFlatParser model, int DELTA, boolean SOFT)
+    {
         Molecule molecule = null;
         this.mapMolecules = new HashMap<String, Molecule>();
         this.mapGenes = new HashMap<String, List<Molecule>>();
@@ -53,7 +54,28 @@ public class MoleculeDataset {
         }
         log.info(new Object[]{"\tTotal Molecules\t\t[" + this.mapMolecules.size() + "]"});
 
-        // 2. Remove molecules without any associated GI/BC/U8 read
+        int rr = 0;
+        int rrkept = 0;
+        // 3. Remove chimeria reads from molecules
+        cles = this.mapMolecules.keySet();
+        it = cles.iterator();
+        while (it.hasNext()) {
+            String molkey = (String) it.next();
+            molecule = (Molecule) this.mapMolecules.get(molkey);
+            
+            rr += molecule.getLongreads().size();
+            molecule.removeChimeriaReads();
+            rrkept += molecule.getLongreads().size();
+        }
+        
+        int chimeriaReads = rr-rrkept;
+        float percent = chimeriaReads * 100f / rr;
+        String formattedString = String.format("%.02f", percent);
+        
+        //log.info(new Object[]{"\tReads in Molecules\t[" + rr + "]"});
+        log.info(new Object[]{"\tChimeria reads removed\t[" + chimeriaReads + " " + formattedString + "%]"});
+     
+        // 3. Remove molecules without any associated GI/BC/U8 read or no more reads
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
         while (it.hasNext()) {
@@ -62,30 +84,20 @@ public class MoleculeDataset {
 
             boolean remove_the_molecule = true;
             List<Longread> longreads = molecule.getLongreads();
+            
             for (Longread lr : longreads) {
                 if (lr.getIs_associated()) {
                     remove_the_molecule = false;
                 }
             }
-            if (remove_the_molecule) {
+            if(remove_the_molecule) {
                 it.remove();
             }
-            // if we keep it, clean the cjhimeria reads based on length of cDNA
-            // of associated records, no more than 10% deviation to average
-            // TODO !
-            else{
-                molecule.cleanYourChimeriaReads();
-            }
         }
-        log.info(new Object[]{"\tGI/BC/U8 Molecules\t[" + this.mapMolecules.size() + "]"});
+        log.info(new Object[]{"\tRemaining Molecules\t[" + this.mapMolecules.size() + "]"});
      
-        // 4. set final geneId and transcriptId without picking one random in the list
-        // should be possible if we have here the model file and select all transcripts from the x genes annotatng the molecule
-        // TODO ! or NOT, if need the model, we will need it everytime....
-        HashMap<String, List<TranscriptRecord>> mapGenesTranscripts = model.getMapGenesTranscripts();
-
+        // 4. Running thought all molecules to set isoform
         log.info(new Object[]{"\tSetIsoforms\t\tstart..."});
-        // Running thought all molecules to set for isoform
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
         while (it.hasNext()) {
@@ -101,9 +113,6 @@ public class MoleculeDataset {
 
         // 5. magGenes initialization for rapid Molecule retrieval
         List<Molecule> l;
-        int[] xreads = new int[21];
-        int[] xreads_iso = new int[21];
-        int[] xreads_undef = new int[21];
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
         while (it.hasNext()) {
@@ -116,23 +125,14 @@ public class MoleculeDataset {
                 l.add(molecule);
                 mapGenes.put(molecule.getGeneId(), l);
             }
-            // stats
-            int nn = molecule.getLongreads().size();
-            if (nn > 20) { nn = 20; }
-            xreads[nn]++;
-            if("undef".equals(molecule.getTranscriptId()))
-                xreads_undef[nn]++;
-            else
-                xreads_iso[nn]++;
-        }
-        for(int i=1;i<21;i++){
-            log.info(new Object[]{"\t"+i+" reads molecules\t" + xreads_iso[i] + "\t" + xreads_undef[i]+ "\t" + xreads[i]});
         }
     }
 
     public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException {
         LongreadRecord record = LongreadRecord.fromSAMRecord(r);
-        //if(record == null) { softclipped++; return null; }
+        
+        if(record.getIsSecondaryOrSupplementary()) { return null; }
+        
         //if(record.getChrom().contains("_")) { chromstrange++; return null; }
         //if(record.getExonBases() == 0) { noexons++; return null; }
         //if(record.getGeneId() == null) { nogeneid++; return null; }
@@ -222,9 +222,9 @@ public class MoleculeDataset {
         return this.mapMolecules;
     }
 
-    public Matrix DTEMatrix(UCSCRefFlatParser model) {
+    public Matrix produceMatrix(UCSCRefFlatParser model, boolean is_gene_level) {
         int nb = 0;
-        Matrix matrix = new Matrix();
+        Matrix matrix = new Matrix(is_gene_level);
         HashMap<String, List<TranscriptRecord>> mapGenesTranscripts = model.getMapGenesTranscripts();
 
         log.info(new Object[]{"\tDTEMatrix\t\tstart...[" + mapGenesTranscripts.size() + "] genes"});
