@@ -23,12 +23,15 @@ public class Longread implements Comparable<Longread> {
         this.name = name;
         this.longreadrecords = new ArrayList<LongreadRecord>();
     }
+    
+    public int compareTo(Longread lr)
+    {
+        Float obj1 = new Float(lr.getAssociatedRecord().getDv());
+        Float obj2 = new Float(this.getAssociatedRecord().getDv());
+        int retval = obj2.compareTo(obj1);
+        return retval;
 
-    public int compareTo(Longread lr) {
-        //String obj1 = new Float(((Longread)lr).getName());
-        //String obj2 = new Float(this.name);
-        //int retval =  obj2.compareTo(obj1);
-        return 1;
+        //return ((Longread)lr).getAssociatedRecord().getExonBases() - this.getAssociatedRecord().getExonBases();
     }
 
     public String toString() {
@@ -36,7 +39,8 @@ public class Longread implements Comparable<Longread> {
         return str;
     }
 
-    public void addRecord(LongreadRecord lrr) {
+    public void addRecord(LongreadRecord lrr)
+    {
         this.longreadrecords.add(lrr);
 
         // is associated record
