@@ -53,7 +53,8 @@ public class LongreadParser implements LongreadModelParser {
         log.info(new Object[]{"\tTotal Longreads\t\t[" + mapLongreads.size() + "]"});
     }
 
-    public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException {
+    public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException
+    {
         LongreadRecord record = LongreadRecord.fromSAMRecord(r);
 
         //if(record == null) { return null; }
