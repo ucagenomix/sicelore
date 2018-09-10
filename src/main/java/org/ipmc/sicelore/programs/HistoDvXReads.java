@@ -23,7 +23,7 @@ public class HistoDvXReads extends CommandLineProgram {
     private ProgressLogger pl;
     @Argument(shortName = "I", doc = "The input retag molecule SAM or BAM file to analyze")
     public File INPUT;
-    @Argument(shortName = "O", doc = "The output histogram.txt")
+    @Argument(shortName = "O", doc = "The output molecule metrics file")
     public File OUTPUT;
 
     HashMap<String, MoleculeMetrics> map;
@@ -64,16 +64,13 @@ public class HistoDvXReads extends CommandLineProgram {
             log.info(new Object[]{"Parsing bam file\t\t...end"});
             
             os = new DataOutputStream(new FileOutputStream(OUTPUT));
-            os.writeBytes("geneId\ttranscriptId\tBC\tU8\txReads\txCleanReads\txConsensusReads\tpctId\n");
-            Set cles = map.keySet();
-            Iterator it = cles.iterator();
-            while (it.hasNext()) {
-                String key = (String) it.next();
+            os.writeBytes("barcode\tumi\tgeneId\ttranscriptId\ttotal_reads\tclean_reads\txconsensus_reads\tpctIdentity\n");
+            for(String key : map.keySet()){
                 MoleculeMetrics m = (MoleculeMetrics)this.map.get(key);
                 
                 // Cdk4|ENSMUST00000006911.11|CGCGTTTTCCAAACAC|TCACCCAGCA|120|108|10
                 String[] keys = key.split("\\|");
-                os.writeBytes(keys[0]+"\t"+keys[1]+"\t"+keys[2]+"\t"+keys[3]+"\t"+m.getXReads()+"\t"+m.getXCleanReads()+"\t"+m.getXConsensusReads()+"\t"+m.getPctId()+"\n");
+                os.writeBytes(keys[2]+"\t"+keys[3]+"\t"+keys[0]+"\t"+keys[1]+"\t"+m.getXReads()+"\t"+m.getXCleanReads()+"\t"+m.getXConsensusReads()+"\t"+m.getPctId()+"\n");
             }
             os.close();
 

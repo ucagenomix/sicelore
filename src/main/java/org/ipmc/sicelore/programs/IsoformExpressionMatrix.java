@@ -2,11 +2,8 @@ package org.ipmc.sicelore.programs;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Pattern;
-import htsjdk.samtools.*;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.CloseableIterator;
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -23,16 +20,14 @@ public class IsoformExpressionMatrix extends CommandLineProgram
     public File REFFLAT;
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;
-    @Argument(shortName = "MATRIX", doc = "The count matrix file")
-    public File MATRIX;
+    @Argument(shortName = "OUTDIR", doc = "The output directory")
+    public File OUTDIR;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
     public int DELTA = 10;
     @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
     public boolean SOFT = false;
-    @Argument(shortName = "GENE", doc = "Wheter or not generate a count matrix per genes instead of per isoforms (default=false)")
-    public boolean GENE = false;
-    @Argument(shortName = "METRICS", doc = "The output metrics file")
-    public File METRICS;
+    @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=sicelore)")
+    public String PREFIX = "sicelore";
 
     public HashSet<String> DTEcells;
     private final Log log;
@@ -51,23 +46,42 @@ public class IsoformExpressionMatrix extends CommandLineProgram
         return 0;
     }
 
-    protected void process() {
+    protected void process()
+    {
+        File ISOMATRIX   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isoforms_matrix.txt");
+        File ISOMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isoforms_metrics.txt");
+        File GENEMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genes_matrix.txt");
+        File GENEMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genes_metrics.txt");
+        File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cells_metrics.txt");
+
         loadDTEcells();
-        log.info(new Object[]{"Cells number\t\t[" + DTEcells.size() + "]"});
+        log.info(new Object[]{"Cells loaded\t\t[" + DTEcells.size() + "]"});
 
         // 4mn and 9.6Gb for 1.450.000 SAMrecords [747.000 molecules]
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT);
         MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
         
-        Matrix matrix = dataset.produceMatrix(model, GENE);
-        matrix.writeMatrix(MATRIX, DTEcells);
-        matrix.writeMetrics(METRICS, DTEcells);
+        Matrix matrix = dataset.produceMatrix(model, DTEcells);
+        matrix.writeIsoformMatrix(ISOMATRIX);
+        matrix.writeGeneMatrix(GENEMATRIX);
+        matrix.writeCellMetrics(CELLMETRICS);
+        matrix.writeGeneMetrics(GENEMETRICS);
+        matrix.writeIsoformMetrics(ISOMETRICS);
+        //matrix.writeDGESummary(DGESUMMARY));
+
+        log.info(new Object[]{"\t\tMatrix cells\t\t[" + matrix.getCellMetrics().size() + "]"});
+        log.info(new Object[]{"\t\tMatrix genes\t\t[" + matrix.getGeneMetrics().size() + "]"});
+        log.info(new Object[]{"\t\tMatrix isoforms\t[" + matrix.getMatrice().size() + "]"});
+        log.info(new Object[]{"\t\tMatrix total counts\t[" + matrix.getTotal_count() + "]"});
+        log.info(new Object[]{"\t\tMatrix isoform def\t[" + matrix.getTotal_isoform_def() + "]"});
+        log.info(new Object[]{"\t\tMatrix isoform undef\t[" + matrix.getTotal_isoform_undef() + "]"});
         
         //dataset.displayMetrics(METRICS);
     }
 
-    public void loadDTEcells() {
+    public void loadDTEcells()
+    {
         try {
             BufferedReader fichier = new BufferedReader(new FileReader(CSV));
             String line = fichier.readLine();

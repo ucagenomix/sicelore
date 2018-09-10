@@ -222,9 +222,10 @@ public class MoleculeDataset {
         return this.mapMolecules;
     }
 
-    public Matrix produceMatrix(UCSCRefFlatParser model, boolean is_gene_level) {
+    public Matrix produceMatrix(UCSCRefFlatParser model, HashSet<String> authorizedCells)
+    {
         int nb = 0;
-        Matrix matrix = new Matrix(is_gene_level);
+        Matrix matrix = new Matrix(authorizedCells);
         HashMap<String, List<TranscriptRecord>> mapGenesTranscripts = model.getMapGenesTranscripts();
 
         log.info(new Object[]{"\tDTEMatrix\t\tstart...[" + mapGenesTranscripts.size() + "] genes"});
