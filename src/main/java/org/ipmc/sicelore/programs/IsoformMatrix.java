@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ *
+ * @author kevin lebrigand
+ * 
+ */
 import java.io.*;
 import java.util.*;
 import htsjdk.samtools.util.IOUtil;
@@ -10,9 +15,9 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Produce Isoforms Expression Matrix", oneLineSummary = "Produce Isoforms Expression Matrix", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Compute expression matrices (isoforms and genes levels) and export metrics files", oneLineSummary = "Compute expression matrices (isoforms and genes levels) and export metrics files", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class IsoformExpressionMatrix extends CommandLineProgram
+public class IsoformMatrix extends CommandLineProgram
 {
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
@@ -32,8 +37,8 @@ public class IsoformExpressionMatrix extends CommandLineProgram
     public HashSet<String> DTEcells;
     private final Log log;
 
-    public IsoformExpressionMatrix() {
-        log = Log.getInstance(IsoformExpressionMatrix.class);
+    public IsoformMatrix() {
+        log = Log.getInstance(IsoformMatrix.class);
         this.DTEcells = new HashSet<String>();
     }
 
@@ -53,9 +58,10 @@ public class IsoformExpressionMatrix extends CommandLineProgram
         File GENEMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genes_matrix.txt");
         File GENEMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genes_metrics.txt");
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cells_metrics.txt");
+        //File MOLMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_ecarts_metrics.txt");
 
         loadDTEcells();
-        log.info(new Object[]{"Cells loaded\t\t[" + DTEcells.size() + "]"});
+        log.info(new Object[]{"Cells loaded\t\t\t[" + DTEcells.size() + "]"});
 
         // 4mn and 9.6Gb for 1.450.000 SAMrecords [747.000 molecules]
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
@@ -63,19 +69,19 @@ public class IsoformExpressionMatrix extends CommandLineProgram
         MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
         
         Matrix matrix = dataset.produceMatrix(model, DTEcells);
-        matrix.writeIsoformMatrix(ISOMATRIX);
+        matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS);
         matrix.writeGeneMatrix(GENEMATRIX);
         matrix.writeCellMetrics(CELLMETRICS);
         matrix.writeGeneMetrics(GENEMETRICS);
-        matrix.writeIsoformMetrics(ISOMETRICS);
-        //matrix.writeDGESummary(DGESUMMARY));
+        
+        //dataset.writeMoleculeMetrics(MOLMETRICS);
 
-        log.info(new Object[]{"\t\tMatrix cells\t\t[" + matrix.getCellMetrics().size() + "]"});
-        log.info(new Object[]{"\t\tMatrix genes\t\t[" + matrix.getGeneMetrics().size() + "]"});
-        log.info(new Object[]{"\t\tMatrix isoforms\t[" + matrix.getMatrice().size() + "]"});
-        log.info(new Object[]{"\t\tMatrix total counts\t[" + matrix.getTotal_count() + "]"});
-        log.info(new Object[]{"\t\tMatrix isoform def\t[" + matrix.getTotal_isoform_def() + "]"});
-        log.info(new Object[]{"\t\tMatrix isoform undef\t[" + matrix.getTotal_isoform_undef() + "]"});
+        log.info(new Object[]{"\tMatrix cells\t\t\t[" + matrix.getCellMetrics().size() + "]"});
+        log.info(new Object[]{"\tMatrix genes\t\t\t[" + matrix.getGeneMetrics().size() + "]"});
+        log.info(new Object[]{"\tMatrix isoforms\t\t\t[" + matrix.getMatrice().size() + "]"});
+        log.info(new Object[]{"\tMatrix total counts\t\t[" + matrix.getTotal_count() + "]"});
+        log.info(new Object[]{"\tMatrix isoform def\t\t[" + matrix.getTotal_isoform_def() + "]"});
+        log.info(new Object[]{"\tMatrix isoform undef\t\t[" + matrix.getTotal_isoform_undef() + "]"});
         
         //dataset.displayMetrics(METRICS);
     }
@@ -96,6 +102,6 @@ public class IsoformExpressionMatrix extends CommandLineProgram
     }
 
     public static void main(String[] args) {
-        System.exit(new IsoformExpressionMatrix().instanceMain(args));
+        System.exit(new IsoformMatrix().instanceMain(args));
     }
 }

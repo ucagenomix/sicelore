@@ -1,8 +1,11 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ *
+ * @author kevin lebrigand
+ * 
+ */
 import java.io.*;
-import java.util.*;
-import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -10,9 +13,9 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Procude molecule consensus sequence", oneLineSummary = "Procude molecule consensus sequence", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Compute and export molecule consensus sequence", oneLineSummary = "Compute and export molecule consensus sequence", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class MoleculeConsensus extends CommandLineProgram {
+public class ComputeConsensus extends CommandLineProgram {
 
     private final Log log;
     private htsjdk.samtools.util.ProgressLogger pl;
@@ -30,8 +33,8 @@ public class MoleculeConsensus extends CommandLineProgram {
     @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
     public boolean SOFT = false;
 
-    public MoleculeConsensus() {
-        log = Log.getInstance(MoleculeConsensus.class);
+    public ComputeConsensus() {
+        log = Log.getInstance(ComputeConsensus.class);
         pl = new htsjdk.samtools.util.ProgressLogger(log);
     }
 
@@ -50,6 +53,6 @@ public class MoleculeConsensus extends CommandLineProgram {
     }
 
     public static void main(String[] args) {
-        System.exit(new MoleculeConsensus().instanceMain(args));
+        System.exit(new ComputeConsensus().instanceMain(args));
     }
 }

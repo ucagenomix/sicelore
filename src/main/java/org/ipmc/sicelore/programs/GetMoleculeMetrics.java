@@ -2,9 +2,9 @@ package org.ipmc.sicelore.programs;
 
 /**
  *
- * @author kevin
+ * @author kevin lebrigand
+ *
  */
-
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.*;
@@ -17,7 +17,7 @@ import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Histogram of reference divergence function of number of longreads per molecule", oneLineSummary = "Histogram of reference divergence function of number of longreads per molecule", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
-public class HistoDvXReads extends CommandLineProgram {
+public class GetMoleculeMetrics extends CommandLineProgram {
 
     private final Log log;
     private ProgressLogger pl;
@@ -28,9 +28,9 @@ public class HistoDvXReads extends CommandLineProgram {
 
     HashMap<String, MoleculeMetrics> map;
 
-    public HistoDvXReads()
+    public GetMoleculeMetrics()
     {
-        log = Log.getInstance(HistoDvXReads.class);
+        log = Log.getInstance(GetMoleculeMetrics.class);
         pl = new ProgressLogger(log);
         map = new HashMap<String, MoleculeMetrics>(); 
     }
@@ -90,7 +90,7 @@ public class HistoDvXReads extends CommandLineProgram {
     }
 
     public static void main(String[] paramArrayOfString) {
-        System.exit(new HistoDvXReads().instanceMain(paramArrayOfString));
+        System.exit(new GetMoleculeMetrics().instanceMain(paramArrayOfString));
     }
 }
 

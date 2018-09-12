@@ -1,9 +1,12 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import java.util.*;
 import java.io.*;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import htsjdk.samtools.util.Log;
 
 public class Matrix
@@ -100,12 +103,15 @@ public class Matrix
         }
     }
 
-    public void writeIsoformMatrix(java.io.File paramFile)
+    public void writeIsoformMatrix(java.io.File isomatrix,java.io.File isometrics)
     {
         DataOutputStream os = null;
+        DataOutputStream os2 = null;
         HashSet setUmi = null;
         try {
-            os = new DataOutputStream(new java.io.FileOutputStream(paramFile));
+            os = new DataOutputStream(new java.io.FileOutputStream(isomatrix));
+            os2 = new DataOutputStream(new java.io.FileOutputStream(isometrics));
+            
             os.writeBytes("geneId\ttranscriptId");
             for(String key : cellMetrics.keySet())
                 os.writeBytes("\t" + key);
@@ -113,21 +119,26 @@ public class Matrix
 
             for(String isokey : matrice.keySet()){
                 os.writeBytes(isokey);
+                os2.writeBytes(isokey);
+                int total = 0;
                 for(String cell_barcode : cellMetrics.keySet()){
                     if ((setUmi = (HashSet) ((HashMap) matrice.get(isokey)).get(cell_barcode)) != null) {
                         os.writeBytes("\t" + setUmi.size());
                         this.total_count += setUmi.size();
+                        total += setUmi.size();
                     }
                     else
                         os.writeBytes("\t0");
                 }
                 os.writeBytes("\n");
+                os2.writeBytes("\t" + total + "\n");
             }
             os.close();
+            os2.close();
         } catch (Exception e) {
             e.printStackTrace();
-            try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
-        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+            try { os.close();  os2.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close();  os2.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
     }
     
     public void writeGeneMatrix(java.io.File paramFile)
@@ -201,34 +212,6 @@ public class Matrix
                 }
                 else{
                     os.writeBytes(geneId+"\t0\t0\t0\n");
-                }
-            }
-            
-            os.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
-        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
-    }
-    
-    public void writeIsoformMetrics(java.io.File paramFile)
-    {
-        DataOutputStream os = null;
-        
-        try {
-            os = new DataOutputStream(new java.io.FileOutputStream(paramFile));
-            os.writeBytes("transcriptId\ttotal\n");
-            for(String geneId : geneMetrics.keySet())
-            {
-                // per transcript here ! -> new matrice ?
-                
-                GeneMetrics gm = this.geneMetrics.get(geneId);
-                if(gm != null){
-                    int total = gm.getIsoform_known_count() + gm.getIsoform_undef_count();
-                    os.writeBytes(geneId+"\t"+total+"\t"+gm.getIsoform_known_count()+"\t" +gm.getIsoform_undef_count()+"\n");
-                }
-                else{
-                    os.writeBytes(geneId+"\t0\n");
                 }
             }
             

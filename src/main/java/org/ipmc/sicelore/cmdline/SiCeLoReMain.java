@@ -3,7 +3,7 @@ package org.ipmc.sicelore.cmdline;
 import java.util.ArrayList;
 import java.util.List;
 import org.ipmc.sicelore.programs.IlluminaOxfordBCUmiMerger;
-import org.ipmc.sicelore.programs.BamReader;
+import org.ipmc.sicelore.programs.BamSerializer;
 import picard.cmdline.PicardCommandLine;
 
 public class SiCeLoReMain extends PicardCommandLine {
@@ -35,7 +35,7 @@ public class SiCeLoReMain extends PicardCommandLine {
                 argument[j] = args[i];
                 j++;
             }
-            new BamReader(argument);
+            new BamSerializer(argument);
         } else {
             System.exit(new SiCeLoReMain().instanceMain(args, getPackageList(), COMMAND_LINE_NAME));
         }

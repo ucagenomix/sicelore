@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ *
+ * @author kevin lebrigand
+ *
+ */
 import java.util.*;
 import java.io.*;
 import htsjdk.samtools.*;
@@ -143,7 +148,8 @@ public class MoleculeDataset {
         return record;
     }
 
-    public List<Molecule> select(String mygene) {
+    public List<Molecule> select(String mygene)
+    {
         return (List<Molecule>) mapGenes.get(mygene);
         /*
     	List<Molecule> filteredList = new ArrayList<Molecule>();
@@ -160,63 +166,27 @@ public class MoleculeDataset {
          */
     }
 
-    public void displayMetrics(File OUTPUT) {
-        Integer i = null;
+     public void writeMoleculeMetrics(java.io.File paramFile)
+    {
         DataOutputStream os = null;
-
-        int[] count = new int[11];
-        double[] somme = new double[11];
-
-        Set cles = this.mapMolecules.keySet();
-        Iterator<String> it = cles.iterator();
-        while (it.hasNext()) {
-            String key = (String) it.next();
-            Molecule molecule = (Molecule) mapMolecules.get(key);
-            List<Longread> longreads = molecule.getLongreads();
-
-            float min_dv = 1;
-            int xtimes = longreads.size();
-            for (Longread lr : longreads) {
-                List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
-                for (LongreadRecord lrr : longreadrecords) {
-                    float dv = lrr.getDv();
-                    if (dv < min_dv) {
-                        min_dv = dv;
-                    }
-                }
-            }
-            double pctId = 1.0 - min_dv;
-            if (xtimes >= 10) {
-                xtimes = 10;
-            }
-            count[xtimes]++;
-            somme[xtimes] += pctId;
-        }
-
+        
         try {
-            log.info(new Object[]{"\tx_times\tavg_dv\tnb_mol\tsum"});
-            os = new DataOutputStream(new FileOutputStream(OUTPUT));
-            for (int ii = 1; ii < 11; ii++) {
-                double avg = 0.0;
-                if (count[ii] > 0) {
-                    avg = somme[ii] / count[ii];
-                }
-                String dvres = String.format("%.3f", avg);
-                String sumres = String.format("%.2f", somme[ii]);
-                os.writeBytes("x" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres + "\n");
-                //log.info(new Object[]{"\tx" + ii + "\t" + dvres + "\t" + count[ii] + "\t" + sumres});
+            os = new DataOutputStream(new java.io.FileOutputStream(paramFile));
+            os.writeBytes("barcode\tumi\tgeneId\ttranscriptId\ttotal_reads\tclean_reads\tconsensus_reads\tecarts\n");
+            
+            for(String molkey : mapMolecules.keySet()){
+                Molecule molecule = (Molecule) mapMolecules.get(molkey);
+                
+                os.writeBytes(molecule.getPctEcartMedian()+"\n");
             }
+            
             os.close();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            try {
-                os.close();
-            } catch (Exception e) {
-                System.err.println("can not close stream");
-            }
-        }
+            try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
     }
+
 
     public HashMap<String, Molecule> getMapMolecules() {
         return this.mapMolecules;

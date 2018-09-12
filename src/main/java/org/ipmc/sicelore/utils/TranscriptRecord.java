@@ -1,7 +1,11 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import java.util.*;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class TranscriptRecord implements Comparable<TranscriptRecord> {

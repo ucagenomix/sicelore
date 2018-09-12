@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import htsjdk.samtools.SAMRecord;
 
 public interface LongreadModelParser {

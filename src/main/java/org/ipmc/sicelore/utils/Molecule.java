@@ -1,26 +1,23 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import java.util.*;
 import org.ipmc.common.utils.ExecuteCmd;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.*;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import org.biojava.nbio.core.sequence.DNASequence;
-import org.biojava.nbio.core.sequence.io.*;
 import java.util.concurrent.*;
 import org.apache.commons.lang3.*;
 import org.biojava.nbio.alignment.Alignments;
 import org.biojava.nbio.core.alignment.template.Profile;
-import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
-import org.biojava.nbio.core.util.ConcurrencyTools;
-import org.biojava.nbio.core.sequence.compound.DNACompoundSet;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
-import org.biojava.nbio.core.alignment.SimpleAlignedSequence;
 import org.biojava.nbio.core.alignment.template.AlignedSequence;
-import org.biojava.nbio.alignment.SimpleGapPenalty;
 
 public class Molecule implements Callable<String> {
 
@@ -34,6 +31,7 @@ public class Molecule implements Callable<String> {
     private int nbReads = 0;
     private int nbCleanReads = 0;
     private int nbConsensusReads = 0;
+    private String pctEcartMedian = "";
     
     private final static HashMap<Character, Integer> encode;
     private final static char[] decode;
@@ -80,7 +78,11 @@ public class Molecule implements Callable<String> {
     public HashSet<String> getGeneIds() {
         return geneIds;
     }
-
+    
+    public String getPctEcartMedian() {
+        return pctEcartMedian;
+    }
+    
     public String[] getGeneIdsArray() {
         String[] array = new String[this.geneIds.size()];
         this.geneIds.toArray(array);
@@ -274,13 +276,17 @@ public class Molecule implements Callable<String> {
         // this order to get the better a the last one
         Collections.reverse(this.longreads);
         
-        int median = this.getMedianCna();
+        double median = this.getMedianCna();
         
         Iterator<Longread> it = this.longreads.iterator();
         while (it.hasNext()){
             Longread lr = (Longread) it.next();
             LongreadRecord lrr = lr.getAssociatedRecord();
-                
+            
+            double pct = ((lrr.getCdna().length() - median) * 100) / median;
+            pctEcartMedian += String.format("%.02f", pct) + "\n";
+            //System.out.println(pctEcartMedian);
+            
             // require to be longer than 90% length of median ExonBases of molecules records
             //if(lrr.getExonBases() > (max_pct * medianExonBases) || lrr.getExonBases() < (min_pct * medianExonBases)){
             if(lrr.getCdna().length() > (max_pct * median) || lrr.getCdna().length() < (min_pct * median)){
@@ -480,7 +486,7 @@ public class Molecule implements Callable<String> {
         return median;
     }
     
-    public int getMedianCna()
+    public double getMedianCna()
     {
         int[] numArray = new int[this.longreads.size()];
         int i=0;
@@ -493,7 +499,7 @@ public class Molecule implements Callable<String> {
         }
         
         Arrays.sort(numArray);
-        int median;
+        double median;
         if (numArray.length % 2 == 0)
             median = ((int)numArray[numArray.length/2] + (int)numArray[numArray.length/2 - 1])/2;
         else

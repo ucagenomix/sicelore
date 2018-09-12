@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import java.io.*;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
@@ -10,7 +15,7 @@ import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", oneLineSummary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class ReTagReadWithBarcodes extends CommandLineProgram {
+public class AddBamMoleculeTags extends CommandLineProgram {
 
     private final Log log;
     private ProgressLogger pl;
@@ -19,8 +24,8 @@ public class ReTagReadWithBarcodes extends CommandLineProgram {
     @Argument(shortName = "O", doc = "The output SAM or BAM file with tags")
     public File OUTPUT;
 
-    public ReTagReadWithBarcodes() {
-        log = Log.getInstance(ReTagReadWithBarcodes.class);
+    public AddBamMoleculeTags() {
+        log = Log.getInstance(AddBamMoleculeTags.class);
         pl = new ProgressLogger(log);
     }
 
@@ -60,6 +65,6 @@ public class ReTagReadWithBarcodes extends CommandLineProgram {
     }
 
     public static void main(String[] paramArrayOfString) {
-        System.exit(new ReTagReadWithBarcodes().instanceMain(paramArrayOfString));
+        System.exit(new AddBamMoleculeTags().instanceMain(paramArrayOfString));
     }
 }

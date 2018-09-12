@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ *
+ * @author rainer waldmann
+ *
+ */
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,14 +19,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-/**
- *
- *
- *
- * @author rainer
- *
- */
-@CommandLineProgramProperties(summary = "Premiere classe de Rainer", oneLineSummary = "Premiere classe de Rainer", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Identify and transfert illumina barcodes to Nanopore reads", oneLineSummary = "Identify and transfert illumina barcodes to Nanopore reads", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IlluminaOxfordBCUmiMerger extends CommandLineProgram {
 

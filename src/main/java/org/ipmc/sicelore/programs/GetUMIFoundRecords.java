@@ -1,64 +1,53 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ *
+ * @author kevin lebrigand
+ *
+ */
 import java.io.*;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.math.BigInteger;
-import gnu.trove.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Filter for reads that have at least a SAMrecord containing GI, BC and a U8 tags", oneLineSummary = "Filter for reads that have at least a SAMrecord containing GI, BC and a U8 tags", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Filter BC/U8 molecule records", oneLineSummary = "Filter BC/U8 molecule records", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
-public class FilterGetMoleculeReads extends CommandLineProgram {
+public class GetUMIFoundRecords extends CommandLineProgram {
 
     private final Log log;
     private htsjdk.samtools.util.ProgressLogger pl;
-    private HashSet<String> reads;
 
-    @Argument(shortName = "I", doc = "The input unfiltered BAM file")
+    @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
-    @Argument(shortName = "U", doc = "The input UMI found BAM file")
-    public File UMIFOUND;
     @Argument(shortName = "O", doc = "The output BAM file")
     public File OUTPUT;
 
-    public FilterGetMoleculeReads() {
-        log = Log.getInstance(FilterGetMoleculeReads.class);
+    public GetUMIFoundRecords() {
+        log = Log.getInstance(GetUMIFoundRecords.class);
         pl = new htsjdk.samtools.util.ProgressLogger(log);
-
-        reads = new HashSet<String>();
     }
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(UMIFOUND);
+        int ww = 0;
+
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        htsjdk.samtools.SamReader umifoundSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(UMIFOUND);
         htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
-
         htsjdk.samtools.SAMFileHeader header = inputSam.getFileHeader();
         SAMFileWriter outputSam = new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
 
         try {
-            log.info(new Object[]{"Parsing UMIfound file\tstart..."});
-            for (SAMRecord r : umifoundSam) {
-                pl.record(r);
-                reads.add(r.getReadName());
-            }
-            umifoundSam.close();
-            log.info(new Object[]{"Parsing UMIfound file\tend..."});
-
-            pl = new htsjdk.samtools.util.ProgressLogger(log);
-            log.info(new Object[]{"Generating Molecule Reads file\tstart..."});
             for (SAMRecord r : inputSam) {
                 pl.record(r);
-                if (reads.contains(r.getReadName())) {
+                String read_id = r.getReadName();
+                String barcode = (String) r.getAttribute("BC");
+                String umi = (String) r.getAttribute("U8");
+
+                if (barcode != null && umi != null) {
                     outputSam.addAlignment(r);
                 }
             }
@@ -68,7 +57,6 @@ public class FilterGetMoleculeReads extends CommandLineProgram {
             e.printStackTrace();
         } finally {
             try {
-                umifoundSam.close();
                 inputSam.close();
                 outputSam.close();
             } catch (Exception e) {
@@ -80,7 +68,7 @@ public class FilterGetMoleculeReads extends CommandLineProgram {
     }
 
     public static void main(String[] args) {
-        System.exit(new FilterGetMoleculeReads().instanceMain(args));
+        System.exit(new GetUMIFoundRecords().instanceMain(args));
     }
 
 }

@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ * 
+ * @author rainer waldmann
+ * 
+ */
 import java.io.File;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -12,27 +17,16 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-/**
- *
- * parses 10x bam file and serializes n requested top cells (most Umis) into a
- *
- * java object file. Format is HashMap<GeneName,
- *
- * Hashmap<CellBarcode,HashMap<UMIseq,UmiReadCount>>> @author rainer
- *
- *
- *
- */
-@CommandLineProgramProperties(summary = "Seconde class donnée par Rainer", oneLineSummary = "Seconde class donnée par Rainer", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Pre-process 10xGenomics possorted_genome_bam.bam file and serializes requested top cells (most Umis) into a java object file", oneLineSummary = "Pre-process 10xGenomics possorted_genome_bam.bam file and serializes requested top cells (most Umis) into a java object file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class BamReader extends CommandLineProgram {
+public class BamSerializer extends CommandLineProgram {
 
     /**
      *
      * @param args the command line arguments
      *
      */
-    public BamReader(String[] args) {
+    public BamSerializer(String[] args) {
 
         File inFile;
 
@@ -52,7 +46,7 @@ public class BamReader extends CommandLineProgram {
 
             HelpFormatter formatter = new HelpFormatter();
 
-            formatter.printHelp("10x bam reader\n parses 10x bam files and creates Hashmaps that are used to identify corresponding Nanopore reads ", options);
+            formatter.printHelp("10x bam preprocessor\n parses 10x bam files and creates Hashmaps that are used to identify corresponding Nanopore reads ", options);
 
             System.exit(1);
 

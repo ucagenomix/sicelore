@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import java.util.*;
 import java.io.*;
 import htsjdk.samtools.*;

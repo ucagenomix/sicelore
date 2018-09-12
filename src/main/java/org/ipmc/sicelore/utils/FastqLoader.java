@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import gnu.trove.THashMap;
 import java.io.BufferedReader;
 import java.io.File;

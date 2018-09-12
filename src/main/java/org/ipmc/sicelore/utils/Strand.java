@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.utils;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 public enum Strand {
     FORWARD {
         public String toString() {

@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import org.ipmc.sicelore.utils.*;
 import gnu.trove.THashMap;
 import htsjdk.samtools.*;
@@ -12,7 +17,7 @@ import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Tag read with fastq sequence", oneLineSummary = "Tag read with fastq sequence", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class TagReadWithSequence extends CommandLineProgram {
+public class AddBamReadSequenceTag extends CommandLineProgram {
 
     private final Log log;
     private ProgressLogger pl;
@@ -25,8 +30,8 @@ public class TagReadWithSequence extends CommandLineProgram {
     @Argument(shortName = "TAG", doc = "The tag <default=US>")
     public String TAG;
 
-    public TagReadWithSequence() {
-        log = Log.getInstance(TagReadWithSequence.class);
+    public AddBamReadSequenceTag() {
+        log = Log.getInstance(AddBamReadSequenceTag.class);
         pl = new ProgressLogger(log);
         TAG = "US";
     }
@@ -75,6 +80,6 @@ public class TagReadWithSequence extends CommandLineProgram {
     }
 
     public static void main(String[] paramArrayOfString) {
-        System.exit(new TagReadWithSequence().instanceMain(paramArrayOfString));
+        System.exit(new AddBamReadSequenceTag().instanceMain(paramArrayOfString));
     }
 }

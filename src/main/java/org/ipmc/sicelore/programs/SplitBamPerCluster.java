@@ -1,5 +1,10 @@
 package org.ipmc.sicelore.programs;
 
+/**
+ * 
+ * @author kevin lebrigand
+ * 
+ */
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.BufferedReader;
@@ -44,7 +49,6 @@ public class SplitBamPerCluster extends CommandLineProgram {
         try {
             BufferedReader localBufferedReader = new BufferedReader(new java.io.FileReader(CSV));
             str1 = localBufferedReader.readLine();
-            str1.split(",");
             str1 = localBufferedReader.readLine();
             while (str1 != null) {
                 String[] localObject = str1.split(",");
