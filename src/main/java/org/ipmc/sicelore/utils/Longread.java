@@ -42,10 +42,15 @@ public class Longread implements Comparable<Longread> {
 
         // is associated record
         if (lrr.getIs_associated()) {
+
+            if(this.is_associated && !this.geneId.equals(lrr.getGeneId()))
+                System.out.println(this.geneId+"|"+this.barcode+"|"+this.umi+" already associated ("+lrr.getGeneId()+")");
+
             this.geneId = lrr.getGeneId();
             this.barcode = lrr.getBarcode();
             this.umi = lrr.getUmi();
             this.is_associated = true;
+            
         }
     }
 

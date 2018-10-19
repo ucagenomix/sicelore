@@ -14,7 +14,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Filter all reads for molecules with an associated record (GI/BC/U8)", oneLineSummary = "Filter all reads for molecules with an associated record (GI/BC/U8)", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Filter associated (BC and U8 tags) molecules all SAMrecords", oneLineSummary = "Filter associated (BC and U8 tags) molecules all SAMrecords", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class GetUMIFoundAllReads extends CommandLineProgram {
 

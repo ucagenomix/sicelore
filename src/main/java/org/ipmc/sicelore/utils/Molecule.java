@@ -149,7 +149,7 @@ public class Molecule implements Callable<String> {
         for (Longread lr : this.longreads) {
             //List<LongreadRecord> longreadrecords = lr.getLongreadrecords();
             LongreadRecord lrr = lr.getAssociatedRecord();
-            
+            /*
             if (SOFT){
                 LinkedHashMap<String,Integer> map_result = create_rules(transcripts,DELTA);
                 //for (LongreadRecord lrr : longreadrecords) {
@@ -164,11 +164,15 @@ public class Molecule implements Callable<String> {
             }
             else { // ############### standard attribution here ###############
                 //for (LongreadRecord lrr : longreadrecords) {
+            */
                     List list = junctionsFromExons(lrr.getExons());
                     for (TranscriptRecord transcriptrecord : transcripts)
                     {                        
                         List list1 = junctionsFromExons(transcriptrecord.getExons());
-                        if (map(list, list1, DELTA)) {
+                        
+                        // faire tous les reads et chsoisir a la fin l'isoform la plus probable !!
+                        
+                        if (map(list, list1, DELTA, SOFT)) {
                             if ("undef".equals(this.transcriptId)) {
                                 this.transcriptId = transcriptrecord.getTranscriptId();
                                 this.geneId = transcriptrecord.getGeneId();
@@ -179,7 +183,7 @@ public class Molecule implements Callable<String> {
                         }
                     }
                 //}
-            }
+            //}
         }
     }
     public LinkedHashMap<String,Integer> create_rules(List<TranscriptRecord> transcriptrecord,int DELTA)
@@ -215,6 +219,7 @@ public class Molecule implements Callable<String> {
         }
         return map_result;
     }
+    
     public TranscriptRecord asign_transcript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA, LinkedHashMap<String,Integer> map_result)
     {
         List<int[]> list_lrr = junctionsFromExons(lrr.getExons());
@@ -248,19 +253,30 @@ public class Molecule implements Callable<String> {
         }
     }
 
-    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA)
+    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA, boolean SOFT)
     {
         boolean bool = true;
-        if (tr_exons.size() == lrr_exons.size()) {
-            for (int i = 0; i < tr_exons.size(); i++) {
-                if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
-                    bool = false;
-                    //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
-                }
+	if(SOFT){
+            if(tr_exons.size() <= lrr_exons.size()){
+	   	for(int i=0; i<tr_exons.size(); i++){
+                    if(!isIn((int[])tr_exons.get(i), lrr_exons, DELTA))
+	        	bool = false;
+	       }
             }
-        } else {
-            bool = false;
-            //System.out.println("not same exons size");
+	    else{ bool = false; }
+	}
+	else{
+            if (tr_exons.size() == lrr_exons.size()) {
+                for (int i = 0; i < tr_exons.size(); i++) {
+                    if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
+                        bool = false;
+                        //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
+                    }
+                }
+            } else {
+                bool = false;
+                //System.out.println("not same exons size");
+            }
         }
         //System.out.println(tr_exons.size() + "\t" + lrr_exons.size() + "-->"+bool);
         return bool;

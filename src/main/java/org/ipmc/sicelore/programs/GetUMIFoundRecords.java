@@ -13,7 +13,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Filter BC/U8 molecule records", oneLineSummary = "Filter BC/U8 molecule records", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Filter BC/U8 SAMrecords", oneLineSummary = "Filter BC/U8 SAMrecords", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class GetUMIFoundRecords extends CommandLineProgram {
 
