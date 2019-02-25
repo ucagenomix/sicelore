@@ -18,6 +18,7 @@ processing of sequencing runs of the same unfragmented library on Nanopore devic
 ## Features
 
 * [10xGenomics possorted_genome_bam.bam preprocessing](#preprocessing)
+* [Long reads scanning](#scanning)
 * [minimap2 mapping of Nanopore reads](#minimap2-mapping)
 * [Long reads SAM records Gene name tagging (GE) with dropseq.jar](#gene-name-tagging)
 * [Long reads SAM records read sequence tagging (US)](#TagReadWithSequence)
@@ -29,29 +30,43 @@ processing of sequencing runs of the same unfragmented library on Nanopore devic
 
 
 ## preprocessing
-Parsing of 10xGenomics possorted_genome_bam.bam file for production of parsedForNanopore.obj java object required for illumina cell barcode and UMI transfert to Nanopore reads
+Parsing of 10xGenomics possorted_genome_bam.bam file for production of parsedForNanopore.obj java object required during illumina barcodes (BC/UMI) transfert to Nanopore reads.
+
+```bash
+
+```
+## scanning
+Long read scan operation to filter out low quality reads in which we won't be abble to find the Illlumina barcodes. The reads where we detect a polyA tail are kept and eventually reversed/complemetned to fit for structure (TSO)-(cDNA)-(polyA)-(BC)-(UMI)-(ADAPTOR)
+so the next steps could considered as stranded.
 
 ```bash
 
 ```
 
 ## minimap2 mapping
-Nanopore reads genome mapping step
+Reads are first splitted in 24 chunks for time optimization and distribution accross the calcul custer.
+Parallel Nanopore long read genome mapping  is then performed using minimap2.
+
 
 ```bash
-minimap2 -ax splice -t ... $BUILD.mmi nanopore_reads.fastq > minimap.sam
-"/bin/awk '{ if($3 !="*") print $0 }' minimap.sam > minimap.match.sam
-samtools view -Sb minimap.match.sam -o minimap.unsorted.bam
-samtools sort minimap.unsorted.bam -o minimap.bam
-samtools index minimap.bam
+# fastq splitting
+fastp -i PROMxxxxxx.fastq -Q -A --thread 20 --split_prefix_digits=4 --out1=sub.fastq --split=24
+
+# then parallel mapping
+minimap2 -a -x splice -t 20 -N 100 $BUILD.mmi 0001.sub.fastq > 0001.sub.sam
+"/bin/awk '{ if($3 !="*") print $0 }' 0001.sub.sam > 0001.sub.match.sam
+samtools view -Sb 0001.sub.match.sam -o 0001.sub.unsorted.bam
+samtools sort 0001.sub.unsorted.bam -o 0001.sub.bam
+samtools index 0001.sub.bam
 ```
 
 ## gene name tagging
-Assignment of GE tag to Nanopore reads using dropseq.jar from Maccarrol lab
+Assignment of GE tag to Nanopore reads using dropseq.jar from McCarrol lab.
+Optimization for taking into account long read particularities compared to short read for wich this pipeline has been implemented.
 
 ```bash
 cd ~/Drop-seq_tools-1.12/jar/
-java -jar -Xmx12g dropseq.jar TagReadWithGeneExon I=minimap.bam O=minimap.GE.bam ANNOTATIONS_FILE=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE ALLOW_MULTI_GENE_READS=TRUE USE_STRAND_INFO=FALSE
+java -jar -Xmx12g dropseq.jar TagReadWithGeneExon I=0001.sub.bam O=0001.sub.GE.bam ANNOTATIONS_FILE=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index minimap.GE.bam
 ```
 
@@ -59,7 +74,7 @@ samtools index minimap.GE.bam
 Sam flag US assigment of Nanopore raw read sequence
 
 ```bash
-java -jar -Xmx12g sicelor.jar TagReadWithSequence I=minimap.GE.bam O=minimap.GEUS.bam FASTQ=nanopore.fastq
+java -jar -Xmx12g sicelor.jar TagReadWithSequence I=0001.sub.GE.bam O=0001.sub.GEUS.bam FASTQ=nanopore.fastq
 samtools index minimap.GEUS.bam
 ```
 
@@ -67,13 +82,13 @@ samtools index minimap.GEUS.bam
 Assignation of Illumina cell barcode and UMI to Nanopore mapped reads
 
 ```bash
-java -jar -Xmx25g IlluminaOxfordMergerNew.jar -i minimap.GEUS.bam -o minimap.GEUS10xAttributes.bam -k parsedForNanopore.obj -p CTTCCGATCT -a 140 -s GTACATGG  --maxUMIfalseMatchPercent 6 --maxBCfalseMatchPercent 5 -l minimap.GEUS10xAttributes.log
+java -jar -Xmx25g IlluminaOxfordMergerNew.jar -i 0001.sub.GEUS.bam -o 0001.sub.GEUS10xAttributes.bam -k parsedForNanopore.obj -p CTTCCGATCT -a 140 -s GTACATGG  --maxUMIfalseMatchPercent 6 --maxBCfalseMatchPercent 5 -l minimap.GEUS10xAttributes.log
 ```
 
 ## IsoformExpressionMatrix
 
 ```bash
-java -jar -Xmx44g Sicelor-1.0-SNAPSHOT-jar-with-dependencies.jar IsoformExpressionMatrix I=minimap.GEUS10xAttributes.umifound.bam REFFLAT=refFlat_gencode.vM18.txt CSV=10xgenomics.barcodes.csv MATRIX=MatrixIsoforms.txt DELTA=10 METRICS=MetricsIsoforms.txt
+java -jar -Xmx44g Sicelor-1.0-SNAPSHOT-jar-with-dependencies.jar IsoformExpressionMatrix I=0001.sub.GEUS10xAttributes.umifound.bam REFFLAT=refFlat_gencode.vM18.txt CSV=10xgenomics.barcodes.csv MATRIX=MatrixIsoforms.txt DELTA=10 METRICS=MetricsIsoforms.txt
 ```
 
 ## MoleculeConsensus
