@@ -35,7 +35,8 @@ public class SplitBamPerCluster extends CommandLineProgram {
         pl = new ProgressLogger(log);
     }
 
-    protected int doWork() {
+    protected int doWork()
+    {
         String str1 = null;
 
         IOUtil.assertFileIsReadable(INPUT);

@@ -53,7 +53,9 @@ public class Matrix
         
         if(! geneMetrics.containsKey(molecule.getGeneId()))
             geneMetrics.put(molecule.getGeneId(), new GeneMetrics());
-
+        
+        //System.out.println(molecule.getBarcode()+","+molecule.getGeneId()+","+molecule.getTranscriptId());
+        
         ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
         ((GeneMetrics)geneMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
         

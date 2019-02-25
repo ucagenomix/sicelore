@@ -33,15 +33,13 @@ public class MoleculeDataset {
     private DataOutputStream os;
     private Iterator itglobal;
 
-    public MoleculeDataset(LongreadParser bam, UCSCRefFlatParser model, int DELTA, boolean SOFT)
+    public MoleculeDataset(LongreadParser bam)
     {
         Molecule molecule = null;
         this.mapMolecules = new HashMap<String, Molecule>();
         this.mapGenes = new HashMap<String, List<Molecule>>();
-
         log = Log.getInstance(MoleculeDataset.class);
 
-        // 1. Load molecule from bam file
         HashMap<String, Longread> mapLongreads = bam.getMapLongreads();
         Set cles = mapLongreads.keySet();
         Iterator it = cles.iterator();
@@ -50,61 +48,35 @@ public class MoleculeDataset {
             Longread lr = (Longread) mapLongreads.get(name);
 
             String molkey = lr.getBarcode() + ":" + lr.getUmi();
-            if ((molecule = (Molecule) this.mapMolecules.get(molkey)) != null) {
+            if((molecule = (Molecule) this.mapMolecules.get(molkey)) != null) {
                 molecule.addLongread(lr);
-            } else {
+            } 
+            else{
                 this.mapMolecules.put(molkey, new Molecule(lr.getBarcode(), lr.getUmi()));
                 ((Molecule) this.mapMolecules.get(molkey)).addLongread(lr);
             }
         }
         log.info(new Object[]{"\tTotal Molecules\t\t[" + this.mapMolecules.size() + "]"});
-
-        int rr = 0;
-        int rrkept = 0;
-        // 3. Remove chimeria reads from molecules
+        
+        int multiIG = 0;
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
-        while (it.hasNext()) {
-            String molkey = (String) it.next();
-            molecule = (Molecule) this.mapMolecules.get(molkey);
-            
-            rr += molecule.getLongreads().size();
-            molecule.removeChimeriaReads();
-            rrkept += molecule.getLongreads().size();
-        }
+        while (it.hasNext()){
+            molecule = (Molecule) this.mapMolecules.get((String) it.next());
+            if(molecule.getGeneIds().size() > 1)
+                multiIG++;
+        }        
+        log.info(new Object[]{"\tTotal Molecules multiIG\t[" + multiIG + "]"});
+    }
+    
+    public void setIsoforms(UCSCRefFlatParser model, int DELTA, boolean SOFT)
+    {
+        Molecule molecule = null;
         
-        int chimeriaReads = rr-rrkept;
-        float percent = chimeriaReads * 100f / rr;
-        String formattedString = String.format("%.02f", percent);
-        
-        //log.info(new Object[]{"\tReads in Molecules\t[" + rr + "]"});
-        log.info(new Object[]{"\tChimeria reads removed\t[" + chimeriaReads + " " + formattedString + "%]"});
-     
-        // 3. Remove molecules without any associated GI/BC/U8 read or no more reads
-        cles = this.mapMolecules.keySet();
-        it = cles.iterator();
-        while (it.hasNext()) {
-            String molkey = (String) it.next();
-            molecule = (Molecule) this.mapMolecules.get(molkey);
-
-            boolean remove_the_molecule = true;
-            List<Longread> longreads = molecule.getLongreads();
-            
-            for (Longread lr : longreads) {
-                if (lr.getIs_associated()) {
-                    remove_the_molecule = false;
-                }
-            }
-            if(remove_the_molecule) {
-                it.remove();
-            }
-        }
-        log.info(new Object[]{"\tRemaining Molecules\t[" + this.mapMolecules.size() + "]"});
-     
-        // 4. Running thought all molecules to set isoform
+        int compteur=0;
         log.info(new Object[]{"\tSetIsoforms\t\tstart..."});
-        cles = this.mapMolecules.keySet();
-        it = cles.iterator();
+        Set cles = this.mapMolecules.keySet();
+        Iterator it = cles.iterator();
         while (it.hasNext()) {
             String molkey = (String) it.next();
             molecule = (Molecule) this.mapMolecules.get(molkey);
@@ -113,10 +85,13 @@ public class MoleculeDataset {
             // sort all selected isoforms on exons number (max to min)
             Collections.sort(transcripts);
             molecule.setIsoform(transcripts, DELTA, SOFT);
+            
+            compteur++;
+            if(compteur%200000 == 0)
+                log.info(new Object[]{"\tSetIsoforms\t\t" + compteur + "/" + this.mapMolecules.size()});
         }
         log.info(new Object[]{"\tSetIsoforms\t\tend..."});
-
-        // 5. magGenes initialization for rapid Molecule retrieval
+        
         List<Molecule> l;
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
@@ -133,64 +108,8 @@ public class MoleculeDataset {
         }
     }
 
-    public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException {
-        LongreadRecord record = LongreadRecord.fromSAMRecord(r);
-        
-        if(record.getIsSecondaryOrSupplementary()) { return null; }
-        
-        //if(record.getChrom().contains("_")) { chromstrange++; return null; }
-        //if(record.getExonBases() == 0) { noexons++; return null; }
-        //if(record.getGeneId() == null) { nogeneid++; return null; }
-        //if(record.getBarcode() == null) { nobarcode++; return null; }
-        //if(record.getUmi() == null) { noumi++; return null; }
-        //if(record.getIsSoftClipped()) { softclipped++; return null; }
-        //if(record.getGeneId().substring(0,2).equals("Gm")) { genegm++; return null; }
-        return record;
-    }
-
-    public List<Molecule> select(String mygene)
-    {
-        return (List<Molecule>) mapGenes.get(mygene);
-        /*
-    	List<Molecule> filteredList = new ArrayList<Molecule>();
-        Set cles = this.mapMolecules.keySet();
-        Iterator it = cles.iterator();
-        while(it.hasNext()){
-        	String cle = (String)it.next();
-        	Molecule molecule =(Molecule)this.mapMolecules.get(cle);
-        	
-        	if(mygene.equals(molecule.getGeneId()))
-        		filteredList.add(molecule);
-        }
-        return filteredList;
-         */
-    }
-
-     public void writeMoleculeMetrics(java.io.File paramFile)
-    {
-        DataOutputStream os = null;
-        
-        try {
-            os = new DataOutputStream(new java.io.FileOutputStream(paramFile));
-            os.writeBytes("barcode\tumi\tgeneId\ttranscriptId\ttotal_reads\tclean_reads\tconsensus_reads\tecarts\n");
-            
-            for(String molkey : mapMolecules.keySet()){
-                Molecule molecule = (Molecule) mapMolecules.get(molkey);
-                
-                os.writeBytes(molecule.getPctEcartMedian()+"\n");
-            }
-            
-            os.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
-        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
-    }
-
-
-    public HashMap<String, Molecule> getMapMolecules() {
-        return this.mapMolecules;
-    }
+    public List<Molecule> select(String mygene){ return (List<Molecule>) mapGenes.get(mygene); }
+    public HashMap<String, Molecule> getMapMolecules() { return this.mapMolecules; }
 
     public Matrix produceMatrix(UCSCRefFlatParser model, HashSet<String> authorizedCells)
     {
@@ -205,11 +124,9 @@ public class MoleculeDataset {
             String mygene = (String) it.next();
             List<Molecule> molecules = this.select(mygene);
 
-            // if we have molecule for this gene
             if (molecules != null) {
-                for (Molecule molecule : molecules) {
+                for (Molecule molecule : molecules)
                     matrix.addMolecule(molecule);
-                }
             }
 
             nb++;

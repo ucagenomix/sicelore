@@ -38,15 +38,16 @@ public class ComputeConsensus extends CommandLineProgram {
         pl = new htsjdk.samtools.util.ProgressLogger(log);
     }
 
-    protected int doWork() {
+    protected int doWork()
+    {
         int nb = 0;
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(REFFLAT);
 
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-        LongreadParser bam = new LongreadParser(INPUT);
-        MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
-
+        LongreadParser bam = new LongreadParser(INPUT, true);
+        MoleculeDataset dataset = new MoleculeDataset(bam);
+        dataset.setIsoforms(model, DELTA, SOFT);
         dataset.callConsensus(OUTPUT, nThreads);
 
         return 0;

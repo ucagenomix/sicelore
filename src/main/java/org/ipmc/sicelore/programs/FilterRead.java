@@ -13,19 +13,21 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", oneLineSummary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "remove read", oneLineSummary = "remove read", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
-public class AddBamMoleculeTags extends CommandLineProgram {
+public class FilterRead extends CommandLineProgram {
 
     private final Log log;
     private ProgressLogger pl;
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
-    @Argument(shortName = "O", doc = "The output SAM or BAM file with tags")
+    @Argument(shortName = "O", doc = "The output SAM or BAM file")
     public File OUTPUT;
-
-    public AddBamMoleculeTags() {
-        log = Log.getInstance(AddBamMoleculeTags.class);
+    @Argument(shortName = "readName", doc = "The read name")
+    public String readName;
+    
+    public FilterRead() {
+        log = Log.getInstance(FilterRead.class);
         pl = new ProgressLogger(log);
     }
 
@@ -41,15 +43,9 @@ public class AddBamMoleculeTags extends CommandLineProgram {
                 pl.record(r);
                 String str = r.getReadName();
                 String[] info = str.split("\\|");
-
-                r.setAttribute("IG", info[0]);
-                r.setAttribute("IT", info[1]);
-                r.setAttribute("BC", info[2]);
-                r.setAttribute("U8", info[3]);
-                // molecule longreads
-                r.setAttribute("R1", new Integer(info[4]).intValue());
-
-                localSAMFileWriter.addAlignment(r);
+                
+                if(!str.equals(readName))
+                    localSAMFileWriter.addAlignment(r);
             }
             localSamReader.close();
             localSAMFileWriter.close();
@@ -61,6 +57,6 @@ public class AddBamMoleculeTags extends CommandLineProgram {
     }
 
     public static void main(String[] paramArrayOfString) {
-        System.exit(new AddBamMoleculeTags().instanceMain(paramArrayOfString));
+        System.exit(new FilterRead().instanceMain(paramArrayOfString));
     }
 }

@@ -29,14 +29,18 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
     public File FASTQ;
     @Argument(shortName = "TAG", doc = "The tag <default=US>")
     public String TAG;
+    @Argument(shortName = "TAGQV", doc = "The tag <default=UQ>")
+    public String TAGQV;
 
     public AddBamReadSequenceTag() {
         log = Log.getInstance(AddBamReadSequenceTag.class);
         pl = new ProgressLogger(log);
         TAG = "US";
+        TAGQV = "UQ";
     }
 
-    protected int doWork() {
+    protected int doWork()
+    {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(FASTQ);
         IOUtil.assertFileIsWritable(OUTPUT);
@@ -44,6 +48,7 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
         log.info(new Object[]{"loadFastq\tSTART..."});
         FastqLoader localFastqLoader = new FastqLoader(FASTQ);
         THashMap localTHashMap = localFastqLoader.getMap();
+        THashMap localTHashMapQV = localFastqLoader.getMapQV();
         log.info(new Object[]{"loadFastq\t" + localTHashMap.size() + " reads loaded"});
 
         SamReader localSamReader = SamReaderFactory.makeDefault().open(INPUT);
@@ -56,6 +61,8 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
                 String name = localSAMRecord.getReadName();
                 String seq = new String((byte[]) localTHashMap.get(name));
                 localSAMRecord.setAttribute(TAG, seq);
+                String qv = new String((byte[]) localTHashMapQV.get(name));
+                localSAMRecord.setAttribute(TAGQV, qv);
                 localSAMFileWriter.addAlignment(localSAMRecord);
             }
             localSamReader.close();

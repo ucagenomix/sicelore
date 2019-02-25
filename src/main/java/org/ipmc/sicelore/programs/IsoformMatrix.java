@@ -61,27 +61,32 @@ public class IsoformMatrix extends CommandLineProgram
         //File MOLMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_ecarts_metrics.txt");
 
         loadDTEcells();
-        log.info(new Object[]{"Cells loaded\t\t\t[" + DTEcells.size() + "]"});
+        log.info(new Object[]{"\tCells loaded\t\t[" + DTEcells.size() + "]"});
 
         // 4mn and 9.6Gb for 1.450.000 SAMrecords [747.000 molecules]
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-        LongreadParser bam = new LongreadParser(INPUT);
-        MoleculeDataset dataset = new MoleculeDataset(bam, model, DELTA, SOFT);
+        LongreadParser bam = new LongreadParser(INPUT, false);
+        MoleculeDataset dataset = new MoleculeDataset(bam);
+        dataset.setIsoforms(model, DELTA, SOFT);
         
         Matrix matrix = dataset.produceMatrix(model, DTEcells);
+        log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});
         matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS);
+        log.info(new Object[]{"\twriteGeneMatrix\t\t[start]"});
         matrix.writeGeneMatrix(GENEMATRIX);
+         log.info(new Object[]{"\twriteCellMetrics\t[start]"});
         matrix.writeCellMetrics(CELLMETRICS);
+         log.info(new Object[]{"\twriteGeneMetrics\t[start]"});
         matrix.writeGeneMetrics(GENEMETRICS);
         
         //dataset.writeMoleculeMetrics(MOLMETRICS);
 
-        log.info(new Object[]{"\tMatrix cells\t\t\t[" + matrix.getCellMetrics().size() + "]"});
-        log.info(new Object[]{"\tMatrix genes\t\t\t[" + matrix.getGeneMetrics().size() + "]"});
-        log.info(new Object[]{"\tMatrix isoforms\t\t\t[" + matrix.getMatrice().size() + "]"});
-        log.info(new Object[]{"\tMatrix total counts\t\t[" + matrix.getTotal_count() + "]"});
-        log.info(new Object[]{"\tMatrix isoform def\t\t[" + matrix.getTotal_isoform_def() + "]"});
-        log.info(new Object[]{"\tMatrix isoform undef\t\t[" + matrix.getTotal_isoform_undef() + "]"});
+        log.info(new Object[]{"\tMatrix cells\t\t[" + matrix.getCellMetrics().size() + "]"});
+        log.info(new Object[]{"\tMatrix genes\t\t[" + matrix.getGeneMetrics().size() + "]"});
+        log.info(new Object[]{"\tMatrix isoforms\t\t[" + matrix.getMatrice().size() + "]"});
+        log.info(new Object[]{"\tMatrix total counts\t[" + matrix.getTotal_count() + "]"});
+        log.info(new Object[]{"\tMatrix isoform def\t[" + matrix.getTotal_isoform_def() + "]"});
+        log.info(new Object[]{"\tMatrix isoform undef\t[" + matrix.getTotal_isoform_undef() + "]"});
         
         //dataset.displayMetrics(METRICS);
     }
