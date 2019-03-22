@@ -1,10 +1,10 @@
-# Sicelore
+# SiCeLoRe
 
 Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated 
 to the bioinformatics processing, analysis and exploration of highly 
-multiplexed single cell droplets-based approach experiments sequenced 
-with long reads. Typically starting with a 
-possorted_genome.bam file from a 10xGenomics single cell cellranger pipeline, 
+multiplexed single cell droplets-based approaches experiments sequenced 
+with long reads. Typically starting with a possorted_genome.bam file from 
+a 10xGenomics single cell cellranger pipeline, 
 the workflow integrate several sequential steps for standard analysis and 
 processing of sequencing runs of the same unfragmented library on Nanopore/PacBio device.
 
