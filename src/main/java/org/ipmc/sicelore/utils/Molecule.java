@@ -133,24 +133,10 @@ public class Molecule implements Callable<String>
     public void addLongread(Longread lr)
     {
         this.longreads.add(lr);
-        lr.setBarcode(null);
-        lr.setUmi(null);
         
         Iterator<String> iterator = lr.getGeneIds().iterator();
         while (iterator.hasNext())
             this.geneIds.add((String)iterator.next());
-        
-         /*
-        // random peaking case of multigenes molecules
-        if (geneIds.size() > 1) {
-            int index = new Random().nextInt(geneIds.size());
-            Iterator<String> iter = geneIds.iterator();
-            for (int i = 0; i < index; i++) {
-                iter.next();
-            }
-            this.geneId = (String) iter.next();
-        }
-        */
     }
 
     public void setIsoform(List<TranscriptRecord> transcripts, int DELTA, boolean SOFT)

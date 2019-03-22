@@ -138,8 +138,9 @@ public class MoleculeDataset {
 
         return matrix;
     }
-
-    public void callConsensus(File OUTPUT, int nThreads) {
+    
+    public void callConsensus(File OUTPUT, int nThreads)
+    {
         log.info(new Object[]{"\tCalling consensus\tstart with [" + nThreads + "] threads"});
 
         future_list = new ConcurrentLinkedDeque<Future<String>>();

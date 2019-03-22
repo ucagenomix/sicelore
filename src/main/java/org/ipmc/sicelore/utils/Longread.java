@@ -52,10 +52,6 @@ public class Longread implements Comparable<Longread> {
         this.barcode = lrr.getBarcode();
         this.umi = lrr.getUmi();
         
-        lrr.setName(null);
-        lrr.setBarcode(null);
-        lrr.setUmi(null);
-
         this.longreadrecords.add(lrr);
     }
     

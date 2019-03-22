@@ -8,12 +8,13 @@ package org.ipmc.sicelore.programs;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.*;
+import java.util.HashSet;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Filter all reads for the selected molecule based on BC and U8 barcodes", oneLineSummary = "Filter all reads for the selected molecule based on BC and U8 barcodes", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Export reads for molecules in file", oneLineSummary = "Export reads for molecules in file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class GetMoleculeReads extends CommandLineProgram {
 
@@ -23,10 +24,8 @@ public class GetMoleculeReads extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output BAM file")
     public File OUTPUT;
-    @Argument(shortName = "BC", doc = "The BC cell barcode")
-    public String BC;
-    @Argument(shortName = "U8", doc = "The U8 molecule barcode")
-    public String U8;
+    @Argument(shortName = "CSV", doc = "The molecules cell and molecular barcodes .csv file (BC,U8 one per line)")
+    public File CSV;
 
     public GetMoleculeReads()
     {
@@ -37,10 +36,23 @@ public class GetMoleculeReads extends CommandLineProgram {
     protected int doWork()
     {
         IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(CSV);
         IOUtil.assertFileIsWritable(OUTPUT);
+        
+        HashSet<String> mols = new HashSet<String>();
+        
+        try {
+            BufferedReader fichier = new BufferedReader(new FileReader(CSV));
+            String line = fichier.readLine();
+            while(line != null) {
+                String[] tmp = line.split(",");
+                mols.add(tmp[0]+"|"+tmp[1]);
+                line = fichier.readLine();
+            }
+            fichier.close();
+        } catch (Exception e) { e.printStackTrace(); }
 
         htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
-
         htsjdk.samtools.SAMFileHeader header = inputSam.getFileHeader();
         SAMFileWriter outputSam = new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
 
@@ -52,7 +64,7 @@ public class GetMoleculeReads extends CommandLineProgram {
                 String cell_barcode = (String)r.getAttribute("BC");
                 String molecule_barcode = (String)r.getAttribute("U8");
 
-                if (BC.equals(cell_barcode) && U8.equals(molecule_barcode) ) {
+                if (mols.contains(cell_barcode+"|"+molecule_barcode) ) {
                     outputSam.addAlignment(r);
                 }
             }

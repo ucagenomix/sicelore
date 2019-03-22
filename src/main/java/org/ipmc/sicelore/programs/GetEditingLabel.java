@@ -14,8 +14,12 @@ import java.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
+import org.ipmc.sicelore.utils.LongreadRecord;
+import org.ipmc.sicelore.utils.Longread;
 import org.ipmc.sicelore.utils.Matrix;
 import org.ipmc.sicelore.utils.Molecule;
+import org.ipmc.sicelore.utils.TranscriptRecord;
+import org.ipmc.sicelore.utils.UCSCRefFlatParser;
 import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Get Isoforms-2-Editing association for Gria2 molecules", oneLineSummary = "Get Isoforms-2-Editing association for Gria2 molecules", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
@@ -28,6 +32,8 @@ public class GetEditingLabel extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;
+    @Argument(shortName = "REFFLAT", doc = "The refFlat gene model file")
+    public File REFFLAT;
     //@Argument(shortName = "O", doc = "The output directory")
     //public File OUTPUT;
     //@Argument(shortName = "CSV", doc = "The .csv cluster file")
@@ -43,56 +49,72 @@ public class GetEditingLabel extends CommandLineProgram {
         this.DTEcells = new HashSet<String>();
     }
 
-    protected int doWork() {
-        String str1 = null;
-
+    protected int doWork()
+    {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
+        IOUtil.assertFileIsReadable(REFFLAT);
 
         loadDTEcells();        
         Matrix matrix = new Matrix(DTEcells);
+        
+         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
+        String[] gria2 = {"Gria2"};
+        List<TranscriptRecord> transcripts = model.select(gria2);
         
         SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
         //htsjdk.samtools.SAMFileHeader localSAMFileHeader = samReader.getFileHeader();
         //SAMFileWriter localSAMFileWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, OUTPUT);
         try {
-            for(SAMRecord r : samReader) {
+            
+            int nb = 0;
+            for(SAMRecord r : samReader){
                 pl.record(r);
-                String readName = r.getReadName();
-                String readString = r.getReadString();
-                //String US = (String)r.getAttribute("US");
-                String IG = (String)r.getAttribute("IG");
-                String BC = (String)r.getAttribute("BC");
-                String U8 = (String)r.getAttribute("U8");
                 
-                int RGpos = r.getReadPositionAtReferencePosition(80692286);
-                int QRpos = r.getReadPositionAtReferencePosition(80706912);
-                
-                boolean is_short = ((int)r.getReadPositionAtReferencePosition(80692000)>0)?true:false;
-                boolean is_flop  = ((int)r.getReadPositionAtReferencePosition(80691420)>0)?true:false;
-                boolean is_flip  = ((int)r.getReadPositionAtReferencePosition(80690470)>0)?true:false;
-                boolean is_exon  = ((int)r.getReadPositionAtReferencePosition(80691720)>0)?true:false;
-                
-                if(RGpos > 0 && readString.length() > RGpos){
-                    String RGbase = readString.substring(RGpos - 1, RGpos);
-                    String QRbase = "NA";
-                    if(QRpos > 0){ QRbase = readString.substring(QRpos - 1, QRpos); }
+                // a molecule SAM records in fact
+                LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
+                if(lrr != null){
                     
-                    String transcriptId = "undef";
-                    if(is_short){ transcriptId = "short"; }
-                    else if(is_flop && !is_flip && !is_exon){ transcriptId = "flop"; }
-                    else if(!is_flop && is_flip && !is_exon){ transcriptId = "flip";}
-                    else if(is_flop && is_flip && !is_exon){ transcriptId = "flipflop"; }
-                    else if(is_flop && is_flip && is_exon){ transcriptId = "flipflopexon"; }
+                    Longread lr = new Longread(r.getReadName());
+                    lr.addRecord(lrr);
                     
-                    transcriptId = transcriptId + "." + RGbase + "." + QRbase;
+                    String readString = r.getReadString();
                     
-                    //System.out.println(readName+","+IG+"\t"+transcriptId);
-                    
-                    Molecule molecule = new Molecule(BC,U8);
-                    molecule.setGeneId("Gria2");
-                    molecule.setTranscriptId(transcriptId);
-                    matrix.addMolecule(molecule);
+                    int RGpos = r.getReadPositionAtReferencePosition(80692286);
+                    int QRpos = r.getReadPositionAtReferencePosition(80706912);
+                    //boolean is_short = ((int)r.getReadPositionAtReferencePosition(80692000)>0)?true:false;
+                    //boolean is_flop  = ((int)r.getReadPositionAtReferencePosition(80691420)>0)?true:false;
+                    //boolean is_flip  = ((int)r.getReadPositionAtReferencePosition(80690470)>0)?true:false;
+                    //boolean is_flap  = ((int)r.getReadPositionAtReferencePosition(80691710)>0)?true:false;
+
+                    if(RGpos > 0 && readString.length() > RGpos){
+                        String RGbase = readString.substring(RGpos - 1, RGpos);
+                        
+                        //String QRbase = "NA";
+                        //if(QRpos > 0){ QRbase = readString.substring(QRpos - 1, QRpos); }
+
+                        //String transcriptId = "undef";
+                        //if(is_short){ transcriptId = "short"; }
+                        //else if(is_flop && !is_flip && !is_flap){ transcriptId = "flop"; }
+                        //else if(!is_flop && is_flip && !is_flap){ transcriptId = "flip";}
+                        //else if(is_flop && is_flip && !is_flap){ transcriptId = "flipflop"; }
+                        //else if(is_flop && is_flip && is_flap){ transcriptId = "flipflopflap"; }
+
+                        //transcriptId = transcriptId + "." + RGbase + "." + QRbase;
+                        //transcriptId = transcriptId + "." + RGbase;
+                        //nb++;
+                        //System.out.println(nb + "\t" + r.getReadName() + "\t" + transcriptId);
+
+                        Molecule molecule = new Molecule(lrr.getBarcode(),lrr.getUmi());
+                        molecule.addLongread(lr);
+                        molecule.setIsoform(transcripts, 5, true);
+                        //molecule.setGeneId("Gria2");
+                        //molecule.setTranscriptId(transcriptId);
+                        
+                        molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase);
+                        //molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase + "." + QRbase);
+                        matrix.addMolecule(molecule);
+                    }
                 }
             }
             samReader.close();

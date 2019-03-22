@@ -57,7 +57,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         record.barcode = (String) r.getAttribute("BC");
         record.umi = (String) r.getAttribute("U8");
        
-        if (record.geneId == null || record.barcode == null || record.umi == null)
+        if (record.geneId == null || record.barcode == null || record.umi == null || r.getReadUnmappedFlag())
             return null;
         
         try {
@@ -92,19 +92,6 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             String[] cigarsize = cigar.split("[A-Z]");
             cigar = cigar.replaceAll("[0-9]+[IDS]","");
             
-            // detect large softclipping starting or ending reads
-            if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])){
-                //if (new Integer(cigarsize[0]).intValue() > 250) {
-                //    isSoftOrHardClipped = true;
-                    sizeStartToClip = new Integer(cigarsize[0]).intValue();
-                //}
-            }
-            if ("H".equals(cigartype[cigartype.length - 1]) || "S".equals(cigartype[cigartype.length - 1])) {
-                //if (new Integer(cigarsize[cigarsize.length - 1]).intValue() > 250) {
-                //    isSoftOrHardClipped = true;
-                    sizeEndToClip = new Integer(cigarsize[cigarsize.length - 1]).intValue();
-                //}
-            }
                 
             // is possible to set IG if we have a GE but it will induce bad correlation with illumina profiling
             // seems to be difference in term of GTF used for both analysis: cellranger and dropseq.jar add GE tag
@@ -114,7 +101,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             if (record.geneId != null && record.barcode != null && record.umi != null){
                 String str = null;
                 String readSequence = (String)r.getAttribute("US");
-                //record.is_associated = true;
+                
+                // detect softclipping starting or ending reads
+                if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])){ sizeStartToClip = new Integer(cigarsize[0]).intValue(); }
+                if ("H".equals(cigartype[cigartype.length - 1]) || "S".equals(cigartype[cigartype.length - 1])) { sizeEndToClip = new Integer(cigarsize[cigarsize.length - 1]).intValue(); }
                 
                 // Strand "+" process
                 if(! r.getReadNegativeStrandFlag()){
@@ -162,23 +152,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                     }
                     else{ record.isChimeria = true; }
                 }
-                    /*
-                    if(orientation == null) {
-                        str = readSequence.substring(umiEnd, (tsoEnd != 0) ? tsoEnd : readSequence.length());
-                        str = complementWC(str);
-                    }
-                    else {
-                        str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, umiEnd);
-                    }
-                    if(sizeStartToClip > 0){
-			if(sizeStartToClip >= str.length()){ return null; }
-			str = str.substring(sizeStartToClip, str.length());
-                    }
-                    else if(sizeEndToClip > 0){
-			if(sizeEndToClip >= str.length()){ return null; }
-			str = str.substring(sizeEndToClip, str.length());
-                    }
-                    */
+                 
+                if(sizeStartToClip > 150 || sizeEndToClip > 150)
+                    record.isChimeria = true;
+                    
                 if(load_sequence && !record.isChimeria && !record.isReversed)
                     record.cdna = str.getBytes();
 
