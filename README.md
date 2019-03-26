@@ -8,7 +8,7 @@ a 10xGenomics single cell cellranger pipeline,
 the workflow integrate several sequential steps for standard analysis and 
 processing of sequencing runs of the same unfragmented library on Nanopore/PacBio device.
 
-[![GitHub license]()]((https://github.com/hyeshik/poreplex/blob/master/LICENSE.txt))
+[![GitHub license]()]((https://github.com/ucagenomix/Sicelore/blob/master/LICENCE.md))
 [![Twitter Follow](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand)
 
 ## Installation

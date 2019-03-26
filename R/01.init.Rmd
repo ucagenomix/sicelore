@@ -1,6 +1,6 @@
 ```{r function section, echo=FALSE,include=FALSE}
 
-source("E18import.R")
+source("00.import.R")
 
 ```
 
@@ -19,7 +19,7 @@ Cellranger Illumina profiling (190c)
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=14}
 
-data <- Read10X("~/data/190c/illumina/")
+data <- Read10X("data/190c/illumina/")
 s190 <- CreateSeuratObject(data)
 s190[['sample']] <- "1"
 
@@ -59,7 +59,7 @@ Cellranger Illumina profiling (951c)
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=14}
 
-data <- Read10X("~/data/951c/illumina/")
+data <- Read10X("data/951c/illumina/")
 s951 <- CreateSeuratObject(data)
 s951[['sample']] <- "3"
 
@@ -87,7 +87,6 @@ s951 <- FindVariableFeatures(object = s951, selection.method = "vst", nfeatures 
 length(VariableFeatures(s951))
 s951 <- RunPCA(s951, features = VariableFeatures(s951), verbose = FALSE)
 ElbowPlot(object = s951)
-
 s951 <- RunTSNE(object = s951, dims = 1:10)
 s951 <- FindNeighbors(object = s951, do.plot=TRUE, dims = 1:10)
 s951 <- FindClusters(object = s951, resolution=0.6)
@@ -105,7 +104,7 @@ Adding Nanopore data (ISOG/ISO/SOFT)
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
-all = read.delim("~/data/951c/nanopore/E18brain.951c_genes_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/951c/nanopore/genes_matrix.txt", stringsAsFactors = F)
 data = all[,2:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) <- all$geneId
@@ -114,7 +113,7 @@ data <- data[vect]
 s951[["ISOG"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "ISOG")
 
-all = read.delim("~/data/951c/nanopore/E18brain.951c_isoforms_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/951c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -124,21 +123,21 @@ data <- data[idx,vect]
 s951[["ISO"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "ISO")
 
-all = read.delim("~/data/951c/nanopore/gria2_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/951c/nanopore/gria2_matrix.txt", stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
 vect <- colnames(s951@assays$RNA)
 data <- data[,vect]
-s951[["EDITPLUS"]] <- CreateAssayObject(counts = data)
-s951 <- NormalizeData(object = s951, assay = "EDITPLUS")
+s951[["EDIT"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "EDIT")
 
-edited <- grep("\\.C", rownames(s951@assays$EDITPLUS@counts))
-nonedited <- grep("\\.T", rownames(s951@assays$EDITPLUS@counts))
-s951[['edited']] <- Matrix::colSums(s951@assays$EDITPLUS@counts[edited,])
-s951[['nonedited']] <- Matrix::colSums(s951@assays$EDITPLUS@counts[nonedited,])
+edited <- grep("\\.C", rownames(s951@assays$EDIT@counts))
+nonedited <- grep("\\.T", rownames(s951@assays$EDIT@counts))
+s951[['edited']] <- Matrix::colSums(s951@assays$EDIT@counts[edited,])
+s951[['nonedited']] <- Matrix::colSums(s951@assays$EDIT@counts[nonedited,])
 
-all = read.delim("~/data/190c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/190c/nanopore/genes_matrix.txt", stringsAsFactors = F)
 data = all[,2:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) <- all$geneId
@@ -147,7 +146,7 @@ data <- data[vect]
 s190[["ISOG"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "ISOG")
 
-all = read.delim("~/data/190c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/190c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -162,26 +161,30 @@ s190[['nonedited']] <- 0
 
 ```
 
-Seurat v3 merging 
+Integration 
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
 anchors <- FindIntegrationAnchors(object.list = c(s190, s951), assay=c("RNA","RNA"), dims = 1:30)
-s1141 <- IntegrateData(anchorset = anchors, dims = 1:30)
-DefaultAssay(object = s1141) <- "integrated"
-s1141 <- ScaleData(object = s1141, verbose = FALSE)
-s1141 <- RunPCA(object = s1141, npcs = 30, verbose = FALSE)
-ElbowPlot(object = s1141)
+illu1141 <- IntegrateData(anchorset = anchors, dims = 1:30)
+DefaultAssay(object = illu1141) <- "integrated"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+illu1141 <- RunPCA(object = illu1141, npcs = 30, verbose = FALSE)
+ElbowPlot(object = illu1141)
 
-s1141 <- RunTSNE(object = s1141, reduction = "pca", dims = 1:11)
-s1141 <- FindNeighbors(object = s1141, do.plot=TRUE, dims = 1:11)
-s1141 <- FindClusters(object = s1141, resolution=0.8)
+illu1141 <- RunTSNE(object = illu1141, reduction = "pca", dims = 1:11)
+illu1141 <- FindNeighbors(object = illu1141, do.plot=TRUE, dims = 1:11)
+illu1141 <- FindClusters(object = illu1141, resolution=1)
 
-DotPlot(object = s1141, features = markers, plot.legend = TRUE) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+illu1141 <- readRDS("1141c.label.rds")
+illu1141 <- FindNeighbors(object = illu1141, do.plot=TRUE, dims = 1:11)
+illu1141 <- FindClusters(object = illu1141, resolution=0.8)
 
-#pdf("Illumina.tSNE.9clusters.pdf", width=10, height=8, useDingbats=FALSE)
-DimPlot(object = s1141, reduction = "tsne", group.by = "state")
-DimPlot(object = s1141, reduction = "tsne")
+DotPlot(object = illu1141, features = markers, plot.legend = TRUE) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+#pdf("clusters.pdf", width=10, height=8, useDingbats=FALSE)
+DimPlot(object = illu1141, reduction = "tsne", group.by = "state")
+DimPlot(object = illu1141, reduction = "tsne")
 #dev.off()
 
 ```
@@ -190,19 +193,19 @@ Gene Markers Heatmap
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8 }
 
-DefaultAssay(object = s1141) <- "RNA"
-s1141 <- ScaleData(object = s1141, verbose = FALSE)
-DefaultAssay(object = s1141) <- "ISOG"
-s1141 <- ScaleData(object = s1141, verbose = FALSE)
-DefaultAssay(object = s1141) <- "ISO"
-s1141 <- ScaleData(object = s1141, verbose = FALSE)
+DefaultAssay(object = illu1141) <- "RNA"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+DefaultAssay(object = illu1141) <- "ISOG"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+DefaultAssay(object = illu1141) <- "ISO"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
 
-DefaultAssay(object = s1141) <- "RNA"
-s1141.markers <- FindAllMarkers(object = s1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
-top5.s1141 <- s1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
-DoHeatmap(s1141, features=top5.s1141$gene, size=3.5)
+DefaultAssay(object = illu1141) <- "RNA"
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
+DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 
-#write.table(s1141.markers, file="markers.csv", sep=",")
+write.table(illu1141.markers, file="illu1141.markers.csv", sep=",")
 
 ```
 
@@ -210,19 +213,18 @@ Clusters re-labelling, saving .rds file
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
-#saveRDS(s1141, "object.rds")
+#saveRDS(illu1141, "illu1141.rds")
 
-new.cluster.ids <- c("GABAergic","Glutamatergic imature 3","GABAergic imature","Glutamatergic","Glutamatergic", "GABAergic progenitors","Glutamatergic imature 4","Glutamatergic progenitors","Radial glia","Cajal-Retzius")
-names(x = new.cluster.ids) <- levels(x = s1141)
-s1141 <- RenameIdents(object = s1141, new.cluster.ids)
+new.cluster.ids <- c("GABAergic","Glutamatergic imature 3","Glutamatergic","GABAergic imature","Glutamatergic", "RPs proliferative","Glutamatergic progenitors","Glutamatergic imature 4","Radial glia","Cajal-Retzius")
+names(x = new.cluster.ids) <- levels(x = illu1141)
+illu1141 <- RenameIdents(object = illu1141, new.cluster.ids)
 
-my_levels <- c("Radial glia","Glutamatergic progenitors", "Glutamatergic imature 4", "Glutamatergic imature 3", "Glutamatergic" , "GABAergic progenitors","GABAergic imature","GABAergic","Cajal-Retzius")
+my_levels <- c("Radial glia", "RPs proliferative","Glutamatergic progenitors", "Glutamatergic imature 4", "Glutamatergic imature 3", "Glutamatergic","GABAergic imature","GABAergic","Cajal-Retzius")
 # Relevel object@ident
-s1141@active.ident <- factor(x = s1141@active.ident, levels = my_levels)
+illu1141@active.ident <- factor(x = illu1141@active.ident, levels = my_levels)
+DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
 
-DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
-
-saveRDS(s1141, "/home/lebrigand/10x_rainer/E18brain.1141c.rds")
+saveRDS(illu1141, "illu1141c.rds")
 
 ```
 
@@ -230,15 +232,15 @@ Gene markers
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=3, fig.width=16}
 
-DefaultAssay(object = s1141) <- "RNA"
+DefaultAssay(object = illu1141) <- "RNA"
 
 #pdf("/home/lebrigand/10x_rainer/figures/Illumina.featurePlots.pdf", width=20, height=4, useDingbats=FALSE)
-FeaturePlot(object = s1141, features = c("Emx1","Gad2","Dlx2","Vim"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
-FeaturePlot(object = s1141, features = c("Sox2","Pax6","Eomes","Tbr1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
-FeaturePlot(object = s1141, features = c("Tubb3","Reln","Aif1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
-FeaturePlot(object = s1141, features = c("Meis2","Gpm6a","Sox5","Arpp21"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
-FeaturePlot(object = s1141, features = c("Camk2b","Camkv","Grin2b","Cacna1e"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
-FeaturePlot(object = s1141, features = c("Kcnk1","Gabra2","Scn2a1",""), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Emx1","Gad2","Dlx2","Vim"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Sox2","Pax6","Eomes","Tbr1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Tubb3","Reln","Aif1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Meis2","Gpm6a","Sox5","Arpp21"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Camk2b","Camkv","Grin2b","Cacna1e"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Kcnk1","Gabra2","Scn2a1",""), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
 #dev.off()
 
 ```
@@ -247,11 +249,11 @@ Gene Markers Heatmap
 ==========
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8}
 
-s1141.markers <- FindAllMarkers(object = s1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
-top5.s1141 <- s1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
-DoHeatmap(s1141, features=top5.s1141$gene, size=3.5)
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
+DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 
-write.table(s1141.markers, file="/home/lebrigand/10x_rainer/E18brain.1141c.csv", sep=",")
+#write.table(illu1141.markers, file="output/markers.label.csv", sep=",")
 
 ```
 
@@ -259,20 +261,20 @@ Differentially expressed isoforms
 ===================
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=12}
 
-DefaultAssay(object = s1141) <- "ISO"
-s1141.markers <- FindAllMarkers(object = s1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
-top5.s1141 <- s1141.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
-DoHeatmap(s1141, features=top5.s1141$gene, size=3.5)
+DefaultAssay(object = illu1141) <- "ISO"
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
+DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 
-write.table(s1141.markers, file="/home/lebrigand/10x_rainer/E18brain.1141c.iso.csv", sep=",")
+#write.table(illu1141.markers, file="output/isoforms.csv", sep=",")
 
-s1141.markers$geneId <- sapply(strsplit(s1141.markers$gene, "-ENS"), `[`, 1)
-s1141.markers$transcriptId <- paste("ENS", sapply(strsplit(s1141.markers$gene, "-ENS"), `[`, 2), sep="")
+illu1141.markers$geneId <- sapply(strsplit(illu1141.markers$gene, "-ENS"), `[`, 1)
+illu1141.markers$transcriptId <- paste("ENS", sapply(strsplit(illu1141.markers$gene, "-ENS"), `[`, 2), sep="")
 
-total <- s1141.markers[which(s1141.markers$geneId == "------"),]
-all.genes <- unique(s1141.markers$geneId)
+total <- illu1141.markers[which(illu1141.markers$geneId == "------"),]
+all.genes <- unique(illu1141.markers$geneId)
 for (i in (1:length(all.genes))){
-   sub <- s1141.markers[which(s1141.markers$geneId == all.genes[i]),]
+   sub <- illu1141.markers[which(illu1141.markers$geneId == all.genes[i]),]
    nb.clusters <- unique(sub$cluster)
    nb.transcripts <- unique(sub$transcriptId)
   
@@ -282,7 +284,6 @@ for (i in (1:length(all.genes))){
 }
 
 print(kable(total, "markdown", table.attr='class="flat-table"'))
-
-write.table(total, file="/home/lebrigand/10x_rainer/E18brain.1141c.iso.DE.csv", sep=",")
+write.table(illu1141.markers, file="output/isoforms.DE.csv", sep=",")
 
 ```
