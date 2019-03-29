@@ -1,0 +1,257 @@
+---
+title: "E18 mouse brain, short read profiling"
+author: "K.Lebrigand, R.Waldmann"
+output:
+  BiocStyle::html_document:
+    code_folding: hide
+    number_sections: yes
+    toc: yes  
+---
+
+# Cellranger Illumina profiling (190c)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=14}
+
+source("00.import.R")
+
+data <- Read10X("data/190c/illumina/")
+s190 <- CreateSeuratObject(data)
+s190[['sample']] <- "1"
+
+mito.genes <- grep(pattern = "^mt-", x = rownames(s190@assays$RNA), value = TRUE)
+dropouts <- Matrix::colSums(s190@assays$RNA@data == 0)/nrow(s190@assays$RNA)
+ribo.genes <- grep(pattern = "^Rp[sl]", x = rownames(s190@assays$RNA), value = TRUE)
+percent.mito <- Matrix::colSums(s190@assays$RNA[mito.genes, ])/Matrix::colSums(s190@assays$RNA)
+percent.ribo <- Matrix::colSums(s190@assays$RNA[ribo.genes, ])/Matrix::colSums(s190@assays$RNA)
+s190[['percent.mito']] <- percent.mito
+s190[['percent.ribo']] <- percent.ribo
+s190[['dropouts']] <- dropouts
+VlnPlot(s190, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+dim(s190@assays$RNA)
+s190 <- subset(s190, subset = dropouts < 0.95)
+dim(s190@assays$RNA)
+VlnPlot(s190, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+s190 <- NormalizeData(s190, normalization.method = "LogNormalize", scale.factor = 10000)
+s190 <- ScaleData(s190)
+s190 <- FindVariableFeatures(object = s190, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+length(VariableFeatures(s190))
+s190 <- RunPCA(s190, features = VariableFeatures(s190), verbose = FALSE)
+ElbowPlot(object = s190)
+
+s190 <- RunTSNE(object = s190, dims = 1:7)
+s190 <- FindNeighbors(object = s190, do.plot=TRUE, dims = 1:7)
+s190 <- FindClusters(object = s190, resolution=0.6)
+DimPlot(object = s190, reduction = "tsne", pt.size = 2, label=TRUE)
+
+```
+
+# Cellranger Illumina profiling (951c)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=14}
+
+data <- Read10X("data/951c/illumina/")
+s951 <- CreateSeuratObject(data)
+s951[['sample']] <- "3"
+
+mito.genes <- grep(pattern = "^mt-", x = rownames(s951@assays$RNA), value = TRUE)
+dropouts <- Matrix::colSums(s951@assays$RNA@data == 0)/nrow(s951@assays$RNA)
+ribo.genes <- grep(pattern = "^Rp[sl]", x = rownames(s951@assays$RNA), value = TRUE)
+percent.mito <- Matrix::colSums(s951@assays$RNA[mito.genes, ])/Matrix::colSums(s951@assays$RNA)
+percent.ribo <- Matrix::colSums(s951@assays$RNA[ribo.genes, ])/Matrix::colSums(s951@assays$RNA)
+s951[['percent.mito']] <- percent.mito
+s951[['percent.ribo']] <- percent.ribo
+s951[['dropouts']] <- dropouts
+VlnPlot(s951, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+dim(s951@assays$RNA)
+s951 <- subset(s951, subset = dropouts < 0.95)
+dim(s951@assays$RNA)
+VlnPlot(s951, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+s951 <- NormalizeData(s951, normalization.method = "LogNormalize", scale.factor = 10000)
+s951 <- ScaleData(s951)
+s951 <- FindVariableFeatures(object = s951, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+length(VariableFeatures(s951))
+s951 <- RunPCA(s951, features = VariableFeatures(s951), verbose = FALSE)
+ElbowPlot(object = s951)
+s951 <- RunTSNE(object = s951, dims = 1:10)
+s951 <- FindNeighbors(object = s951, do.plot=TRUE, dims = 1:10)
+s951 <- FindClusters(object = s951, resolution=0.6)
+DimPlot(object = s951, reduction = "tsne", pt.size = 2, label=TRUE)
+
+s190@meta.data$state <- "s190"
+s951@meta.data$state <- "s951"
+
+s190 <- RenameCells(s190, add.cell.id = "s190")
+s951 <- RenameCells(s951, add.cell.id = "s951")
+
+```
+
+# Adding Nanopore data (ISOG/ISO)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+all = read.delim("data/951c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+data = all[,2:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) <- all$geneId
+vect <- colnames(s951@assays$RNA)
+data <- data[vect]
+s951[["ISOG"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "ISOG")
+
+all = read.delim("data/951c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s951@assays$RNA)
+idx <- grep("undef", rownames(data), invert = TRUE)
+data <- data[idx,vect]
+s951[["ISO"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "ISO")
+
+all = read.delim("data/951c/nanopore/gria2_matrix.txt", stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s951@assays$RNA)
+data <- data[,vect]
+s951[["EDIT"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "EDIT")
+
+edited <- grep("\\.C", rownames(s951@assays$EDIT@counts))
+nonedited <- grep("\\.T", rownames(s951@assays$EDIT@counts))
+s951[['edited']] <- Matrix::colSums(s951@assays$EDIT@counts[edited,])
+s951[['nonedited']] <- Matrix::colSums(s951@assays$EDIT@counts[nonedited,])
+
+all = read.delim("data/190c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+data = all[,2:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) <- all$geneId
+vect <- colnames(s190@assays$RNA)
+data <- data[vect]
+s190[["ISOG"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "ISOG")
+
+all = read.delim("data/190c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s190@assays$RNA)
+idx <- grep("undef", rownames(data), invert = TRUE)
+data <- data[idx,vect]
+s190[["ISO"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "ISO")
+
+s190[['edited']] <- 0
+s190[['nonedited']] <- 0
+
+```
+
+# Integration RNA
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+anchors <- FindIntegrationAnchors(object.list = c(s190, s951), assay=c("RNA","RNA"), dims = 1:30)
+illu1141 <- IntegrateData(anchorset = anchors, dims = 1:30)
+DefaultAssay(object = illu1141) <- "integrated"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+illu1141 <- RunPCA(object = illu1141, npcs = 30, verbose = FALSE)
+ElbowPlot(object = illu1141)
+
+illu1141 <- RunTSNE(object = illu1141, reduction = "pca", dims = 1:11)
+illu1141 <- FindNeighbors(object = illu1141, do.plot=TRUE, dims = 1:11)
+illu1141 <- FindClusters(object = illu1141, resolution=0.8)
+
+DotPlot(object = illu1141, features = markers, plot.legend = TRUE) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+#pdf("clusters.pdf", width=10, height=8, useDingbats=FALSE)
+DimPlot(object = illu1141, reduction = "tsne", group.by = "state")
+DimPlot(object = illu1141, reduction = "tsne")
+#dev.off()
+
+```
+
+# Gene Markers Heatmap
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8 }
+
+DefaultAssay(object = illu1141) <- "RNA"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+DefaultAssay(object = illu1141) <- "ISOG"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+DefaultAssay(object = illu1141) <- "ISO"
+illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
+
+DefaultAssay(object = illu1141) <- "RNA"
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
+DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
+
+write.table(illu1141.markers, file="output/illu1141.markers.csv", sep=",")
+
+```
+
+# Clusters re-labelling, saving .rds file
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+#saveRDS(illu1141, "illu1141.rds")
+
+new.cluster.ids <- c("GABAergic matures","Glutamatergic imatures","Glutamatergic matures","GABAergic imatures","Glutamatergic matures", "Radial precursors","Intermediate progenitors","Glutamatergic imatures","Radial glia","Cajal-Retzius")
+names(x = new.cluster.ids) <- levels(x = illu1141)
+illu1141 <- RenameIdents(object = illu1141, new.cluster.ids)
+
+my_levels <- c("Radial glia", "Radial precursors","Intermediate progenitors", "Glutamatergic imatures", "Glutamatergic matures","GABAergic imatures","GABAergic matures", "Cajal-Retzius")
+# Relevel object@ident
+illu1141@active.ident <- factor(x = illu1141@active.ident, levels = my_levels)
+DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
+
+illu1141[['illumina.ident']] <- illu1141@active.ident
+saveRDS(illu1141, "illu1141c.rds")
+
+```
+
+# Gene markers
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=3, fig.width=16}
+
+DefaultAssay(object = illu1141) <- "RNA"
+
+#pdf("/home/lebrigand/10x_rainer/figures/Illumina.featurePlots.pdf", width=20, height=4, useDingbats=FALSE)
+FeaturePlot(object = illu1141, features = c("Emx1","Gad2","Dlx2","Vim"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Sox2","Pax6","Eomes","Tbr1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Tubb3","Reln","Aif1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Meis2","Gpm6a","Sox5","Arpp21"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Camk2b","Camkv","Grin2b","Cacna1e"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = illu1141, features = c("Kcnk1","Gabra2","Scn2a1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+#dev.off()
+
+```
+
+# Heatmap
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8}
+
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
+DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
+
+write.table(illu1141.markers, file="output/markers.label.csv", sep=",")
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
+
