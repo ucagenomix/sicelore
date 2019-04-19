@@ -20,7 +20,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Add a sam flag from read name", oneLineSummary = "Add a sam flag from read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Add a sam flag from read name", oneLineSummary = "Add a sam flag from read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class AddTagFromReadName extends CommandLineProgram {
 

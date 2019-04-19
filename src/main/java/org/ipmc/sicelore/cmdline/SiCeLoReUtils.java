@@ -8,10 +8,10 @@ public class SiCeLoReUtils implements CommandLineProgramGroup {
     }
 
     public String getName() {
-        return "SiCeLoRe Utils";
+        return "SiCeLoRe utils";
     }
 
     public String getDescription() {
-        return "SiCeLoRe Utils";
+        return "SiCeLoRe utils";
     }
 }

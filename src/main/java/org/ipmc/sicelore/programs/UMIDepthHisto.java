@@ -30,7 +30,7 @@ public class UMIDepthHisto extends CommandLineProgram
 {
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
-    @Argument(shortName = "T", doc = "The type of input SAM or BAM file (longread/molecule/shortread)")
+    @Argument(shortName = "T", doc = "The type of input SAM or BAM file (shortread, longread or molecule)")
     public String TYPE = "molecule";
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;

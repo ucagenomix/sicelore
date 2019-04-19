@@ -17,7 +17,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Pre-process 10xGenomics possorted_genome_bam.bam file and serializes requested top cells (most Umis) into a java object file", oneLineSummary = "Pre-process 10xGenomics possorted_genome_bam.bam file and serializes requested top cells (most Umis) into a java object file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "External jar file", oneLineSummary = "External jar file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class BamSerializer extends CommandLineProgram {
 

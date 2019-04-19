@@ -19,7 +19,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Identify and transfert illumina barcodes to Nanopore reads", oneLineSummary = "Identify and transfert illumina barcodes to Nanopore reads", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "External jar file", oneLineSummary = "External jar file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IlluminaOxfordBCUmiMerger extends CommandLineProgram {
 

@@ -8,10 +8,10 @@ public class SiCeLoRe implements CommandLineProgramGroup {
     }
 
     public String getName() {
-        return "SiCeLoRe Pipeline";
+        return "SiCeLoRe tools";
     }
 
     public String getDescription() {
-        return "SiCeLoRe Pipeline - [Si]ngle [Ce]ll [Lo]ng [Re]ads tools";
+        return "SiCeLoRe tools - [Si]ngle [Ce]ll [Lo]ng [Re]ads tools";
     }
 }

@@ -15,7 +15,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Tag read with fastq sequence", oneLineSummary = "Tag read with fastq sequence", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Tag read with FASTQ sequence (US) and QV value (UQ)", oneLineSummary = "Tag read with FASTQ sequence (US) and QV value (UQ)", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class AddBamReadSequenceTag extends CommandLineProgram {
 

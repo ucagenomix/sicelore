@@ -28,6 +28,11 @@ public class Molecule implements Callable<String>
     private String consensus = "";
     private String geneId = "undef";
     private String transcriptId = "undef";
+    
+    protected static String TMPDIR;
+    protected static String RACONPATH;
+    protected static String MINIMAP2PATH;
+    
     //private int nbReads = 0;
     //private int nbCleanReads = 0;
     //private int nbConsensusReads = 0;
@@ -36,6 +41,8 @@ public class Molecule implements Callable<String>
     private final static HashMap<Character, Integer> encode;
     private final static char[] decode;
 
+    public Molecule() {}
+    
     public Molecule(String barcode, String umi) {
         this.longreads = new ArrayList<Longread>();
         this.geneIds = new HashSet<String>();
@@ -61,6 +68,13 @@ public class Molecule implements Callable<String>
         decode[2] = 'T';
         decode[3] = 'C';
         decode[4] = 'G';
+    }
+
+    public void setStaticParams(String tmp, String racon, String minimap2){
+	this.TMPDIR = tmp;
+        this.RACONPATH = racon;
+        this.MINIMAP2PATH = minimap2;
+        //System.out.println(TMPDIR);
     }
 
     public static int getIndexForChar(char base) {
@@ -352,7 +366,9 @@ public class Molecule implements Callable<String>
         double dvMin = 1.0;
         String bestRead = "";
         List<DNASequence> lst = new ArrayList<DNASequence>();
-
+        
+        //System.out.println(this.getLabel());
+        
         // should be an argument for consensus calling
         int nb_max_best_reads = 10;
 
@@ -406,7 +422,7 @@ public class Molecule implements Callable<String>
         }
         catch (Exception e) { 
             e.printStackTrace(); 
-            System.out.println(this.getLabel()+"\n"+lst);
+            //System.out.println(this.getLabel()+"\n"+lst);
             this.consensus = bestRead;
         }
         
@@ -419,11 +435,11 @@ public class Molecule implements Callable<String>
             DataOutputStream os=null;
             try{
                 String prefix = this.barcode + "" + this.umi;
-                os = new DataOutputStream(new FileOutputStream("/share/data/scratch/sicelore/"+prefix+"_consensus.fa"));
+                os = new DataOutputStream(new FileOutputStream(TMPDIR+"/"+prefix+"_consensus.fa"));
                 os.writeBytes(">"+this.barcode + this.umi+"\n"+this.consensus+"\n");
                 os.close();
 
-                os = new DataOutputStream(new FileOutputStream("/share/data/scratch/sicelore/"+prefix+"_reads.fa"));
+                os = new DataOutputStream(new FileOutputStream(TMPDIR+"/"+prefix+"_reads.fa"));
                 Iterator<Longread> iterator = this.longreads.iterator();
                 while(iterator.hasNext()){
                     Longread lr = (Longread) iterator.next();
@@ -432,17 +448,20 @@ public class Molecule implements Callable<String>
                 }
                 os.close();
                 
-                
                 String[] commande = {"bash", "-c" , ""};
-                commande[2] = "/share/apps/local/minimap2/minimap2 --secondary=no -ax map-ont "+prefix+"_consensus.fa "+prefix+"_reads.fa > "+prefix+"_overlap.sam";
-                ExecuteCmd executeCmd = new ExecuteCmd(commande, new String[0], "/share/data/scratch/sicelore/");
+                commande[2] = MINIMAP2PATH + "/minimap2 --secondary=no -ax map-ont "+TMPDIR+"/"+prefix+"_consensus.fa "+TMPDIR+"/"+prefix+"_reads.fa > "+TMPDIR+"/"+prefix+"_overlap.sam";
+                ExecuteCmd executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
                 executeCmd.run();
+                
+                //System.out.println(System.getenv("PATH"));
+                //executeCmd.getError();
 
-                commande[2] = "/share/apps/local/racon/bin/racon "+prefix+"_reads.fa "+prefix+"_overlap.sam "+prefix+"_consensus.fa > "+prefix+"_corrected_consensus.fa";
-                executeCmd = new ExecuteCmd(commande, new String[0], "/share/data/scratch/sicelore/");
+                commande[2] = RACONPATH + "/racon "+TMPDIR+"/"+prefix+"_reads.fa "+TMPDIR+"/"+prefix+"_overlap.sam "+TMPDIR+"/"+prefix+"_consensus.fa > "+TMPDIR+"/"+prefix+"_corrected_consensus.fa";
+                executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
                 executeCmd.run();
-
-                BufferedReader fichier = new BufferedReader(new FileReader("/share/data/scratch/sicelore/"+prefix+"_corrected_consensus.fa"));
+                
+                        
+                BufferedReader fichier = new BufferedReader(new FileReader(TMPDIR+"/"+prefix + "_corrected_consensus.fa"));
                 String line = fichier.readLine();
                
                 //System.out.println("avant\t"+this.getLabel() + "\n" + this.consensus);
@@ -451,8 +470,8 @@ public class Molecule implements Callable<String>
                 
                 fichier.close();
 
-                commande[2] = "rm "+prefix+"_reads.fa "+prefix+"_overlap.sam "+prefix+"_consensus.fa "+prefix+"_corrected_consensus.fa";
-                executeCmd = new ExecuteCmd(commande, new String[0], "/share/data/scratch/sicelore/");
+                commande[2] = "rm "+TMPDIR+"/"+prefix+"_reads.fa "+TMPDIR+"/"+prefix+"_overlap.sam "+TMPDIR+"/"+prefix+"_consensus.fa "+TMPDIR+"/"+prefix+"_corrected_consensus.fa";
+                executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
                 executeCmd.run();
            }
             catch(Exception e){ e.printStackTrace(); }

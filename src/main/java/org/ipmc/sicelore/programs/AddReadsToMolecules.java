@@ -18,7 +18,7 @@ import org.ipmc.sicelore.utils.LongreadParser;
 import org.ipmc.sicelore.utils.MoleculeDataset;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Add reads from molecules present in reference bam file", oneLineSummary = "Add reads from molecules present in reference bam file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Add reads from TARGETED bam for molecules present in INPUT bam", oneLineSummary = "Add reads from TARGETED bam for molecules present in INPUT bam", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class AddReadsToMolecules extends CommandLineProgram {
 

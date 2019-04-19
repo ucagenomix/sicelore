@@ -77,6 +77,7 @@ public class ExecuteCmd {
         try {
             BufferedReader localBufferedReader = new BufferedReader(new java.io.InputStreamReader(p.getErrorStream()));
             while (localBufferedReader.readLine() != null) {
+                 //System.out.println(localBufferedReader.readLine());
             }
 
             localBufferedReader.close();

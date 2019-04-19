@@ -28,7 +28,7 @@ public class IsoformMatrix extends CommandLineProgram
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
-    public int DELTA = 10;
+    public int DELTA = 5;
     @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
     public boolean SOFT = false;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=sicelore)")
