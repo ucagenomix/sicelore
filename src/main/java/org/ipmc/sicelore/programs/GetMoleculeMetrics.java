@@ -51,26 +51,24 @@ public class GetMoleculeMetrics extends CommandLineProgram {
                 String molecule_name = r.getReadName();
                 String BC = (String)r.getAttribute("BC");
                 String U8 = (String)r.getAttribute("U8");
-                int R1 = ((Integer) r.getAttribute("R1") != null) ? (Integer) r.getAttribute("R1") : 0;
-                int R2 = ((Integer) r.getAttribute("R2") != null) ? (Integer) r.getAttribute("R2") : 0;
-                int R3 = ((Integer) r.getAttribute("R3") != null) ? (Integer) r.getAttribute("R3") : 0;
+                int RN = ((Integer) r.getAttribute("RN") != null) ? (Integer) r.getAttribute("RN") : 0;
                 
-                Float dv = (Float) r.getAttribute("dv");
-                double pctId = 1.0 - dv;
+                Float de = (Float) r.getAttribute("de");
+                double pctId = 1.0 - de;
                 
-                map.put(molecule_name, new MoleculeMetrics(R1, R2, R3, pctId));
+                map.put(molecule_name, new MoleculeMetrics(RN, pctId));
             }
             inputSam.close();
             log.info(new Object[]{"Parsing bam file\t\t...end"});
             
             os = new DataOutputStream(new FileOutputStream(OUTPUT));
-            os.writeBytes("barcode\tumi\tgeneId\ttranscriptId\ttotal_reads\tclean_reads\txconsensus_reads\tpctIdentity\n");
+            os.writeBytes("barcode\tumi\tgeneId\ttranscriptId\ttotal_reads\tpctIdentity\n");
             for(String key : map.keySet()){
                 MoleculeMetrics m = (MoleculeMetrics)this.map.get(key);
                 
-                // Cdk4|ENSMUST00000006911.11|CGCGTTTTCCAAACAC|TCACCCAGCA|120|108|10
+                // Cdk4|ENSMUST00000006911.11|CGCGTTTTCCAAACAC|TCACCCAGCA|120
                 String[] keys = key.split("\\|");
-                os.writeBytes(keys[2]+"\t"+keys[3]+"\t"+keys[0]+"\t"+keys[1]+"\t"+m.getXReads()+"\t"+m.getXCleanReads()+"\t"+m.getXConsensusReads()+"\t"+m.getPctId()+"\n");
+                os.writeBytes(keys[2]+"\t"+keys[3]+"\t"+keys[0]+"\t"+keys[1]+"\t"+m.getXReads()+"\t"+m.getPctId()+"\n");
             }
             os.close();
 
@@ -84,9 +82,7 @@ public class GetMoleculeMetrics extends CommandLineProgram {
                 System.err.println("can not close stream");
             }
         }
-
         return 0;
-
     }
 
     public static void main(String[] paramArrayOfString) {

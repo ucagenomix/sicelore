@@ -56,7 +56,7 @@ public class Matrix
         
         //System.out.println(molecule.getBarcode()+","+molecule.getGeneId()+","+molecule.getTranscriptId());
         
-        ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
+        ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(), molecule.getTranscriptId(), molecule.getLongreads().size());
         ((GeneMetrics)geneMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
         
         if ("undef".equals(molecule.getTranscriptId()))
@@ -178,16 +178,16 @@ public class Matrix
         
         try {
             os = new DataOutputStream(new java.io.FileOutputStream(paramFile));
-            os.writeBytes("barcode\ttotal\tisoform_def\tisoform_undef\n");
+            os.writeBytes("cellBC\tnbReads\tnbUmis\tnbIsoformSet\tnbIsoformNotSet\n");
             
             for(String cell_barcode : cellMetrics.keySet()){
                 CellMetrics cm = cellMetrics.get(cell_barcode);
                 if(cm != null){
-                    int total = cm.getIsoform_known_count() + cm.getIsoform_undef_count();
-                    os.writeBytes(cell_barcode+"\t"+total+"\t"+cm.getIsoform_known_count()+"\t" +cm.getIsoform_undef_count()+"\n");
+                    //int total = cm.getIsoform_known_count() + cm.getIsoform_undef_count();
+                    os.writeBytes(cell_barcode+"\t"+cm.getNb_reads()+"\t"+cm.getNb_umis()+"\t"+cm.getIsoform_known_count()+"\t" +cm.getIsoform_undef_count()+"\n");
                 }
                 else{
-                    os.writeBytes(cell_barcode+"\t0\t0\t0\n");
+                    os.writeBytes(cell_barcode+"\t0\t0\t0\t0\t0\n");
                 }
             }
             

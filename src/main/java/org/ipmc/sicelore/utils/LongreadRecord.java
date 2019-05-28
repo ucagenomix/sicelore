@@ -31,9 +31,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     //private String orientation;
     //private int umiEnd;
     //private int tsoEnd;
-    private Float dv;
+    private Float de;
+    private int mapqv;
     //private boolean isSoftOrHardClipped = false;
-    //private boolean isSecondaryOrSupplementary = false;
+    private boolean isSecondaryOrSupplementary = false;
     //private int sizeStartToClip;
     //private int sizeEndToClip;
     //private boolean is_associated = false;
@@ -43,8 +44,8 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     private LongreadRecord() { }
 
     public int compareTo(LongreadRecord lr){
-        Float obj1 = new Float(((LongreadRecord) lr).getDv());
-        Float obj2 = new Float(this.dv);
+        Float obj1 = new Float(((LongreadRecord) lr).getDe());
+        Float obj2 = new Float(this.de);
         int retval = obj2.compareTo(obj1);
         return retval;
     }
@@ -56,7 +57,8 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         record.geneId = (String) r.getAttribute("IG");
         record.barcode = (String) r.getAttribute("BC");
         record.umi = (String) r.getAttribute("U8");
-       
+        record.mapqv = r.getMappingQuality();
+        
         if (record.geneId == null || record.barcode == null || record.umi == null || r.getReadUnmappedFlag())
             return null;
         
@@ -73,8 +75,8 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             //record.chrom = r.getReferenceName();
             //record.txStart = r.getAlignmentStart();
             //record.txEnd = r.getAlignmentEnd();
-            //record.isSecondaryOrSupplementary = r.isSecondaryOrSupplementary();
-            record.dv = (Float) r.getAttribute("dv");
+            record.isSecondaryOrSupplementary = r.isSecondaryOrSupplementary();
+            record.de = ((Float) r.getAttribute("de") != null) ? (Float) r.getAttribute("de") : (Float) r.getAttribute("df"); // minimap 2.17 (de) versus 2.10 (df)
             
             //Strand strand = Strand.fromString((r.getReadNegativeStrandFlag()) ? "-" : "+");
             //String orientation = (String) r.getAttribute("AR");  // if exists US is "TSO------------------------AAAA-UMI-BC-ADAPTOR"
@@ -250,8 +252,11 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         this.geneId = geneId;
     }
 
-    public float getDv() {
-        return this.dv;
+    public int getMapqv() {
+        return this.mapqv;
+    }
+    public float getDe() {
+        return this.de;
     }
     /*
     public int getSizeStartToClip(){
@@ -273,9 +278,9 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         return isReversed;
     }
     
-    //public boolean getIsSecondaryOrSupplementary() {
-    //    return isSecondaryOrSupplementary;
-    //}
+    public boolean getIsSecondaryOrSupplementary() {
+        return isSecondaryOrSupplementary;
+    }
 
     public List<int[]> getExons() {
         return this.exons;

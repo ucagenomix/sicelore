@@ -110,7 +110,12 @@ public class MoleculeDataset {
 
     public List<Molecule> select(String mygene){ return (List<Molecule>) mapGenes.get(mygene); }
     public HashMap<String, Molecule> getMapMolecules() { return this.mapMolecules; }
-
+    
+    public Molecule getMolecule(String isokey)
+    {
+        return this.mapMolecules.get(isokey);
+    }
+    
     public Matrix produceMatrix(UCSCRefFlatParser model, HashSet<String> authorizedCells)
     {
         int nb = 0;

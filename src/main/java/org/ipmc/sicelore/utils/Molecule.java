@@ -155,40 +155,36 @@ public class Molecule implements Callable<String>
 
     public void setIsoform(List<TranscriptRecord> transcripts, int DELTA, boolean SOFT)
     {
-        //System.out.println("\n\n"+this.getLabel() + "\t" + this.longreads.size());
-        //Collections.sort(this.longreads);
+        List list1=null;
         
         HashMap<String, Integer> candidates = new HashMap<String, Integer>();
         
         for(Longread lr : this.longreads){
-            LongreadRecord lrr = lr.getBestRecord();
-            
-            //System.out.println(lr.getName() + "\t" + lr.getLongreadrecords().size() + "\t" + lrr);
-            
-            List list = junctionsFromExons(lrr.getExons());
-            for(TranscriptRecord transcriptrecord : transcripts)
-            {                        
-                List list1 = junctionsFromExons(transcriptrecord.getExons());
-                
-                //System.out.println(list.size() + "\t" +  transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId() + "\t" + list1.size());
-                
-                if(map(list, list1, DELTA, SOFT)) {
-                    String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
-                    
-                    // case SOFT pocess put nb exons as the value to get the more complex transcript
-                    if(SOFT)
-                        candidates.put(key, transcriptrecord.getExons().size());
-                    else{
-                        if(candidates.containsKey(key))
-                            candidates.put(key, candidates.get(key) + 1);
-                         else
-                            candidates.put(key, 1);
+            List<LongreadRecord> records = lr.getLongreadrecords();
+            //LongreadRecord lrr = lr.getBestRecord();
+
+            for(LongreadRecord lrr : records){
+                List list = junctionsFromExons(lrr.getExons());
+
+                for(TranscriptRecord transcriptrecord : transcripts){                        
+                    list1 = junctionsFromExons(transcriptrecord.getExons());
+
+                    if(map(list, list1, DELTA, SOFT)) {
+                        String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
+
+                        // case SOFT pocess put nb exons as the value to get the more complex transcript
+                        if(SOFT)
+                            candidates.put(key, transcriptrecord.getExons().size());
+                        else{
+                            if(candidates.containsKey(key))
+                                candidates.put(key, candidates.get(key) + 1);
+                             else
+                                candidates.put(key, 1);
+                        }
                     }
                 }
             }
         }
-            
-        //System.out.println(candidates.size());
         
         if(candidates.size() > 0){
             HashSet<String> bestCandidates = new HashSet<String>();
@@ -202,8 +198,6 @@ public class Molecule implements Callable<String>
             String g = (String) iter.next();
             this.transcriptId = g.split("\\|")[0];
             this.geneId = g.split("\\|")[1];
-            
-            //System.out.println(candidates.size() + "\t" + this.transcriptId);
         }
         else{
             int index = new Random().nextInt(geneIds.size());
@@ -211,6 +205,12 @@ public class Molecule implements Callable<String>
             for (int i = 0; i < index; i++) { iter.next(); }
             this.transcriptId = "undef";
             this.geneId = (String) iter.next();
+        }
+        
+        // only 1 mono-exonic transcript in the model --> we set the isoform
+        if(transcripts.size() == 1 && list1.size() == 0){
+           this.transcriptId = transcripts.get(0).getTranscriptId();
+           this.geneId = transcripts.get(0).getGeneId();
         }
     }
     
@@ -293,8 +293,8 @@ public class Molecule implements Callable<String>
             }
 	    else{ bool = false; }
 	}
-	else{
-            if (tr_exons.size() == lrr_exons.size()) {
+        else{
+            if(tr_exons.size() > 0 && tr_exons.size() == lrr_exons.size()) {
                 for (int i = 0; i < tr_exons.size(); i++) {
                     if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
                         bool = false;
@@ -306,6 +306,7 @@ public class Molecule implements Callable<String>
                 //System.out.println("not same exons size");
             }
         }
+        
         //System.out.println(tr_exons.size() + "\t" + lrr_exons.size() + "-->"+bool);
         return bool;
     }
@@ -363,7 +364,7 @@ public class Molecule implements Callable<String>
 
     public String call() throws Exception
     {
-        double dvMin = 1.0;
+        double deMin = 1.0;
         String bestRead = "";
         List<DNASequence> lst = new ArrayList<DNASequence>();
         
@@ -383,8 +384,8 @@ public class Molecule implements Callable<String>
                 String cdna = new String(lrr.getCdna());
                 //System.out.println(cdna);
                 
-                if (lrr.getDv() < dvMin) {
-                    dvMin = lrr.getDv();
+                if (lrr.getDe() < deMin) {
+                    deMin = lrr.getDe();
                     bestRead = cdna;
                 }
                 lst.add(new DNASequence(cdna));

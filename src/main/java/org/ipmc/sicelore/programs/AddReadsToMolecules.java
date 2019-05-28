@@ -45,7 +45,7 @@ public class AddReadsToMolecules extends CommandLineProgram {
         int rec=0;
         int addrec=0;
 
-        LongreadParser bam = new LongreadParser(INPUT, false);
+        LongreadParser bam = new LongreadParser(INPUT, false, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
         Set cles = dataset.getMapMolecules().keySet();
         

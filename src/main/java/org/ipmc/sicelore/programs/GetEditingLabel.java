@@ -90,8 +90,8 @@ public class GetEditingLabel extends CommandLineProgram {
                     if(RGpos > 0 && readString.length() > RGpos){
                         String RGbase = readString.substring(RGpos - 1, RGpos);
                         
-                        //String QRbase = "NA";
-                        //if(QRpos > 0){ QRbase = readString.substring(QRpos - 1, QRpos); }
+                        String QRbase = "NA";
+                        if(QRpos > 0){ QRbase = readString.substring(QRpos - 1, QRpos); }
 
                         //String transcriptId = "undef";
                         //if(is_short){ transcriptId = "short"; }
@@ -111,8 +111,8 @@ public class GetEditingLabel extends CommandLineProgram {
                         //molecule.setGeneId("Gria2");
                         //molecule.setTranscriptId(transcriptId);
                         
-                        molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase);
-                        //molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase + "." + QRbase);
+                        //molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase);
+                        molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase + "." + QRbase);
                         matrix.addMolecule(molecule);
                     }
                 }

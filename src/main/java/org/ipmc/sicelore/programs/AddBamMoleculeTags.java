@@ -41,14 +41,22 @@ public class AddBamMoleculeTags extends CommandLineProgram {
                 pl.record(r);
                 String str = r.getReadName();
                 String[] info = str.split("\\|");
-
-                r.setAttribute("IG", info[0]);
-                r.setAttribute("IT", info[1]);
-                r.setAttribute("BC", info[2]);
-                r.setAttribute("U8", info[3]);
-                // molecule longreads
-                r.setAttribute("R1", new Integer(info[4]).intValue());
-
+                
+                if(info.length == 5){ // GENEID|TRANSCRIPTID|BC|U8|NBREADS --> isoform set before consensus
+                    r.setAttribute("IG", info[0]);
+                    //r.setAttribute("IT", info[1]);
+                    r.setAttribute("BC", info[2]);
+                    r.setAttribute("U8", info[3]);
+                    // molecule longreads
+                    r.setAttribute("RN", new Integer(info[4]).intValue());
+                }
+                else if(info.length == 4){ // GENEID|BC|U8|NBREADS --> isoform set after consensus
+                    r.setAttribute("IG", info[0]);
+                    r.setAttribute("BC", info[1]);
+                    r.setAttribute("U8", info[2]);
+                    // molecule longreads
+                    r.setAttribute("RN", new Integer(info[3]).intValue());
+                }
                 localSAMFileWriter.addAlignment(r);
             }
             localSamReader.close();

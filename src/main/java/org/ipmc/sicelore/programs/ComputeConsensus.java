@@ -56,7 +56,7 @@ public class ComputeConsensus extends CommandLineProgram {
         //System.out.println(System.getenv("PATH"));
         
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-        LongreadParser bam = new LongreadParser(INPUT, true);
+        LongreadParser bam = new LongreadParser(INPUT, true, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
         dataset.setIsoforms(model, DELTA, SOFT);
         dataset.callConsensus(OUTPUT, nThreads);

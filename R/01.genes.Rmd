@@ -156,7 +156,7 @@ s190[['nonedited']] <- 0
 
 ```
 
-# Integration RNA
+# Integration (RNA)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
@@ -170,8 +170,6 @@ ElbowPlot(object = illu1141)
 illu1141 <- RunTSNE(object = illu1141, reduction = "pca", dims = 1:11)
 illu1141 <- FindNeighbors(object = illu1141, do.plot=TRUE, dims = 1:11)
 illu1141 <- FindClusters(object = illu1141, resolution=0.8)
-
-DotPlot(object = illu1141, features = markers, plot.legend = TRUE) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
 
 #pdf("clusters.pdf", width=10, height=8, useDingbats=FALSE)
 DimPlot(object = illu1141, reduction = "tsne", group.by = "state")
@@ -200,17 +198,33 @@ write.table(illu1141.markers, file="output/illu1141.markers.csv", sep=",")
 
 ```
 
+# Correlation between clusters
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+saveRDS(illu1141, "illu1141c.clusters.rds")
+
+mnmat <- c()
+uniq <- unique(illu1141@active.ident)
+for(i in 1:length(uniq)){
+  mnmat <- cbind(mnmat, apply(as.matrix(illu1141@assays$RNA@data[, illu1141@meta.data$integrated_snn_res.0.8==uniq[i]]), 1, mean))
+}
+
+colnames(mnmat) <- as.vector(unique(illu1141@active.ident))
+ct=cor(mnmat)
+pheatmap(ct)
+
+```
+
 # Clusters re-labelling, saving .rds file
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
-#saveRDS(illu1141, "illu1141.rds")
-
-new.cluster.ids <- c("GABAergic matures","Glutamatergic imatures","Glutamatergic matures","GABAergic imatures","Glutamatergic matures", "Radial precursors","Intermediate progenitors","Glutamatergic imatures","Radial glia","Cajal-Retzius")
+new.cluster.ids <- c("mature GABAergic","imature Glutamatergic","mature Glutamatergic","imature GABAergic","mature Glutamatergic", "cycling radial glia","intermediate progenitor","imature Glutamatergic","radial glia","Cajal-Retzius")
 names(x = new.cluster.ids) <- levels(x = illu1141)
 illu1141 <- RenameIdents(object = illu1141, new.cluster.ids)
 
-my_levels <- c("Radial glia", "Radial precursors","Intermediate progenitors", "Glutamatergic imatures", "Glutamatergic matures","GABAergic imatures","GABAergic matures", "Cajal-Retzius")
+my_levels <- c("cycling radial glia","radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
 # Relevel object@ident
 illu1141@active.ident <- factor(x = illu1141@active.ident, levels = my_levels)
 DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
@@ -220,9 +234,18 @@ saveRDS(illu1141, "illu1141c.rds")
 
 ```
 
+# Dotplot
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+DotPlot(object = illu1141, features = c("Dbi","Vim","Fabp7","Top2a","Ccnd2","Cenpf","Mki67","Pou3f2","Pou3f3","Sox11","Eomes","Neurog2","Pax6","Ascl1","Camk2b","Crym","Opcml","Foxp1","Grin2b","Mef2c","Neurod2","Neurod6","Rbfox3","Neurod1","H3f3b","Meis2","Mafb","Maf","Sst","Arx","Sox6","Htr3a","Tcf4","Tubb2a","Npy","Meg3","Reln","Lhx5","Snhg11"), reduction="tsne") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+
+```
+
 # Gene markers
 
-```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=3, fig.width=16}
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=20}
 
 DefaultAssay(object = illu1141) <- "RNA"
 
@@ -248,6 +271,48 @@ DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 write.table(illu1141.markers, file="output/markers.label.csv", sep=",")
 
 ```
+
+# Dotplot isoforms
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=18}
+
+DefaultAssay(object = illu1141) <- "ISO"
+
+#pdf("dotplotiso.pdf", width=24, height=8, useDingbats=FALSE)
+
+lst <- c('Clta','Pkm','Myl6','Sox2','Rpl22l1','Evl','Meg3','Dbi','Serpinh1','Vim','Slc1a3','Sh3glb1','Gnas','Gng5','Cd63','Clic1','Csrp1','Mdk','Id4','Dctn2')
+isolist <- c()
+for(i in 1:length(lst)){
+  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
+}
+DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+lst <- c('Ccnd2','Ppp1r1a','Gnai2','Slc25a5','Tead2','B9d1','Pmm1','Zfand6','Myl12a','Cdk6','Nek6','H2afv','Selm','Shisa4','Mfap2','Ezr','Tubb4b','Mrfap1')
+isolist <- c()
+for(i in 1:length(lst)){
+  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
+}
+DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+lst <- c('Arl2bp','Rps27l','Atp5g2','Idh2','Nt5dc2','Rmst','Cenpw','Lhx2','Krtcap2','Pgp','Ppib','Aldoa','Rpl29','Tecr','Capns1','H1f0','Tubb2a','Stmn4')
+isolist <- c()
+for(i in 1:length(lst)){
+  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
+}
+DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+lst <- c('Pcsk1n','Rtn1','Crmp1','Calm2','Ppp2r2b','Dlx2','Nnat','Pfn2','Dlx6os1','Dlx1','Sp9','Tcf4','Rgs2','Dynlt1c','Gadd45g','Pantr1','Ddah2','Nfib','Tmem176b','Insm1','Hnrnpa1','Carhsp1')
+isolist <- c()
+for(i in 1:length(lst)){
+  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
+}
+DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+#dev.off()
+
+```
+
+
 
 # Session Info
 

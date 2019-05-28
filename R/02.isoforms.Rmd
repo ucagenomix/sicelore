@@ -156,7 +156,7 @@ s190[['nonedited']] <- 0
 
 ```
 
-# Integration ISO
+# Integration (ISO)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
@@ -189,6 +189,9 @@ DimPlot(object = iso1141, reduction = "tsne", group.by="illumina.ident")
 
 saveRDS(iso1141, "iso1141c.rds")
 
+iso1141 <- readRDS("iso1141c.rds")
+iso1141 <- SetIdent(object=iso1141, value="illumina.ident")
+
 ```
 
 # Gene Markers Heatmap
@@ -210,8 +213,6 @@ write.table(iso1141.markers, file="output/iso1141.markers.csv", sep=",")
 
 genes.liste <- c("Eomes","Vim","Reln","Dbi","Htr3a","Maf","Nrp1","Nrp2")
 for (i in (1:length(genes.liste))){
-  #print(genes.liste[i])
-  #print(grep(paste("^",genes.liste[i],"-",sep=""), rownames(iso1141@assays$ISO@counts)))
   print(FeaturePlot(object = iso1141, features = c(rownames(iso1141@assays$ISO@counts)[grep(paste("^",genes.liste[i],"-",sep=""), rownames(iso1141@assays$ISO@counts))]), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4))
 }
 

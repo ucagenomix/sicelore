@@ -17,11 +17,13 @@ public class LongreadParser implements LongreadModelParser {
     private int unvalid_records = 0;
     private int chimeria_records = 0;
     private int reversed_records = 0;
+    private int not_primary_records = 0;
+    private int mapqv0_records = 0;
     private boolean load_sequence = false;
     
     HashMap<String, Longread> mapLongreads;
 
-    public LongreadParser(File bam, boolean load_sequence)
+    public LongreadParser(File bam, boolean load_sequence, boolean primary_only)
     {
         this.load_sequence = load_sequence;
         
@@ -40,7 +42,7 @@ public class LongreadParser implements LongreadModelParser {
         try {
             for(SAMRecord r : inputSam) {
                 pl.record(r);
-                LongreadRecord lrr = parseSAMRecord(r);
+                LongreadRecord lrr = parseSAMRecord(r, primary_only);
                 total_records++;
                 
                 //if(total_records%1000000 == 0){
@@ -52,7 +54,7 @@ public class LongreadParser implements LongreadModelParser {
                 if (lrr != null) {
                     valid_records++;
 
-                    if ((longread = (Longread) this.mapLongreads.get(lrr.getName())) != null) {
+                    if ((longread = (Longread) this.mapLongreads.get(lrr.getName())) != null){
                         longread.addRecord(lrr);
                         //multiRec.add(longread.getName());
                     } 
@@ -72,16 +74,20 @@ public class LongreadParser implements LongreadModelParser {
         log.info(new Object[]{"\tSAMrecords unvalid\t[" + unvalid_records + "]"});
         log.info(new Object[]{"\tSAMrecords chimeria\t[" + chimeria_records + "]"});
         log.info(new Object[]{"\tSAMrecords reversed\t[" + reversed_records + "]"});
+        log.info(new Object[]{"\tSAMrecords mapqv=0\t[" + mapqv0_records + "]"});
+        log.info(new Object[]{"\tSAMrecords not primary\t[" + not_primary_records + "]"});
         log.info(new Object[]{"\tTotal reads\t\t[" + mapLongreads.size() + "]"});
         //log.info(new Object[]{"\tTotal reads multiSAM\t[" + multiRec.size() + "]"});
     }
 
-    public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException
+    public LongreadRecord parseSAMRecord(SAMRecord r, boolean primary_only) throws LongreadParseException
     {
         LongreadRecord record = LongreadRecord.fromSAMRecord(r, this.load_sequence);
         if(record == null) { unvalid_records++; return null; }
         if(record.getIsChimeria()) { chimeria_records++; return null; }
         if(record.getIsReversed()) { reversed_records++; return null; }
+        //if(record.getMapqv() == 0) { mapqv0_records++; return null; }
+        //if(primary_only && record.getIsSecondaryOrSupplementary()) { not_primary_records++; return null; }
         return record;
     }
 

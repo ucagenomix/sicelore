@@ -18,6 +18,7 @@ illu1141 <- readRDS("illu1141c.rds")
 DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
 
 100*sum(illu1141@meta.data$nCount_ISOG)/sum(illu1141@meta.data$nCount_RNA)
+100*sum(illu1141@meta.data$nFeature_ISOG)/sum(illu1141@meta.data$nFeature_RNA)
 
 median(illu1141@meta.data$nCount_ISOG)
 median(illu1141@meta.data$nCount_RNA)
@@ -46,7 +47,7 @@ sub951 <- subset(illu1141, subset = sample==3)
 
 ```
 
-# Correlation plots illumina/Nanopore (R2)
+# Correlation plots illumina/Nanopore (r²)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
@@ -102,7 +103,7 @@ plot_grid(plot1, plot2)
 
 ```
 
-# Correlation Illumina / Nanopore (R)
+# Correlation Illumina / Nanopore (r)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 

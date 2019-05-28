@@ -65,7 +65,7 @@ public class UMIDepthHisto extends CommandLineProgram
         if("longread".equals(TYPE)){
             log.info(new Object[]{"loadLongreadsBam"});
             
-            LongreadParser bam = new LongreadParser(INPUT, false);
+            LongreadParser bam = new LongreadParser(INPUT, false, false);
             MoleculeDataset dataset = new MoleculeDataset(bam);
             
             Set cles = dataset.getMapMolecules().keySet();
