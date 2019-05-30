@@ -428,7 +428,7 @@ public class Molecule implements Callable<String>
         }
         
         this.consensus = this.consensus.replaceAll("-", "");
-        
+         
         /*
             Now need to polish the consensus with racon
         */
