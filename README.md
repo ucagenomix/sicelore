@@ -61,8 +61,6 @@ requires:
 
     + Consensus sequences are re-mapped to the reference genome
 
-* [SNPs calling, fusion transcript detection]()  
-
  
 
 ## Authors
@@ -731,7 +729,7 @@ Other info is added to the following tags by default:
 
  
 
-*** merge bam files ***
+**merge bam files**
 
 Cell barcode and UMI assigned Bam files need to be merged.  
 
@@ -746,11 +744,10 @@ samtools index GEUS10xAttributes.umifound.bam
 
 ```
 
- 
 
-*** isoform expression quantification ***
+**isoform expression quantification**
 
-*** use IsoformMatrix (sicelore.jar) ***
+**use IsoformMatrix (sicelore.jar)**
 
 SAM records matching known genes (gene name must be in IG tag) are analyzed for matching Gencode transcripts corresponding to the same gene and a transcript isoform count table for is generated. 
 
@@ -759,7 +756,7 @@ A read is assigned to a given transcript when it recapitulates the full exon-exo
 When more than one read is available for the molecule (UMI), all are processed and the TranscriptId is set to the most often identified transcript for the UMI. 
 
 
-*** parameters ***
+**parameters**
 
 **INPUT=**  (required)  
 
@@ -769,7 +766,7 @@ GEUS10xAttributes.umifound.bam file containing cellBC (BC tag) and UMI (U8 tag) 
 
 .csv file listing, one per line, the cell barcodes that need to be quantified (e.g. brain951.barcodes.tsv in github /barcodes/ directory)  
 
- **REFFLAT=** (required)  
+**REFFLAT=** (required)  
 
 .txt file describing the gene model for the organism concerned (e.g. refFlat_gencode.vM18.txt in github /refFlat/ directory) 
 
@@ -798,7 +795,7 @@ Gria2   flop    chr3    -       80681449        80802835        80688549        
 
 ```
 
-*** output files ***
+**output files**
 
 **PREFIX**_cells_metrics.txt
 
@@ -821,7 +818,6 @@ gene level number of molecules per cell barcode count matrix for subsequent stat
 isoform level number of molecules per cell barcode count matrix for subsequent statistical analysis
 
  
-
 #### Example
 
 
@@ -836,7 +832,7 @@ java -jar -Xmx44g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REF
 ## 7) Compute consensus sequences
 
  
-*** use ComputeConsensus (sicelore.jar) ***
+**use ComputeConsensus (sicelore.jar)**
 
 The pipeline allows to compute the consensus sequence for each molecule identified in the INPUT .bam file.
 
@@ -855,15 +851,6 @@ The consensus sequence is then “racon” polished using the whole set of reads
 Using a 20 cores compute nodes for muti-threading, and depending on the sequencing depth inducing a low/high number of multi-reads molecules, the speed of consensus sequence computation can be estimated at 30k / hour.
 
 For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
-
-
-
- The default number of threads is set to 20 but can be change using the “T” argument.
-All the computed molecules
-
-consensus sequence are finally grouped as a “OUTPUT” Fasta formatted file so that they can be mapped-back to the genome using minimap2 or 
-
-gmap mapper for subsequent analysis such as SNPs or editing events calling.
 
 
 ### splitting bam by chromosomes  
@@ -885,9 +872,9 @@ for($i=0; $i<@jobs; $i++){
 
  
 
-### ComputeConsensus pipeline  
+### ComputeConsensus pipeline
 
-*** parameters ***
+**parameters**
 
 **INPUT=**  (required)  
 
