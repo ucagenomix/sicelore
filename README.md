@@ -29,7 +29,7 @@ requires:
 
 # Worflow
 
-<img src="flow.png">
+<img src="flow.png" width="350" height="250">
 
 
 # Features
