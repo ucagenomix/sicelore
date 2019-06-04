@@ -15,7 +15,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Tag read with FASTQ sequence (US) and QV value (UQ)", oneLineSummary = "Tag read with FASTQ sequence (US) and QV value (UQ)", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Add read sequence and QV to SAMrecords", oneLineSummary = "Add read sequence and QV to SAMrecords", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class AddBamReadSequenceTag extends CommandLineProgram {
 
@@ -27,16 +27,14 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
     public File OUTPUT;
     @Argument(shortName = "FASTQ", doc = "The .FASTQ file")
     public File FASTQ;
-    @Argument(shortName = "TAG", doc = "The tag <default=US>")
-    public String TAG;
-    @Argument(shortName = "TAGQV", doc = "The tag <default=UQ>")
-    public String TAGQV;
+    @Argument(shortName = "SEQTAG", doc = "The sequence tag <default=US>")
+    public String SEQTAG = "US";
+    @Argument(shortName = "QVTAG", doc = "The QV tag <default=UQ>")
+    public String QVTAG = "UQ";
 
     public AddBamReadSequenceTag() {
         log = Log.getInstance(AddBamReadSequenceTag.class);
         pl = new ProgressLogger(log);
-        TAG = "US";
-        TAGQV = "UQ";
     }
 
     protected int doWork()
@@ -60,9 +58,9 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
                 pl.record(localSAMRecord);
                 String name = localSAMRecord.getReadName();
                 String seq = new String((byte[]) localTHashMap.get(name));
-                localSAMRecord.setAttribute(TAG, seq);
+                localSAMRecord.setAttribute(SEQTAG, seq);
                 String qv = new String((byte[]) localTHashMapQV.get(name));
-                localSAMRecord.setAttribute(TAGQV, qv);
+                localSAMRecord.setAttribute(QVTAG, qv);
                 localSAMFileWriter.addAlignment(localSAMRecord);
             }
             localSamReader.close();

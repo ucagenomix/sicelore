@@ -41,7 +41,25 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     private boolean isChimeria = false;
     private boolean isReversed = false;
     
-    private LongreadRecord() { }
+    protected static String CELLTAG; // BC
+    protected static String UMITAG; // U8
+    protected static String GENETAG; //IG
+    protected static String TSOENDTAG; //TE
+    protected static String UMIENDTAG; //UE
+    protected static String USTAG; // US
+    protected static int MAXCLIP; // 150
+
+    public LongreadRecord() { }
+
+    public void setStaticParams(String celltag, String umitag, String genetag, String tsoendtag, String umiendtag, String ustag, int maxclip){
+	this.CELLTAG = celltag;
+        this.UMITAG = umitag;
+        this.GENETAG = genetag;
+        this.TSOENDTAG = tsoendtag;
+        this.UMIENDTAG = umiendtag;
+        this.USTAG = ustag;
+        this.MAXCLIP = maxclip;
+    }
 
     public int compareTo(LongreadRecord lr){
         Float obj1 = new Float(((LongreadRecord) lr).getDe());
@@ -54,9 +72,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     {
         LongreadRecord record = new LongreadRecord();
         
-        record.geneId = (String) r.getAttribute("IG");
-        record.barcode = (String) r.getAttribute("BC");
-        record.umi = (String) r.getAttribute("U8");
+        record.geneId = (String) r.getAttribute(GENETAG);
+        record.barcode = (String) r.getAttribute(CELLTAG);
+        record.umi = (String) r.getAttribute(UMITAG);
+        
         record.mapqv = r.getMappingQuality();
         
         if (record.geneId == null || record.barcode == null || record.umi == null || r.getReadUnmappedFlag())
@@ -80,8 +99,8 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             
             //Strand strand = Strand.fromString((r.getReadNegativeStrandFlag()) ? "-" : "+");
             //String orientation = (String) r.getAttribute("AR");  // if exists US is "TSO------------------------AAAA-UMI-BC-ADAPTOR"
-            int umiEnd = ((Integer) r.getAttribute("UE") != null) ? (Integer) r.getAttribute("UE") : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
-            int tsoEnd = ((Integer) r.getAttribute("TE") != null) ? (Integer) r.getAttribute("TE") : 0;
+            int umiEnd = ((Integer) r.getAttribute(UMIENDTAG) != null) ? (Integer) r.getAttribute(UMIENDTAG) : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
+            int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
             
             //boolean isSoftOrHardClipped = false;
             int sizeStartToClip = 0;
@@ -102,7 +121,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             
             if (record.geneId != null && record.barcode != null && record.umi != null){
                 String str = null;
-                String readSequence = (String)r.getAttribute("US");
+                String readSequence = (String)r.getAttribute(USTAG);
                 
                 // detect softclipping starting or ending reads
                 if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])){ sizeStartToClip = new Integer(cigarsize[0]).intValue(); }
@@ -110,10 +129,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                 
                 // Strand "+" process
                 if(! r.getReadNegativeStrandFlag()){
-                    if(sizeEndToClip < 150){
+                    if(sizeEndToClip < MAXCLIP){
                         if(load_sequence){
                             // need to trim sizeStartToClip bases at start in case of chimeria
-                            if(sizeStartToClip > 150){
+                            if(sizeStartToClip > MAXCLIP){
                                 //System.out.println(record.name+"\t"+record.geneId+"\t"+sizeStartToClip+"\t"+tsoEnd+"\n"+readSequence);
                                 if(sizeStartToClip > umiEnd)
                                     record.isReversed = true;
@@ -133,10 +152,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                 }
                 // Strand "-" process
                 else{
-                    if(sizeStartToClip < 150){
+                    if(sizeStartToClip < MAXCLIP){
                         if(load_sequence){
                             // need to trim sizeStartToClip bases at start in case of chimeria
-                            if(sizeEndToClip > 150){
+                            if(sizeEndToClip > MAXCLIP){
                                 //System.out.println(record.name+"\t"+record.geneId+"\t"+sizeEndToClip+"\t"+tsoEnd+"\n"+readSequence);
                                 if(sizeEndToClip > umiEnd)
                                     record.isReversed = true;
@@ -155,7 +174,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                     else{ record.isChimeria = true; }
                 }
                  
-                if(sizeStartToClip > 150 || sizeEndToClip > 150)
+                if(sizeStartToClip > MAXCLIP || sizeEndToClip > MAXCLIP)
                     record.isChimeria = true;
                     
                 if(load_sequence && !record.isChimeria && !record.isReversed)

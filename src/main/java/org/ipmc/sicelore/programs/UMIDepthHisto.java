@@ -24,7 +24,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "UMI depth histogram calculation", oneLineSummary = "UMI depth histogram calculation", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "UMI depth histogram calculation", oneLineSummary = "UMI depth histogram calculation", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class UMIDepthHisto extends CommandLineProgram
 {

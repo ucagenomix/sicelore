@@ -13,7 +13,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Compute molecule consensus from reads in INPUT", oneLineSummary = "Compute molecule consensus from reads in INPUT", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Compute molecule consensus sequence", oneLineSummary = "Compute molecule consensus sequence", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class ComputeConsensus extends CommandLineProgram {
 
@@ -38,6 +38,20 @@ public class ComputeConsensus extends CommandLineProgram {
     public String MINIMAP2PATH = "/share/apps/local/minimap2/";
     @Argument(shortName = "TMPDIR", doc = "TMPDIR")
     public String TMPDIR = "/share/data/scratch/sicelore/";
+    @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (optional, default=BC)")
+    public String CELLTAG = "BC";
+    @Argument(shortName = "UMITAG", doc = "UMI tag (optional, default=U8)")
+    public String UMITAG = "U8";
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (optional, default=IG)")
+    public String GENETAG = "IG";
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (optional, default=TE)")
+    public String TSOENDTAG = "TE";
+    @Argument(shortName = "UMIENDTAG", doc = "Cell barcode tag (optional, default=UE)")
+    public String UMIENDTAG = "UE";
+    @Argument(shortName = "USTAG", doc = "Read sequence tag (optional, default=US)")
+    public String USTAG = "US";
+    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (optional, default=150)")
+    public int MAXCLIP = 150;
 
     public ComputeConsensus() {
         log = Log.getInstance(ComputeConsensus.class);
@@ -52,6 +66,8 @@ public class ComputeConsensus extends CommandLineProgram {
 
 	Molecule m = new Molecule();
 	m.setStaticParams(TMPDIR,RACONPATH,MINIMAP2PATH);
+	LongreadRecord lrr = new LongreadRecord();
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,USTAG,MAXCLIP);
         
         //System.out.println(System.getenv("PATH"));
         

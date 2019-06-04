@@ -13,7 +13,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", oneLineSummary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", oneLineSummary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class AddBamMoleculeTags extends CommandLineProgram {
 

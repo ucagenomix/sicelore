@@ -166,7 +166,7 @@ public class Molecule implements Callable<String>
             for(LongreadRecord lrr : records){
                 List list = junctionsFromExons(lrr.getExons());
 
-                for(TranscriptRecord transcriptrecord : transcripts){                        
+                for(TranscriptRecord transcriptrecord : transcripts){
                     list1 = junctionsFromExons(transcriptrecord.getExons());
 
                     if(map(list, list1, DELTA, SOFT)) {
@@ -176,10 +176,12 @@ public class Molecule implements Callable<String>
                         if(SOFT)
                             candidates.put(key, transcriptrecord.getExons().size());
                         else{
-                            if(candidates.containsKey(key))
-                                candidates.put(key, candidates.get(key) + 1);
-                             else
-                                candidates.put(key, 1);
+                            //if(candidates.containsKey(key))
+                            //    candidates.put(key, candidates.get(key) + 1);
+                            //else
+                            //    candidates.put(key, 1);
+                            
+                            candidates.put(key, transcriptrecord.getExons().size());
                         }
                     }
                 }
@@ -192,6 +194,15 @@ public class Molecule implements Callable<String>
             for(Map.Entry<String, Integer> entry : candidates.entrySet()) {  // Iterate through hashmap
                 if (entry.getValue() == maxValueInMap) { bestCandidates.add(entry.getKey()); }
             }
+            /*
+            if(bestCandidates.size() > 1){
+                System.out.println(this.barcode + ":" + this.umi + " " + bestCandidates.size());
+                Iterator<String> iterator = bestCandidates.iterator();
+                while (iterator.hasNext()) {
+                    System.out.println((String)iterator.next());
+                }
+            }
+            */
             int index = new Random().nextInt(bestCandidates.size());
             Iterator<String> iter = bestCandidates.iterator();
             for (int i = 0; i < index; i++) { iter.next(); }

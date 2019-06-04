@@ -22,7 +22,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Compute expression matrices (isoforms and genes levels) and export metrics files", oneLineSummary = "Compute expression matrices (isoforms and genes levels) and export metrics files", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Compute isoform-level and gene-level expression matrices", oneLineSummary = "Compute isoform-level and gene-level expression matrices", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IsoformMatrix extends CommandLineProgram
 {
@@ -42,6 +42,19 @@ public class IsoformMatrix extends CommandLineProgram
     public String PREFIX = "sicelore";
     @Argument(shortName = "ISOBAM", doc = "Wether or not to produce a bam file having geneId (IG) and TranscriptId (IT) SAM flags (default=true)")
     public boolean ISOBAM = true;
+    public String CELLTAG = "BC";
+    @Argument(shortName = "UMITAG", doc = "UMI tag (optional, default=U8)")
+    public String UMITAG = "U8";
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (optional, default=IG)")
+    public String GENETAG = "IG";
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (optional, default=TE)")
+    public String TSOENDTAG = "TE";
+    @Argument(shortName = "UMIENDTAG", doc = "Cell barcode tag (optional, default=UE)")
+    public String UMIENDTAG = "UE";
+    @Argument(shortName = "USTAG", doc = "Read sequence tag (optional, default=US)")
+    public String USTAG = "US";
+    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (optional, default=150)")
+    public int MAXCLIP = 150;
 
     public HashSet<String> DTEcells;
     private ProgressLogger pl;
@@ -71,6 +84,9 @@ public class IsoformMatrix extends CommandLineProgram
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cells_metrics.txt");
         File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
         //File MOLMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_ecarts_metrics.txt");
+
+	LongreadRecord lrr = new LongreadRecord();
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,USTAG,MAXCLIP);
 
         loadDTEcells();
         log.info(new Object[]{"\tCells loaded\t\t[" + DTEcells.size() + "]"});
