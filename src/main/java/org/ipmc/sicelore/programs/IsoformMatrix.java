@@ -34,26 +34,29 @@ public class IsoformMatrix extends CommandLineProgram
     public File CSV;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
     public int DELTA = 5;
-    @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
+    @Argument(shortName = "SOFT", doc = "deprecated")
     public boolean SOFT = false;
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=sicelore)")
     public String PREFIX = "sicelore";
-    @Argument(shortName = "ISOBAM", doc = "Wether or not to produce a bam file having geneId (IG) and TranscriptId (IT) SAM flags (default=true)")
+    @Argument(shortName = "ISOBAM", doc = "Wether or not to produce a bam file having geneId (IG) and TranscriptId (IT) SAM flags (default=true)", optional=true)
     public boolean ISOBAM = true;
+    @Argument(shortName = "METHOD", doc = "Isoform assignment method (default=EXONHIGH)", optional=true)
+    public String METHOD = "EXONHIGH";
+    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
-    @Argument(shortName = "UMITAG", doc = "UMI tag (optional, default=U8)")
+    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
     public String UMITAG = "U8";
-    @Argument(shortName = "GENETAG", doc = "Gene name tag (optional, default=IG)")
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (default=IG)", optional=true)
     public String GENETAG = "IG";
-    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (optional, default=TE)")
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (default=TE)", optional=true)
     public String TSOENDTAG = "TE";
-    @Argument(shortName = "UMIENDTAG", doc = "Cell barcode tag (optional, default=UE)")
+    @Argument(shortName = "UMIENDTAG", doc = "Cell barcode tag (default=UE)", optional=true)
     public String UMIENDTAG = "UE";
-    @Argument(shortName = "USTAG", doc = "Read sequence tag (optional, default=US)")
+    @Argument(shortName = "USTAG", doc = "Read sequence tag (default=US)", optional=true)
     public String USTAG = "US";
-    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (optional, default=150)")
+    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
 
     public HashSet<String> DTEcells;
@@ -95,7 +98,7 @@ public class IsoformMatrix extends CommandLineProgram
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, false, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, SOFT);
+        dataset.setIsoforms(model, DELTA, SOFT, METHOD);
         
         Matrix matrix = dataset.produceMatrix(model, DTEcells);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});

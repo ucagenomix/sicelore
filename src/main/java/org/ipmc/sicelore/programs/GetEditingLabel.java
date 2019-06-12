@@ -22,7 +22,9 @@ import org.ipmc.sicelore.utils.TranscriptRecord;
 import org.ipmc.sicelore.utils.UCSCRefFlatParser;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Get Isoforms-2-Editing association for Gria2 molecules", oneLineSummary = "Get Isoforms-2-Editing association for Gria2 molecules", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+//Get Isoforms-2-Editing association for Gria2 molecules
+
+@CommandLineProgramProperties(summary = "deprecated", oneLineSummary = "deprecated", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class GetEditingLabel extends CommandLineProgram {
 
@@ -105,15 +107,16 @@ public class GetEditingLabel extends CommandLineProgram {
                         //nb++;
                         //System.out.println(nb + "\t" + r.getReadName() + "\t" + transcriptId);
 
-                        Molecule molecule = new Molecule(lrr.getBarcode(),lrr.getUmi());
-                        molecule.addLongread(lr);
-                        molecule.setIsoform(transcripts, 5, true);
+                        //Molecule molecule = new Molecule(lrr.getBarcode(),lrr.getUmi());
+                        //molecule.addLongread(lr);
+                        //molecule.setIsoform(transcripts, 5, true);
+                        
                         //molecule.setGeneId("Gria2");
                         //molecule.setTranscriptId(transcriptId);
                         
                         //molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase);
-                        molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase + "." + QRbase);
-                        matrix.addMolecule(molecule);
+                        //molecule.setTranscriptId(molecule.getTranscriptId() + "." + RGbase + "." + QRbase);
+                        //matrix.addMolecule(molecule);
                     }
                 }
             }

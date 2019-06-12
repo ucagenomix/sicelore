@@ -38,19 +38,21 @@ public class ComputeConsensus extends CommandLineProgram {
     public String MINIMAP2PATH = "/share/apps/local/minimap2/";
     @Argument(shortName = "TMPDIR", doc = "TMPDIR")
     public String TMPDIR = "/share/data/scratch/sicelore/";
-    @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (optional, default=BC)")
+    @Argument(shortName = "METHOD", doc = "Isoform assignment method (default=EXONHIGH)", optional=true)
+    public String METHOD = "EXONHIGH";
+    @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
-    @Argument(shortName = "UMITAG", doc = "UMI tag (optional, default=U8)")
+    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
     public String UMITAG = "U8";
-    @Argument(shortName = "GENETAG", doc = "Gene name tag (optional, default=IG)")
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (default=IG)", optional=true)
     public String GENETAG = "IG";
-    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (optional, default=TE)")
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (default=TE)", optional=true)
     public String TSOENDTAG = "TE";
-    @Argument(shortName = "UMIENDTAG", doc = "Cell barcode tag (optional, default=UE)")
+    @Argument(shortName = "UMIENDTAG", doc = "Cell barcode tag (default=UE)", optional=true)
     public String UMIENDTAG = "UE";
-    @Argument(shortName = "USTAG", doc = "Read sequence tag (optional, default=US)")
+    @Argument(shortName = "USTAG", doc = "Read sequence tag (default=US)", optional=true)
     public String USTAG = "US";
-    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (optional, default=150)")
+    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
 
     public ComputeConsensus() {
@@ -74,7 +76,7 @@ public class ComputeConsensus extends CommandLineProgram {
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, true, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, SOFT);
+        dataset.setIsoforms(model, DELTA, SOFT, METHOD);
         dataset.callConsensus(OUTPUT, nThreads);
 
         return 0;
