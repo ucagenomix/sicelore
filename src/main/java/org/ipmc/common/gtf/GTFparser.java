@@ -2,8 +2,6 @@ package org.ipmc.common.gtf;
 
 import java.util.*;
 import java.io.*;
-import java.util.concurrent.Callable;
-import org.biojava.nbio.core.sequence.io.*;
 import java.util.regex.Pattern;
 
 public class GTFparser {

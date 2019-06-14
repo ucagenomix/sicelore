@@ -30,8 +30,6 @@ public class ComputeConsensus extends CommandLineProgram {
     public int nThreads = 20;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
     public int DELTA = 5;
-    @Argument(shortName = "SOFT", doc = "Transcripts exons can be smaller than LongReadRecord exons (detection of specific alternative exons like flip/flop gria2 of Pkm1/Pkm2)")
-    public boolean SOFT = false;
     @Argument(shortName = "RACON", doc = "Racon path")
     public String RACONPATH = "/share/apps/local/racon/bin/";
     @Argument(shortName = "MINIMAP2PATH", doc = "Minimap2 path")
@@ -76,7 +74,7 @@ public class ComputeConsensus extends CommandLineProgram {
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, true, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, SOFT, METHOD);
+        dataset.setIsoforms(model, DELTA, METHOD);
         dataset.callConsensus(OUTPUT, nThreads);
 
         return 0;

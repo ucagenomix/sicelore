@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Do not use edit distances above 4 ->  will increase run time dramatically
+-->
+
+
+<DynamicEditDistances>
+    <description>BC dynamic edit distances</description>
+    <entries>
+        <dataForUMIlength>
+            <umiBCLength>16</umiBCLength>
+            <dataForErr>
+                <errorpercent>1</errorpercent> <!-- Error percent -->
+                <dataForED>
+                    <editDistance>0</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>4294967296</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>1</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>100000</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>2</editDistance> <!-- max ED -->
+                    <maxBarcodes>26362</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>3</editDistance> <!-- max ED -->
+                    <maxBarcodes>1127</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>4</editDistance> <!-- max ED -->
+                    <maxBarcodes>83</maxBarcodes> <!-- N umis -->    
+                </dataForED>                
+            </dataForErr>
+            <dataForErr>
+                <errorpercent>2</errorpercent> <!-- Error percent -->
+                <dataForED>
+                    <editDistance>0</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>4294967296</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>1</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>200000</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>2</editDistance> <!-- max ED -->
+                    <maxBarcodes>52724</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>3</editDistance> <!-- max ED -->
+                    <maxBarcodes>2259</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>4</editDistance> <!-- max ED -->
+                    <maxBarcodes>156</maxBarcodes> <!-- N umis -->    
+                </dataForED>                
+            </dataForErr>
+                    <dataForErr>
+                <errorpercent>3</errorpercent> <!-- Error percent -->
+                <dataForED>
+                    <editDistance>0</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>4294967296</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>1</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>300000</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>2</editDistance> <!-- max ED -->
+                    <maxBarcodes>79086</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>3</editDistance> <!-- max ED -->
+                    <maxBarcodes>3439</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>4</editDistance> <!-- max ED -->
+                    <maxBarcodes>230</maxBarcodes> <!-- N umis -->    
+                </dataForED>                
+            </dataForErr>
+                        <dataForErr>
+                <errorpercent>4</errorpercent> <!-- Error percent -->
+                <dataForED>
+                    <editDistance>0</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>4294967296</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>1</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>400000</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>2</editDistance> <!-- max ED -->
+                    <maxBarcodes>105448</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>3</editDistance> <!-- max ED -->
+                    <maxBarcodes>4619</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>4</editDistance> <!-- max ED -->
+                    <maxBarcodes>309</maxBarcodes> <!-- N umis -->    
+                </dataForED>                
+            </dataForErr>
+                        <dataForErr>
+                <errorpercent>5</errorpercent> <!-- Error percent -->
+                <dataForED>
+                    <editDistance>0</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>4294967296</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>1</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>500000</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>2</editDistance> <!-- max ED -->
+                    <maxBarcodes>131810</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>3</editDistance> <!-- max ED -->
+                    <maxBarcodes>5830</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>4</editDistance> <!-- max ED -->
+                    <maxBarcodes>390</maxBarcodes> <!-- N umis -->    
+                </dataForED>                
+            </dataForErr>
+                        <dataForErr>
+                <errorpercent>6</errorpercent> <!-- Error percent -->
+                <dataForED>
+                    <editDistance>0</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>4294967296</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>1</editDistance> <!-- max ED 1 -->
+                    <maxBarcodes>600000</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>2</editDistance> <!-- max ED -->
+                    <maxBarcodes>158172</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>3</editDistance> <!-- max ED -->
+                    <maxBarcodes>7031</maxBarcodes> <!-- N umis -->    
+                </dataForED>
+                <dataForED>
+                    <editDistance>4</editDistance> <!-- max ED -->
+                    <maxBarcodes>474</maxBarcodes> <!-- N umis -->    
+                </dataForED>                
+            </dataForErr>           
+        </dataForUMIlength>
+    </entries>                
+</DynamicEditDistances>
+    

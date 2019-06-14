@@ -26,10 +26,10 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     private String geneId;
     private List<int[]> codingExons;
     private List<int[]> exons;
+    private List<Junction> junctions;
     private double rpkm;
 
-    private TranscriptRecord() {
-    }
+    private TranscriptRecord() {}
 
     public int compareTo(TranscriptRecord tr) {
         // max exons to min
@@ -50,7 +50,7 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
         }
 
         TranscriptRecord record = new TranscriptRecord();
-
+        record.junctions = new ArrayList();
         record.geneId = fields[0];
         record.transcriptId = fields[1];
         record.chrom = fields[2];
@@ -98,6 +98,13 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
                     record.cdsExonBases += record.cdsEnd - record.cdsStart;
                 }
             }
+            
+            for (int i = 1; i < record.exons.size(); i++) {
+                int j = ((int[]) record.exons.get(i - 1))[1];
+                int k = ((int[]) record.exons.get(i))[0];
+                record.junctions.add(new Junction(j, k));
+            }
+
         } catch (NumberFormatException e) {
             throw new GTFParseException(
                     "Invalid RefGene file. Can't parse integer value: ", e);
@@ -122,6 +129,10 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
 
     public List<int[]> getExons() {
         return this.exons;
+    }
+    
+    public List<Junction> getJunctions() {
+        return this.junctions;
     }
 
     public List<int[]> getExons(boolean cdsExonsOnly) {

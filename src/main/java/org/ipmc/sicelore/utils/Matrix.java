@@ -51,10 +51,12 @@ public class Matrix
         HashMap mapCell = null;
         HashSet setUmi = null;
         
+        //System.out.println(molecule);
+        
         if(! geneMetrics.containsKey(molecule.getGeneId()))
             geneMetrics.put(molecule.getGeneId(), new GeneMetrics());
         
-        //System.out.println(molecule.getBarcode()+","+molecule.getGeneId()+","+molecule.getTranscriptId());
+        //System.out.println(molecule);
         
         ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(), molecule.getTranscriptId(), molecule.getLongreads().size());
         ((GeneMetrics)geneMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());

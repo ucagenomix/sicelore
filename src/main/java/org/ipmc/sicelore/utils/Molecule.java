@@ -133,6 +133,10 @@ public class Molecule implements Callable<String>
     public String getLabel() {
         return this.geneId + "|" + this.transcriptId + "|" + this.barcode + "|" + this.umi + "|" + this.longreads.size();
     }
+    
+    public String toString() {
+        return getLabel();
+    }
     /*
     public int getNbReads() {
         return nbReads;

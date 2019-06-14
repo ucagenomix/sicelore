@@ -34,8 +34,6 @@ public class IsoformMatrix extends CommandLineProgram
     public File CSV;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
     public int DELTA = 5;
-    @Argument(shortName = "SOFT", doc = "deprecated")
-    public boolean SOFT = false;
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=sicelore)")
@@ -98,7 +96,7 @@ public class IsoformMatrix extends CommandLineProgram
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, false, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, SOFT, METHOD);
+        dataset.setIsoforms(model, DELTA, METHOD);
         
         Matrix matrix = dataset.produceMatrix(model, DTEcells);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});

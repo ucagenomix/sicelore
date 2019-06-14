@@ -14,7 +14,8 @@ import org.biojava.nbio.core.util.ConcurrencyTools;
 import com.google.common.util.concurrent.*;
 import org.apache.commons.lang3.StringUtils;
 import org.biojava.nbio.core.sequence.DNASequence;
-
+import java.util.stream.Collectors;
+        
 public class MoleculeDataset {
 
     private final Log log;
@@ -35,6 +36,12 @@ public class MoleculeDataset {
     private DataOutputStream os;
     private Iterator itglobal;
 
+    private int nomatch = 0;
+    private int onematch = 0;
+    private int ambiguous = 0;
+    private int monoexon = 0;
+    private int multimatchset = 0;
+    
     public MoleculeDataset(LongreadParser bam)
     {
         Molecule molecule = null;
@@ -79,7 +86,7 @@ public class MoleculeDataset {
         return this.mapMolecules.get(isokey);
     }
     
-    public void setIsoforms(UCSCRefFlatParser model, int DELTA, boolean SOFT, String METHOD)
+    public void setIsoforms(UCSCRefFlatParser model, int DELTA, String METHOD)
     {
         Molecule molecule = null;
         
@@ -95,7 +102,10 @@ public class MoleculeDataset {
             // sort all selected isoforms on exons number (max to min)
             //Collections.sort(transcripts);
             
-            this.setIsoform(molecule, transcripts, DELTA, SOFT, METHOD);
+            if("SCORE".equals(METHOD))
+                this.setIsoformScore(molecule, transcripts, DELTA, METHOD);
+            else
+                this.setIsoform(molecule, transcripts, DELTA, METHOD);
             
             // record womewhere what happened during this setIsoform
             
@@ -103,7 +113,14 @@ public class MoleculeDataset {
             if(compteur%200000 == 0)
                 log.info(new Object[]{"\tSetIsoforms\t\t" + compteur + "/" + this.mapMolecules.size()});
         }
+        
         log.info(new Object[]{"\tSetIsoforms\t\tend..."});
+        log.info(new Object[]{"\tSetIsoforms\t\tmonoexon\t[" + this.monoexon + "]"});
+        log.info(new Object[]{"\tSetIsoforms\t\t 0 match\t[" + this.nomatch + "]"});
+        log.info(new Object[]{"\tSetIsoforms\t\t 1 match\t[" + this.onematch + "]"});
+        log.info(new Object[]{"\tSetIsoforms\t\t>1 match set\t[" + this.multimatchset + "]"});
+                log.info(new Object[]{"\tSetIsoforms\t\tambiguous\t[" + this.ambiguous + "]"});
+
         
         List<Molecule> l;
         cles = this.mapMolecules.keySet();
@@ -121,7 +138,7 @@ public class MoleculeDataset {
         }
     }
 
-    public void setIsoform(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, boolean SOFT, String METHOD)
+    public void setIsoform(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, String METHOD)
     {
         List list1=null;
         
@@ -138,30 +155,21 @@ public class MoleculeDataset {
                 for(TranscriptRecord transcriptrecord : transcripts){
                     list1 = junctionsFromExons(transcriptrecord.getExons());
 
-                    if(map(list, list1, DELTA, SOFT)) {
+                    if(map(list, list1, DELTA)) {
                         String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
 
-                        // case SOFT pocess put nb exons as the value to get the more complex transcript
-                        if(SOFT)
+                        // candidates will be ranked on the number of  maximum exons,
+                        // nice when 5' degradation or quality loss of long read
+                        if("EXONHIGH".equals(METHOD)){
                             candidates.put(key, transcriptrecord.getExons().size());
-                        else{
-                            // candidates will be ranked on the number of  maximum exons,
-                            // nice when 5' degradation or quality loss of long read
-                            if("EXONHIGH".equals(METHOD)){
-                                candidates.put(key, transcriptrecord.getExons().size());
-                            }
-                            // candidates will be ranked on the number of read to isoform match
-                            // consistent option, but week when last 5p exons is lost because of long read QV loss
-                            else if("NBHIGH".equals(METHOD)){
-                                if(candidates.containsKey(key))
-                                    candidates.put(key, candidates.get(key) + 1);
-                                else
-                                    candidates.put(key, 1);
-                            }
-                            //
-                            // smart method on collapsing model to determine rules 
-                            // of minimal assignation yet to be implemented here !!!
-                            //
+                        }
+                        // candidates will be ranked on the number of read to isoform match
+                        // consistent option, but week when last 5p exons is lost because of long read QV loss
+                        else if("NBHIGH".equals(METHOD)){
+                            if(candidates.containsKey(key))
+                                candidates.put(key, candidates.get(key) + 1);
+                            else
+                                candidates.put(key, 1);
                         }
                     }
                 }
@@ -205,6 +213,166 @@ public class MoleculeDataset {
         }
     }
     
+    
+    public void setIsoformScore(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, String METHOD)
+    {
+        HashMap<Junction, HashSet<TranscriptRecord>> mapper = new HashMap<Junction, HashSet<TranscriptRecord>>();
+        List<Junction> junc = new ArrayList<Junction>();
+        
+        for(TranscriptRecord transcriptrecord : transcripts){
+            junc = transcriptrecord.getJunctions();
+            for(int i=0; i<junc.size(); i++){
+                if(! mapper.containsKey(junc.get(i)))
+                    mapper.put(junc.get(i), new HashSet<TranscriptRecord>());
+                
+                mapper.get(junc.get(i)).add(transcriptrecord);
+            }
+        }
+        
+        //System.out.println(molecule.getBarcode() + "|" + molecule.getUmi() + " --> " + molecule.getGeneIds());
+        
+        /*
+        Set cles = mapper.keySet();
+        Iterator it = cles.iterator();
+        while(it.hasNext()){
+           Junction j = (Junction)it.next();
+           System.out.println(j);
+           HashSet<TranscriptRecord> rec = mapper.get(j);
+           Iterator<TranscriptRecord> iterator = rec.iterator();
+           while(iterator.hasNext()){
+                TranscriptRecord tr = iterator.next();
+                System.out.println("\t"+tr.getTranscriptId());
+            }
+        }
+        */
+        
+        HashSet<TranscriptRecord> h = null;
+        HashMap<TranscriptRecord, Integer> scoring = new HashMap<TranscriptRecord, Integer>();
+        HashMap<Integer, Integer> nbJunctions = new HashMap<Integer, Integer>();
+        List<Longread> longreads = molecule.getLongreads();
+        
+        for(Longread lr : longreads){
+            List<LongreadRecord> records = lr.getLongreadrecords();
+            for(LongreadRecord lrr : records){
+                List<Junction> lrr_junc = junctionsListFromExon(lrr.getExons());
+                
+                // record nb junction of SAM record
+                if(lrr_junc.size() > 0){
+                    if(nbJunctions.containsKey(lrr_junc.size()))
+                        nbJunctions.put(lrr_junc.size(), nbJunctions.get(lrr_junc.size())+1);
+                    else
+                        nbJunctions.put(lrr_junc.size(), 1);
+                }
+                
+                for(int i=0; i<lrr_junc.size(); i++){
+                    Set cles = mapper.keySet();
+                    Iterator it = cles.iterator();
+                    while(it.hasNext()){
+                       Junction j = (Junction)it.next();
+                       
+                       if(isSameJunction(lrr_junc.get(i), j, DELTA)){
+                            HashSet<TranscriptRecord> rec = mapper.get(j);
+                            Iterator<TranscriptRecord> iterator = rec.iterator();
+                            while(iterator.hasNext()){
+                                TranscriptRecord tr = iterator.next();
+                                if(scoring.get(tr) != null)
+                                    scoring.put(tr, scoring.get(tr) + 1);
+                                else
+                                    scoring.put(tr, 1);
+                            }
+                       }
+                    }
+	       }
+            }
+        }
+        
+        if(scoring.isEmpty()){
+            // only 1 mono-exonic transcript in the model --> we set the isoform
+            if(transcripts.size() == 1 && junc.isEmpty()){
+                this.monoexon++;
+                molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
+                molecule.setGeneId(transcripts.get(0).getGeneId());
+            }
+            else{
+                this.nomatch++;
+                // we set the geneId at least
+                int index = new Random().nextInt(molecule.getGeneIds().size());
+                Iterator<String> iter = molecule.getGeneIds().iterator();
+                for (int i = 0; i < index; i++) { iter.next(); }
+                molecule.setTranscriptId("undef");
+                molecule.setGeneId((String) iter.next());
+            }
+        }
+        else{
+            HashMap<TranscriptRecord, Integer> sorted = scoring.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+            .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+        
+            /*
+            int nb=0;
+            Set cles = sorted.keySet();
+            Iterator it = cles.iterator();
+            while(it.hasNext()){
+                TranscriptRecord tr = (TranscriptRecord)it.next();
+                if(nb++ < 3)
+                    System.out.println(tr + " " + sorted.get(tr));
+            }
+            */
+
+            HashSet<TranscriptRecord> bestCandidates = new HashSet<TranscriptRecord>();
+            int maxValueInMap=(Collections.max(sorted.values()));
+            for(Map.Entry<TranscriptRecord, Integer> entry : sorted.entrySet()) 
+                if (entry.getValue() == maxValueInMap) { bestCandidates.add(entry.getKey()); }
+
+            if(bestCandidates.size() == 1){
+                this.onematch++;
+                TranscriptRecord tr = (TranscriptRecord)bestCandidates.iterator().next();
+                molecule.setTranscriptId(tr.getTranscriptId());
+                molecule.setGeneId(tr.getGeneId());
+            }
+            else{
+                 // do we really choose one transcript if several are possible ? maybe better to unassigned here
+                //int index = new Random().nextInt(bestCandidates.size());
+                //Iterator<TranscriptRecord> iter = bestCandidates.iterator();
+                //for (int i = 0; i < index; i++) { iter.next(); }
+                //TranscriptRecord tr = (TranscriptRecord) iter.next();
+                //molecule.setTranscriptId(tr.getTranscriptId());
+                //molecule.setGeneId(tr.getGeneId());
+                
+                // choose on the number of junctions of transcript and number of junctions of reads
+                int nbJunctionsMaxValue=Collections.max(nbJunctions.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+                HashSet<TranscriptRecord> newCandidates = new HashSet<TranscriptRecord>();
+                
+                Iterator<TranscriptRecord> iterator = bestCandidates.iterator();
+                while(iterator.hasNext()){
+                    TranscriptRecord tr = iterator.next();
+                    if(tr.getJunctions().size() == nbJunctionsMaxValue)
+                        newCandidates.add(tr);
+                }
+                
+                //System.out.println(molecule + " --> " + bestCandidates.size() + ", " + nbJunctionsMaxValue + " exons, " + newCandidates.size());
+                
+                if(newCandidates.size() == 1){
+                    TranscriptRecord tr = (TranscriptRecord)newCandidates.iterator().next();
+                    molecule.setTranscriptId(tr.getTranscriptId());
+                    molecule.setGeneId(tr.getGeneId());
+                    this.multimatchset++;
+                }
+                else{
+                    this.ambiguous++;
+                    // we set the geneId at least
+                    int index = new Random().nextInt(molecule.getGeneIds().size());
+                    Iterator<String> iter = molecule.getGeneIds().iterator();
+                    for (int i = 0; i < index; i++) { iter.next(); }
+                    molecule.setTranscriptId("undef");
+                    molecule.setGeneId((String) iter.next());
+                }
+                
+                // choose also on closeness to the 5p of transcript
+                
+            }
+        }
+    }
+    /*
     public LinkedHashMap<String,Integer> create_rules(List<TranscriptRecord> transcriptrecord,int DELTA)
     {
         LinkedHashMap<String, Integer> map_result = new LinkedHashMap<>();
@@ -253,17 +421,39 @@ public class MoleculeDataset {
         }
         return null;
     }
+    */
+    
+    public boolean isSameJunction(Junction j1, Junction j2, int DELTA)
+    {
+        boolean bool = false;
+        if ((Math.abs(j1.getStart() - j2.getStart()) <= DELTA) && (Math.abs(j1.getEnd() - j2.getEnd()) <= DELTA))
+            bool = true;
+        
+        return bool;
+    }
 
     public List<int[]> junctionsFromExons(List<int[]> exons) {
-        ArrayList localArrayList = new ArrayList();
+        ArrayList lst = new ArrayList();
 
         for (int i = 1; i < exons.size(); i++) {
             int j = ((int[]) exons.get(i - 1))[1];
             int k = ((int[]) exons.get(i))[0];
-            localArrayList.add(new int[]{j, k});
+            lst.add(new int[]{j, k});
         }
 
-        return localArrayList;
+        return lst;
+    }
+    
+    public List<Junction> junctionsListFromExon(List<int[]> exons) {
+        ArrayList lst = new ArrayList();
+
+        for (int i = 1; i < exons.size(); i++) {
+            int j = ((int[]) exons.get(i - 1))[1];
+            int k = ((int[]) exons.get(i))[0];
+            lst.add(new Junction(j, k));
+        }
+
+        return lst;
     }
 
     public void print(List<int[]> junctions) {
@@ -272,33 +462,20 @@ public class MoleculeDataset {
         }
     }
 
-    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA, boolean SOFT)
+    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA)
     {
         boolean bool = true;
-	if(SOFT){
-            if(tr_exons.size() <= lrr_exons.size()){
-	   	for(int i=0; i<tr_exons.size(); i++){
-                    if(!isIn((int[])tr_exons.get(i), lrr_exons, DELTA))
-	        	bool = false;
-	       }
-            }
-	    else{ bool = false; }
-	}
-        else{
-            if(tr_exons.size() > 0 && tr_exons.size() == lrr_exons.size()) {
-                for (int i = 0; i < tr_exons.size(); i++) {
-                    if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
-                        bool = false;
-                        //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
-                    }
+	if(tr_exons.size() > 0 && tr_exons.size() == lrr_exons.size()) {
+            for (int i = 0; i < tr_exons.size(); i++) {
+                if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA)) {
+                    bool = false;
+                    //System.out.println(tr_exons.get(i)[0] +"-" + tr_exons.get(i)[1] + " not in read !");
                 }
-            } else {
-                bool = false;
-                //System.out.println("not same exons size");
             }
         }
+        else
+            bool = false;
         
-        //System.out.println(tr_exons.size() + "\t" + lrr_exons.size() + "-->"+bool);
         return bool;
     }
 

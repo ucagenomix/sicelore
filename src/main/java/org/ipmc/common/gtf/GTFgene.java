@@ -1,9 +1,6 @@
 package org.ipmc.common.gtf;
 
 import java.util.*;
-import java.io.*;
-import org.biojava.nbio.core.sequence.io.*;
-import static java.lang.Math.abs;
 
 public class GTFgene {
 
