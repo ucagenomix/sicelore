@@ -99,7 +99,18 @@ s951 <- RenameCells(s951, add.cell.id = "s951")
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
-all = read.delim("data/951c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+prefix190 <- "data/190c/nanopore/190c_"
+prefix951 <- "data/951c/nanopore/951c_"
+
+all = read.delim(paste(prefix951,"cells_metrics.txt",sep=""), stringsAsFactors = F)
+rownames(all) <- paste("s951_",all$cellBC,sep="")
+vect <- colnames(s951@assays$RNA)
+data = all[vect,2:ncol(all)]
+s951[['reads']] <- data$nbReads
+s951[['nbIsoformSet']] <- data$nbIsoformSet 
+s951[['nbIsoformNotSet']] <- data$nbIsoformNotSet
+
+all = read.delim(paste(prefix951,"genes_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,2:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) <- all$geneId
@@ -108,7 +119,7 @@ data <- data[vect]
 s951[["ISOG"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "ISOG")
 
-all = read.delim("data/951c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+all = read.delim(paste(prefix951,"isoforms_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -118,7 +129,7 @@ data <- data[idx,vect]
 s951[["ISO"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "ISO")
 
-all = read.delim("data/951c/nanopore/gria2_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/951c/nanopore/951c.gria2_matrix.txt", stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -127,12 +138,20 @@ data <- data[,vect]
 s951[["EDIT"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "EDIT")
 
-edited <- grep("\\.C", rownames(s951@assays$EDIT@counts))
-nonedited <- grep("\\.T", rownames(s951@assays$EDIT@counts))
+edited <- grep("\\.C\\.", rownames(s951@assays$EDIT@counts))
+nonedited <- grep("\\.T\\.", rownames(s951@assays$EDIT@counts))
 s951[['edited']] <- Matrix::colSums(s951@assays$EDIT@counts[edited,])
 s951[['nonedited']] <- Matrix::colSums(s951@assays$EDIT@counts[nonedited,])
 
-all = read.delim("data/190c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+all = read.delim(paste(prefix190,"cells_metrics.txt",sep=""), stringsAsFactors = F)
+rownames(all) <- paste("s190_",all$cellBC,sep="")
+vect <- colnames(s190@assays$RNA)
+data = all[vect,2:ncol(all)]
+s190[['reads']] <- data$nbReads
+s190[['nbIsoformSet']] <- data$nbIsoformSet 
+s190[['nbIsoformNotSet']] <- data$nbIsoformNotSet
+
+all = read.delim(paste(prefix190,"genes_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,2:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) <- all$geneId
@@ -141,7 +160,7 @@ data <- data[vect]
 s190[["ISOG"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "ISOG")
 
-all = read.delim("data/190c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+all = read.delim(paste(prefix190,"isoforms_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -151,8 +170,19 @@ data <- data[idx,vect]
 s190[["ISO"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "ISO")
 
-s190[['edited']] <- 0
-s190[['nonedited']] <- 0
+all = read.delim("data/190c/nanopore/190c.gria2_matrix.txt", stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s190@assays$RNA)
+data <- data[,vect]
+s190[["EDIT"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "EDIT")
+
+edited <- grep("\\.C\\.", rownames(s190@assays$EDIT@counts))
+nonedited <- grep("\\.T\\.", rownames(s190@assays$EDIT@counts))
+s190[['edited']] <- Matrix::colSums(s190@assays$EDIT@counts[edited,])
+s190[['nonedited']] <- Matrix::colSums(s190@assays$EDIT@counts[nonedited,])
 
 ```
 
@@ -224,7 +254,7 @@ new.cluster.ids <- c("mature GABAergic","imature Glutamatergic","mature Glutamat
 names(x = new.cluster.ids) <- levels(x = illu1141)
 illu1141 <- RenameIdents(object = illu1141, new.cluster.ids)
 
-my_levels <- c("cycling radial glia","radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+my_levels <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
 # Relevel object@ident
 illu1141@active.ident <- factor(x = illu1141@active.ident, levels = my_levels)
 DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
@@ -239,7 +269,6 @@ saveRDS(illu1141, "illu1141c.rds")
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
 DotPlot(object = illu1141, features = c("Dbi","Vim","Fabp7","Top2a","Ccnd2","Cenpf","Mki67","Pou3f2","Pou3f3","Sox11","Eomes","Neurog2","Pax6","Ascl1","Camk2b","Crym","Opcml","Foxp1","Grin2b","Mef2c","Neurod2","Neurod6","Rbfox3","Neurod1","H3f3b","Meis2","Mafb","Maf","Sst","Arx","Sox6","Htr3a","Tcf4","Tubb2a","Npy","Meg3","Reln","Lhx5","Snhg11"), reduction="tsne") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
-
 
 ```
 
@@ -271,48 +300,6 @@ DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 write.table(illu1141.markers, file="output/markers.label.csv", sep=",")
 
 ```
-
-# Dotplot isoforms
-
-```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=18}
-
-DefaultAssay(object = illu1141) <- "ISO"
-
-#pdf("dotplotiso.pdf", width=24, height=8, useDingbats=FALSE)
-
-lst <- c('Clta','Pkm','Myl6','Sox2','Rpl22l1','Evl','Meg3','Dbi','Serpinh1','Vim','Slc1a3','Sh3glb1','Gnas','Gng5','Cd63','Clic1','Csrp1','Mdk','Id4','Dctn2')
-isolist <- c()
-for(i in 1:length(lst)){
-  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
-}
-DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
-
-lst <- c('Ccnd2','Ppp1r1a','Gnai2','Slc25a5','Tead2','B9d1','Pmm1','Zfand6','Myl12a','Cdk6','Nek6','H2afv','Selm','Shisa4','Mfap2','Ezr','Tubb4b','Mrfap1')
-isolist <- c()
-for(i in 1:length(lst)){
-  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
-}
-DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
-
-lst <- c('Arl2bp','Rps27l','Atp5g2','Idh2','Nt5dc2','Rmst','Cenpw','Lhx2','Krtcap2','Pgp','Ppib','Aldoa','Rpl29','Tecr','Capns1','H1f0','Tubb2a','Stmn4')
-isolist <- c()
-for(i in 1:length(lst)){
-  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
-}
-DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
-
-lst <- c('Pcsk1n','Rtn1','Crmp1','Calm2','Ppp2r2b','Dlx2','Nnat','Pfn2','Dlx6os1','Dlx1','Sp9','Tcf4','Rgs2','Dynlt1c','Gadd45g','Pantr1','Ddah2','Nfib','Tmem176b','Insm1','Hnrnpa1','Carhsp1')
-isolist <- c()
-for(i in 1:length(lst)){
-  isolist <- c(isolist, rownames(illu1141@assays$ISO@counts[grep(paste(lst[i],"-",sep=""), rownames(illu1141@assays$ISO@counts)),]))
-}
-DotPlot(object = illu1141, features = isolist, reduction="tsne", cols = c("grey","blue")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
-
-#dev.off()
-
-```
-
-
 
 # Session Info
 

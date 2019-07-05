@@ -33,7 +33,7 @@ public class IsoformMatrix extends CommandLineProgram
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
-    public int DELTA = 5;
+    public int DELTA = 2;
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=sicelore)")

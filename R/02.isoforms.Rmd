@@ -99,7 +99,18 @@ s951 <- RenameCells(s951, add.cell.id = "s951")
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
-all = read.delim("data/951c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+prefix190 <- "data/190c/nanopore/190c_"
+prefix951 <- "data/951c/nanopore/951c_"
+
+all = read.delim(paste(prefix951,"cells_metrics.txt",sep=""), stringsAsFactors = F)
+rownames(all) <- paste("s951_",all$cellBC,sep="")
+vect <- colnames(s951@assays$RNA)
+data = all[vect,2:ncol(all)]
+s951[['reads']] <- data$nbReads
+s951[['nbIsoformSet']] <- data$nbIsoformSet 
+s951[['nbIsoformNotSet']] <- data$nbIsoformNotSet
+
+all = read.delim(paste(prefix951,"genes_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,2:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) <- all$geneId
@@ -108,7 +119,7 @@ data <- data[vect]
 s951[["ISOG"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "ISOG")
 
-all = read.delim("data/951c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+all = read.delim(paste(prefix951,"isoforms_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -118,7 +129,7 @@ data <- data[idx,vect]
 s951[["ISO"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "ISO")
 
-all = read.delim("data/951c/nanopore/gria2_matrix.txt", stringsAsFactors = F)
+all = read.delim("data/951c/nanopore/951c.gria2_matrix.txt", stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -127,12 +138,20 @@ data <- data[,vect]
 s951[["EDIT"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "EDIT")
 
-edited <- grep("\\.C", rownames(s951@assays$EDIT@counts))
-nonedited <- grep("\\.T", rownames(s951@assays$EDIT@counts))
+edited <- grep("\\.C\\.", rownames(s951@assays$EDIT@counts))
+nonedited <- grep("\\.T\\.", rownames(s951@assays$EDIT@counts))
 s951[['edited']] <- Matrix::colSums(s951@assays$EDIT@counts[edited,])
 s951[['nonedited']] <- Matrix::colSums(s951@assays$EDIT@counts[nonedited,])
 
-all = read.delim("data/190c/nanopore/genes_matrix.txt", stringsAsFactors = F)
+all = read.delim(paste(prefix190,"cells_metrics.txt",sep=""), stringsAsFactors = F)
+rownames(all) <- paste("s190_",all$cellBC,sep="")
+vect <- colnames(s190@assays$RNA)
+data = all[vect,2:ncol(all)]
+s190[['reads']] <- data$nbReads
+s190[['nbIsoformSet']] <- data$nbIsoformSet 
+s190[['nbIsoformNotSet']] <- data$nbIsoformNotSet
+
+all = read.delim(paste(prefix190,"genes_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,2:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) <- all$geneId
@@ -141,7 +160,7 @@ data <- data[vect]
 s190[["ISOG"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "ISOG")
 
-all = read.delim("data/190c/nanopore/isoforms_matrix.txt", stringsAsFactors = F)
+all = read.delim(paste(prefix190,"isoforms_matrix.txt",sep=""), stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -151,8 +170,19 @@ data <- data[idx,vect]
 s190[["ISO"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "ISO")
 
-s190[['edited']] <- 0
-s190[['nonedited']] <- 0
+all = read.delim("data/190c/nanopore/190c.gria2_matrix.txt", stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s190@assays$RNA)
+data <- data[,vect]
+s190[["EDIT"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "EDIT")
+
+edited <- grep("\\.C\\.", rownames(s190@assays$EDIT@counts))
+nonedited <- grep("\\.T\\.", rownames(s190@assays$EDIT@counts))
+s190[['edited']] <- Matrix::colSums(s190@assays$EDIT@counts[edited,])
+s190[['nonedited']] <- Matrix::colSums(s190@assays$EDIT@counts[nonedited,])
 
 ```
 
@@ -191,6 +221,9 @@ saveRDS(iso1141, "iso1141c.rds")
 
 iso1141 <- readRDS("iso1141c.rds")
 iso1141 <- SetIdent(object=iso1141, value="illumina.ident")
+my_levels <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+# Relevel object@ident
+iso1141@active.ident <- factor(x = iso1141@active.ident, levels = my_levels)
 
 ```
 

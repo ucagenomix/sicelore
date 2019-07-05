@@ -13,15 +13,15 @@ and open the template in the editor.
   
     <polyAT>
         <!-- minimal length of polyA polyT -->
-        <polyATlength>15</polyATlength>
+        <polyATlength>20</polyATlength>
         <!-- minimal fraction of polyA polyT -->
-        <fractionATInPolyAT>0.75</fractionATInPolyAT>
+        <fractionATInPolyAT>0.85</fractionATInPolyAT>
         <!-- searches max this distance from end for polyA or poly T -->
         <windowSearchForPolyA>100</windowSearchForPolyA>
     </polyAT>
     <adapter>
         <!-- pre-barcode adapter seq, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
-        <adapterseq>CTTCCGATCT</adapterseq>
+        <adapterseq>TCTTCCGATCT</adapterseq>
         <!-- max number of needleman wunsch mismatches in adapter sequence-->  
         <maxAdapterNeedlemanMismatches>3</maxAdapterNeedlemanMismatches>
     </adapter>

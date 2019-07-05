@@ -1,0 +1,150 @@
+---
+title: "E18 mouse brain, Gria2 editing"
+author: "K.Lebrigand, R.Waldmann"
+output:
+  BiocStyle::html_document:
+    code_folding: hide
+    number_sections: yes
+    toc: yes  
+---
+
+# Loading illu1141c.rds
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+source("00.import.R")
+#source("/home/lebrigand/10x_rainer/FindConservedMarkersKL.R")
+
+illu1141 <- readRDS("illu1141c.rds")
+DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
+
+```
+
+Differential analysis of cells containing Gria2 transcripts edited or not edited 
+===================
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+FeaturePlot(illu1141, c("edited","nonedited","Gria2"), reduction="tsne")
+sum(illu1141@meta.data$edited)
+sum(illu1141@meta.data$nonedited)
+
+genes.liste <- c("Gria2")
+for (i in (1:length(genes.liste))){
+  print(FeaturePlot(object = illu1141, features = c(rownames(illu1141@assays$ISO@counts)[grep(paste("^",genes.liste[i],"-",sep=""), rownames(illu1141@assays$ISO@counts))]), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4))
+}
+
+flip <- grep("^Gria2-FLIP\\.", rownames(illu1141@assays$EDIT@counts))
+flop <- grep("^Gria2-FLOP\\.", rownames(illu1141@assays$EDIT@counts))
+illu1141[['flip']] <- Matrix::colSums(illu1141@assays$EDIT@counts[flip,])
+illu1141[['flop']] <- Matrix::colSums(illu1141@assays$EDIT@counts[flop,])
+
+new.cluster.ids <- c("cycling radial glia","radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+for (i in (1:length(new.cluster.ids))){
+  e <- sum(illu1141@meta.data[WhichCells(illu1141, idents = new.cluster.ids[i]),"flip"])
+  ne <- sum(illu1141@meta.data[WhichCells(illu1141, idents = new.cluster.ids[i]),"flop"])
+  print(paste(new.cluster.ids[i], e, ne, sep=" "))
+}
+
+table(illu1141@active.ident,illu1141[['flip']])
+
+VlnPlot(object = illu1141, features = c(rownames(illu1141@assays$ISO@counts)[grep(paste("^Gria2-",sep=""), rownames(illu1141@assays$ISO@counts))]))
+VlnPlot(object = illu1141, features = c("flip","flop"))
+
+
+new.cluster.ids <- c("cycling radial glia","radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+for (i in (1:length(new.cluster.ids))){
+  e <- sum(illu1141@meta.data[WhichCells(illu1141, idents = new.cluster.ids[i]),"edited"])
+  ne <- sum(illu1141@meta.data[WhichCells(illu1141, idents = new.cluster.ids[i]),"nonedited"])
+  tot <- e+ne
+  x <-  (e*100) / tot
+  print(paste(new.cluster.ids[i], e, ne, x, sep=" "))
+}
+
+DefaultAssay(object = illu1141) <- "RNA"
+
+high <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("imature Glutamatergic", "mature Glutamatergic") & illu1141@meta.data$edited > 0 & illu1141@meta.data$nonedited == 0)@assays$RNA@counts)
+low <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("imature Glutamatergic", "mature Glutamatergic") & illu1141@meta.data$edited == 0 & illu1141@meta.data$nonedited > 0)@assays$RNA@counts)
+
+length(high)
+length(low)
+
+sub <- subset(illu1141, cells=c(low,high))
+sub@active.ident <- factor(x = sub@active.ident, levels = c("low","high"))
+sub@meta.data$illumina.ident <- factor(x = sub@meta.data$illumina.ident, levels = c("imature Glutamatergic", "mature Glutamatergic"))
+sub <- SetIdent(object=sub, cells=high, value="high")
+sub <- SetIdent(object=sub, cells=low, value="low")
+
+table(sub@active.ident, sub@meta.data$illumina.ident)
+
+markers <- FindConservedMarkers(object = sub, ident.1 = "high", ident.2 = "low", min.pct = 0.25, thresh.use = 0.25, grouping.var="illumina.ident", only.pos = FALSE)
+
+markers$gene <- rownames(markers) 
+markers$cluster <- "edited.high-low"
+top20 <- markers %>% top_n(40, -p_val)
+top20 <- top20[order(top20$avg_logFC, decreasing=T),]
+DoHeatmap(illu1141, cells=c(low,high), features=top20$gene)
+
+annotation = getBM(attributes=c("ensembl_gene_id", "entrezgene", "transcript_biotype","external_gene_name"), filters = "external_gene_name", values = rownames(markers), mart = ensembl)
+data <- markers$p_val
+names(data) <- rownames(markers)
+my_entrezgene = sapply(names(data), function(x) unique(annotation[annotation$external_gene_name == x, "entrezgene"]))
+names(data) <- my_entrezgene
+data <- sort(data, decreasing = FALSE)
+my_pathways <- reactomePathways(names(data))
+summary(sapply(my_pathways, data))
+fgseaRes <- fgsea(pathways = my_pathways, stats = data, minSize=15, maxSize=500, nperm=100000)
+topPathwaysUp <- fgseaRes[ES > 0][head(order(pval), n=20), pathway]
+print(plotGseaTable(my_pathways[topPathwaysUp], data, fgseaRes, gseaParam = 0.5))
+
+write.table(markers, file="editing.glutamatergic.matures.csv", sep=",")
+
+```
+
+Differential analysis of Isoforms in Interneuron Sst / Htr3a
+===================
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+DefaultAssay(object = illu1141) <- "RNA"
+illu1141 <- SetIdent(illu1141, value = "illumina.ident")
+
+high <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("Interneurons.matures") & Htr3a > 0.5 & Sst == 0)@assays$RNA@counts)
+low <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("Interneurons.matures") & Sst > 0.5 & Htr3a == 0)@assays$RNA@counts)
+length(high)
+length(low)
+illu1141 <- SetIdent(object=illu1141, cells=high, value="high")
+illu1141 <- SetIdent(object=illu1141, cells=low, value="low")
+
+markers <- FindMarkers(object = illu1141, ident.1 = "high", ident.2 = "low", min.pct = 0.25, thresh.use = 0.25)
+markers$gene <- rownames(markers)
+markers$cluster <- "Interneurons.high-low"
+top20 <- markers %>% top_n(40, -p_val)
+top20 <- top20[order(top20$avg_logFC, decreasing=T),]
+DoHeatmap(illu1141, cells=c(low,high), features=top20$gene)
+
+DefaultAssay(object = illu1141) <- "ISO"
+markers <- FindMarkers(object = illu1141, ident.1 = "high", ident.2 = "low", min.pct = 0.25, thresh.use = 0.25)
+markers$gene <- rownames(markers)
+markers$cluster <- "Interneurons.high-low"
+top20 <- markers %>% top_n(40, -p_val)
+top20 <- top20[order(top20$avg_logFC, decreasing=T),]
+DoHeatmap(illu1141, cells=c(low,high), features=top20$gene)
+
+write.table(markers, file="Interneurons.Htr3a.Sst.csv", sep=",")
+
+```
+
+Monocle 5ex -> 6ex
+===================
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+FeaturePlot(object = illu1141, features = c("Clta.6ex.ratio.pct"), cols=c("grey","red"))
+
+
+```
+
+
+
+
+
+
+

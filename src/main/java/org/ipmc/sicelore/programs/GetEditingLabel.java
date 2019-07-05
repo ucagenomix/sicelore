@@ -145,6 +145,6 @@ public class GetEditingLabel extends CommandLineProgram {
     }
 
     public static void main(String[] paramArrayOfString) {
-        System.exit(new SplitBamPerCluster().instanceMain(paramArrayOfString));
+        System.exit(new GetEditingLabel().instanceMain(paramArrayOfString));
     }
 }

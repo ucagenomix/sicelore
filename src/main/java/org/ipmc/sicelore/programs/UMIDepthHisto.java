@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.ipmc.sicelore.programs;
 
 /**
@@ -58,9 +53,9 @@ public class UMIDepthHisto extends CommandLineProgram
     }
 
     protected void process()
-    {   
-        HashMap<String, Integer> m = new HashMap<String, Integer>();
+    {
         loadDTEcells();
+        HashMap<String, Integer> m = new HashMap<String, Integer>();
         
         if("longread".equals(TYPE)){
             log.info(new Object[]{"loadLongreadsBam"});
@@ -70,7 +65,7 @@ public class UMIDepthHisto extends CommandLineProgram
             
             Set cles = dataset.getMapMolecules().keySet();
             Iterator it = cles.iterator();
-            while (it.hasNext()) {
+            while(it.hasNext()){
                 String molkey = (String) it.next();
                 Molecule molecule = (Molecule)dataset.getMapMolecules().get(molkey);
                 Integer nbreads = molecule.getLongreads().size();

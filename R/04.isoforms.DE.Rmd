@@ -21,10 +21,6 @@ DefaultAssay(object = illu1141) <- "RNA"
 g.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.1, logfc.threshold = 0.25)
 write.table(g.markers, file="output/markers.genes.csv", sep=",")
 
-#dim(g.markers)
-#top5 <- g.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
-#DoHeatmap(illu1141, features=top5$gene, size=3.5)
-
 DefaultAssay(object = illu1141) <- "ISO"
 iso.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.1, logfc.threshold = 0.25)
 #dim(iso.markers)
@@ -54,10 +50,7 @@ for(i in 1:length(iso.genes)){
   iso.markers$min.pval.adj[i] <- min(iso.markers$p_val_adj[iso.markers$geneId == iso.genes[i]])
 }
 
-#dim(g.markers)
-#dim(iso.markers)
-
-iso.markers$min.pval.adj.genes <- 2
+iso.markers$min.pval.adj.genes <- "#N/A"
 for(i in 1:length(iso.genes)){
   #print (iso.genes[i])
   if(iso.genes[i] %in% g.markers$gene){
@@ -75,128 +68,42 @@ write.table(iso.markers, file="output/markers.isoforms.csv", sep=",")
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=26}
 
 DefaultAssay(object = illu1141) <- "ISO"
-illu1141.markers <- FindMarkers(object = illu1141, ident.1= c("mature Glutamatergic"), ident.2 = c("radial glia","cycling radial glia"), min.pct = 0.25, thresh.use = 0.25)
-illu1141.markers$cluster <- "mature Glutamatergic"
-illu1141.markers[which(illu1141.markers$avg_logFC>0),]$cluster <- "radial glia"
-illu1141.markers$geneId <- sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 1)
-illu1141.markers$transcriptId <- paste("ENS", sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 2), sep="")
-total <- illu1141.markers[which(illu1141.markers$geneId == "------"),]
-all.genes <- unique(illu1141.markers$geneId)
-for (i in (1:length(all.genes))){
-   sub <- illu1141.markers[which(illu1141.markers$geneId == all.genes[i]),]
-   nb.clusters <- unique(sub$cluster)
-   nb.transcripts <- unique(sub$transcriptId)
-  
-   if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
-     total <- rbind(total, sub)
-   }
+clusters <- c("cycling radial glia","radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+
+total <- data.frame()
+for (i in (1:7)){
+  k <- i+1
+  for (j in (k:8)){
+    if(i != j){
+      print(paste(i, " ", j, " ",clusters[i], " vs ", clusters[j], sep=""))
+      
+      markers <- FindMarkers(object = illu1141, ident.1=clusters[i], ident.2=clusters[j], min.pct = 0.1, thresh.use = 0.25)
+      markers$cluster <- clusters[j]
+      markers$contrast <- paste(clusters[i], "vs", clusters[j], sep=" ")
+      markers[which(markers$avg_logFC>0),]$cluster <- clusters[i]
+      markers$geneId <- sapply(strsplit(rownames(markers), "-ENS"), `[`, 1)
+      markers$transcriptId <- paste("ENS", sapply(strsplit(rownames(markers), "-ENS"), `[`, 2), sep="")
+      #total <- markers[which(markers$geneId == "------"),]
+      all.genes <- unique(markers$geneId)
+      for (k in (1:length(all.genes))){
+         sub <- markers[which(markers$geneId == all.genes[k]),]
+         nb.clusters <- unique(sub$cluster)
+         nb.transcripts <- unique(sub$transcriptId)
+        
+         if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
+           total <- rbind(total, sub)
+         }
+      }
+      print (dim(total))
+      print (length(unique(total$geneId)))
+    }
+  }
 }
 
-kable(total, caption = "mature Glutamatergic / radial glia")
+length(unique(total$geneId))
+head(total)
 
-FeaturePlot(object = illu1141, features = c("Pkm-ENSMUST00000034834.15","Pkm-ENSMUST00000163694.3"), blend=TRUE, reduction="tsne")
-FeaturePlot(object = illu1141, features = c("Clta-ENSMUST00000107849.9","Clta-ENSMUST00000170241.7"), blend=TRUE, reduction="tsne")
-FeaturePlot(object = illu1141, features = c("Cdc42-ENSMUST00000030417.9","Cdc42-ENSMUST00000051477.12"), blend=TRUE, reduction="tsne")
-FeaturePlot(object = illu1141, features = c("Myl6-ENSMUST00000218127.1","Myl6-ENSMUST00000164181.1"), blend=TRUE, reduction="tsne")
-
-illu1141.markers <- FindMarkers(object = illu1141, ident.1= c("mature Glutamatergic"), ident.2 = c("intermediate progenitor"), min.pct = 0.25, thresh.use = 0.25)
-illu1141.markers$cluster <- "mature Glutamatergic"
-illu1141.markers[which(illu1141.markers$avg_logFC>0),]$cluster <- "intermediate progenitor"
-illu1141.markers$geneId <- sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 1)
-illu1141.markers$transcriptId <- paste("ENS", sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 2), sep="")
-total <- illu1141.markers[which(illu1141.markers$geneId == "------"),]
-all.genes <- unique(illu1141.markers$geneId)
-for (i in (1:length(all.genes))){
-   sub <- illu1141.markers[which(illu1141.markers$geneId == all.genes[i]),]
-   nb.clusters <- unique(sub$cluster)
-   nb.transcripts <- unique(sub$transcriptId)
-  
-   if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
-     total <- rbind(total, sub)
-   }
-}
-kable(total, caption = "mature Glutamatergic / intermediate progenitor")
-
-illu1141.markers <- FindMarkers(object = illu1141, ident.1= c("mature GABAergic"), ident.2 = c("radial glia","cycling radial glia"), min.pct = 0.25, thresh.use = 0.25)
-illu1141.markers$cluster <- "mature GABAergic"
-illu1141.markers[which(illu1141.markers$avg_logFC>0),]$cluster <- "radial glia"
-illu1141.markers$geneId <- sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 1)
-illu1141.markers$transcriptId <- paste("ENS", sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 2), sep="")
-total <- illu1141.markers[which(illu1141.markers$geneId == "------"),]
-all.genes <- unique(illu1141.markers$geneId)
-for (i in (1:length(all.genes))){
-   sub <- illu1141.markers[which(illu1141.markers$geneId == all.genes[i]),]
-   nb.clusters <- unique(sub$cluster)
-   nb.transcripts <- unique(sub$transcriptId)
-  
-   if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
-     total <- rbind(total, sub)
-   }
-}
-kable(total, caption = "mature GABAergic / radial glia")
-
-illu1141.markers <- FindMarkers(object = illu1141, ident.1= c("mature GABAergic"), ident.2 = c("intermediate progenitor"), min.pct = 0.25, thresh.use = 0.25)
-illu1141.markers$cluster <- "mature GABAergic"
-illu1141.markers[which(illu1141.markers$avg_logFC>0),]$cluster <- "intermediate progenitor"
-illu1141.markers$geneId <- sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 1)
-illu1141.markers$transcriptId <- paste("ENS", sapply(strsplit(rownames(illu1141.markers), "-ENS"), `[`, 2), sep="")
-total <- illu1141.markers[which(illu1141.markers$geneId == "------"),]
-all.genes <- unique(illu1141.markers$geneId)
-for (i in (1:length(all.genes))){
-   sub <- illu1141.markers[which(illu1141.markers$geneId == all.genes[i]),]
-   nb.clusters <- unique(sub$cluster)
-   nb.transcripts <- unique(sub$transcriptId)
-  
-   if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
-     total <- rbind(total, sub)
-   }
-}
-kable(total, caption = "mature GABAergic / intermediate progenitor")
-
-```
-
-# Clta-6exons vs Clta-5exons conserved RNA markers analysis
-
-c("Glutamatergic matures","Glutamatergic imatures","intermediate progenitor")
-
-```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=6}
-
-clta6ex <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("mature Glutamatergic","imature Glutamatergic","intermediate progenitor") & illu1141@assays$ISO@data["Clta-ENSMUST00000107849.9",] > 1.5)@assays$RNA@counts)
-clta5ex <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("mature Glutamatergic","imature Glutamatergic","intermediate progenitor") & illu1141@assays$ISO@data["Clta-ENSMUST00000107849.9",] == 0 & illu1141@assays$ISO@data["Clta-ENSMUST00000170241.7",] > 0)@assays$RNA@counts)
-
-length(clta6ex)
-length(clta5ex)
-
-DefaultAssay(object = illu1141) <- "RNA"
-sub <- subset(illu1141, cells=c(clta6ex,clta5ex))
-sub <- SetIdent(object=sub, cells=clta6ex, value="clta6ex")
-sub <- SetIdent(object=sub, cells=clta5ex, value="clta5ex")
-sub@meta.data$illumina.ident = factor(sub@meta.data$illumina.ident, levels = unique(sub@meta.data$illumina.ident))
-table(sub@active.ident, sub@meta.data$illumina.ident)
-markers <-FindConservedMarkers(sub, ident.1="clta6ex", ident.2="clta5ex", grouping.var = "illumina.ident", assay.type = "RNA", meta.method = wilkinsonp, logfc.threshold = 0.1)
-kable(markers, caption = "mature Glutamatergic, imature Glutamatergic, intermediate progenitor")
-
-```
-
-c("imature GABAergic","mature GABAergic")
-
-```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=6}
-
-clta6ex <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("imature GABAergic","mature GABAergic") & illu1141@assays$ISO@data["Clta-ENSMUST00000107849.9",] > 1.5)@assays$RNA@counts)
-clta5ex <- colnames(subset(x = illu1141, subset = illumina.ident %in% c("imature GABAergic","mature GABAergic") & illu1141@assays$ISO@data["Clta-ENSMUST00000107849.9",] == 0 & illu1141@assays$ISO@data["Clta-ENSMUST00000170241.7",] > 0)@assays$RNA@counts)
-
-length(clta6ex)
-length(clta5ex)
-
-DefaultAssay(object = illu1141) <- "RNA"
-sub <- subset(illu1141, cells=c(clta6ex,clta5ex))
-sub <- SetIdent(object=sub, cells=clta6ex, value="clta6ex")
-sub <- SetIdent(object=sub, cells=clta5ex, value="clta5ex")
-sub@meta.data$illumina.ident = factor(sub@meta.data$illumina.ident, levels = unique(sub@meta.data$illumina.ident))
-
-table(sub@active.ident, sub@meta.data$illumina.ident)
-markers <-FindConservedMarkers(sub, ident.1="clta6ex", ident.2="clta5ex", grouping.var = "illumina.ident", assay.type = "RNA", meta.method = wilkinsonp, logfc.threshold = 0.1)
-kable(markers, caption = "imature GABAergic, mature GABAergic")
+write.table(total, file="output/markers.isoforms.only.csv", sep=",")
 
 ```
 

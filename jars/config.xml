@@ -8,6 +8,8 @@ and open the template in the editor.
 <!--<Parameters nanoporeBAMgenelist_seperator="," /> -->
 <Parameters>
     <general>
+         <!--If true will print somewhat more detailed info e.g; if SamRecord has issues -->
+        <verbose_errors>true</verbose_errors>
         <!--Max number of threads, if omitted will use  all cpus available -->
         <!--
         <N_Threads>5</N_Threads>
@@ -42,17 +44,17 @@ and open the template in the editor.
         <gene_name_attribute>GE</gene_name_attribute>
         <!-- mean QV attribute in Nanopore BAM 
         leave empty or comment out if not used-->
-        <!--<QV-tag>UQ</QV-tag> -->   
+        <QV-tag>UQ</QV-tag>   
     </files>
     <polyAT>
         <!-- minimal length of polyA polyT -->
-        <polyATlength>15</polyATlength>
+        <polyATlength>20</polyATlength>
         <!-- minimal fraction of polyA polyT -->
-        <fractionATInPolyAT>0.75</fractionATInPolyAT>
+        <fractionATInPolyAT>0.85</fractionATInPolyAT>
         <!-- minimal length to flag internal polyA polyT (used to search artefactual dimers)-->
         <internalpATlength>20</internalpATlength>
         <!-- minimal fraction of polyA polyT to search for internal adapter when polyAT-->
-        <internalFractionATInPolyAT>0.75</internalFractionATInPolyAT>
+        <internalFractionATInPolyAT>0.85</internalFractionATInPolyAT>
         <!-- minimal polyA polyT length to flag internal polyAT. If internal adapter found polyAT is allways reported even if below this cutoff-->
         <internalMinPolyATlengthForReporting>20</internalMinPolyATlengthForReporting>
         <!-- searches max this distance from end for polyA or poly T -->
@@ -60,7 +62,7 @@ and open the template in the editor.
     </polyAT>
     <adapter>
         <!-- pre-barcode adapter seq, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
-        <adapterseq>CTTCCGATCT</adapterseq>
+        <adapterseq>TCTTCCGATCT</adapterseq>
         <!-- max number of needleman wunsch mismatches in adapter sequence-->  
         <maxAdapterNeedlemanMismatches>3</maxAdapterNeedlemanMismatches>
     </adapter>

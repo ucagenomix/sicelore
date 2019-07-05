@@ -20,10 +20,17 @@ DimPlot(object = illu1141, reduction = "tsne", label = FALSE, pt.size = 2)
 100*sum(illu1141@meta.data$nCount_ISOG)/sum(illu1141@meta.data$nCount_RNA)
 100*sum(illu1141@meta.data$nFeature_ISOG)/sum(illu1141@meta.data$nFeature_RNA)
 
-median(illu1141@meta.data$nCount_ISOG)
+sum(illu1141@meta.data$nCount_RNA)
+sum(illu1141@meta.data$nCount_ISOG)
+sum(illu1141@meta.data$nCount_ISO)
+
 median(illu1141@meta.data$nCount_RNA)
+median(illu1141@meta.data$nCount_ISOG)
+median(illu1141@meta.data$nCount_ISO)
+
 median(illu1141@meta.data$nFeature_ISOG)
 median(illu1141@meta.data$nFeature_RNA)
+median(illu1141@meta.data$nFeature_ISO)
 
 ```
 
@@ -122,7 +129,7 @@ rownames(df) <- c()
 df2 <- data.frame()
 for (i in (1:length(common.cells))){
   #print (i)
-  random <- sample(1:length(common.cells), 1, replace=T)
+  random <- sample(1:length(common.cells), 5, replace=T)
   
   for (j in (1:length(random))){
     if(i != random[j]){

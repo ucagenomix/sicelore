@@ -41,13 +41,13 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     private boolean isChimeria = false;
     private boolean isReversed = false;
     
-    protected static String CELLTAG; // BC
-    protected static String UMITAG; // U8
-    protected static String GENETAG; //IG
-    protected static String TSOENDTAG; //TE
-    protected static String UMIENDTAG; //UE
-    protected static String USTAG; // US
-    protected static int MAXCLIP; // 150
+    protected static String CELLTAG = "BC"; // BC
+    protected static String UMITAG = "U8"; // U8
+    protected static String GENETAG = "IG"; //IG
+    protected static String TSOENDTAG = "TE"; //TE
+    protected static String UMIENDTAG = "UE"; //UE
+    protected static String USTAG = "US"; // US
+    protected static int MAXCLIP = 150; // 150
 
     public LongreadRecord() { }
 
