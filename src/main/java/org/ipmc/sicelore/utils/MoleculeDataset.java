@@ -7,14 +7,12 @@ package org.ipmc.sicelore.utils;
  */
 import java.util.*;
 import java.io.*;
-import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.util.concurrent.*;
 import org.biojava.nbio.core.util.ConcurrencyTools;
 import com.google.common.util.concurrent.*;
 import org.apache.commons.lang3.StringUtils;
 import org.biojava.nbio.core.sequence.DNASequence;
-import java.util.stream.Collectors;
         
 public class MoleculeDataset {
 
@@ -102,10 +100,10 @@ public class MoleculeDataset {
             // sort all selected isoforms on exons number (max to min)
             //Collections.sort(transcripts);
             
-            if("SCORE".equals(METHOD))
-                this.setIsoformScore(molecule, transcripts, DELTA, METHOD);
-            else
-                this.setIsoform(molecule, transcripts, DELTA, METHOD);
+            if("JSCORE".equals(METHOD))
+                this.setIsoformJunctionScore(molecule, transcripts, DELTA);
+            else if("ISOHIGH".equals(METHOD))
+                this.setIsoformIsoHigh(molecule, transcripts, DELTA);
             
             // record womewhere what happened during this setIsoform
             
@@ -118,8 +116,8 @@ public class MoleculeDataset {
         log.info(new Object[]{"\tSetIsoforms\t\tmonoexon\t[" + this.monoexon + "]"});
         log.info(new Object[]{"\tSetIsoforms\t\t 0 match\t[" + this.nomatch + "]"});
         log.info(new Object[]{"\tSetIsoforms\t\t 1 match\t[" + this.onematch + "]"});
-        log.info(new Object[]{"\tSetIsoforms\t\t>1 match set\t[" + this.multimatchset + "]"});
-                log.info(new Object[]{"\tSetIsoforms\t\tambiguous\t[" + this.ambiguous + "]"});
+        //log.info(new Object[]{"\tSetIsoforms\t\t>1 match set\t[" + this.multimatchset + "]"});
+        log.info(new Object[]{"\tSetIsoforms\t\tambiguous\t[" + this.ambiguous + "]"});
 
         
         List<Molecule> l;
@@ -138,7 +136,7 @@ public class MoleculeDataset {
         }
     }
 
-    public void setIsoform(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, String METHOD)
+    public void setIsoformIsoHigh(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA)
     {
         List list1=null;
         
@@ -160,17 +158,17 @@ public class MoleculeDataset {
 
                         // candidates will be ranked on the number of  maximum exons,
                         // nice when 5' degradation or quality loss of long read
-                        if("EXONHIGH".equals(METHOD)){
-                            candidates.put(key, transcriptrecord.getExons().size());
-                        }
+                        //if("EXONHIGH".equals(METHOD)){
+                        //    candidates.put(key, transcriptrecord.getExons().size());
+                        //}
                         // candidates will be ranked on the number of read to isoform match
                         // consistent option, but week when last 5p exons is lost because of long read QV loss
-                        else if("NBHIGH".equals(METHOD)){
+                        //else if("NBHIGH".equals(METHOD)){
                             if(candidates.containsKey(key))
                                 candidates.put(key, candidates.get(key) + 1);
                             else
                                 candidates.put(key, 1);
-                        }
+                        //}
                     }
                 }
             }
@@ -197,8 +195,14 @@ public class MoleculeDataset {
             String g = (String) iter.next();
             molecule.setTranscriptId(g.split("\\|")[0]);
             molecule.setGeneId(g.split("\\|")[1]);
+            
+            if(bestCandidates.size() == 1)
+                this.onematch++;
+            else
+                this.ambiguous++; // note that here the ambiguous are set !!!
         }
         else{
+            this.nomatch++;
             int index = new Random().nextInt(molecule.getGeneIds().size());
             Iterator<String> iter = molecule.getGeneIds().iterator();
             for (int i = 0; i < index; i++) { iter.next(); }
@@ -208,13 +212,14 @@ public class MoleculeDataset {
         
         // only 1 mono-exonic transcript in the model --> we set the isoform
         if(transcripts.size() == 1 && list1.size() == 0){
+           this.monoexon++;
            molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
            molecule.setGeneId(transcripts.get(0).getGeneId());
         }
     }
     
     
-    public void setIsoformScore(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, String METHOD)
+    public void setIsoformJunctionScore(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA)
     {
         HashMap<Junction, HashSet<TranscriptRecord>> mapper = new HashMap<Junction, HashSet<TranscriptRecord>>();
         List<Junction> junc = new ArrayList<Junction>();
@@ -355,7 +360,7 @@ public class MoleculeDataset {
                     TranscriptRecord tr = (TranscriptRecord)newCandidates.iterator().next();
                     molecule.setTranscriptId(tr.getTranscriptId());
                     molecule.setGeneId(tr.getGeneId());
-                    this.multimatchset++;
+                    this.onematch++;
                 }
                 else{
                     this.ambiguous++;
@@ -372,56 +377,6 @@ public class MoleculeDataset {
             }
         }
     }
-    /*
-    public LinkedHashMap<String,Integer> create_rules(List<TranscriptRecord> transcriptrecord,int DELTA)
-    {
-        LinkedHashMap<String, Integer> map_result = new LinkedHashMap<>();
-        List<List<int[]>> list_transcript = new ArrayList<>();
-        for (int cpt = 0; cpt < transcriptrecord.size(); cpt++) {
-            list_transcript.add(junctionsFromExons(transcriptrecord.get(cpt).getExons()));
-        }
-        for (int i = 0; i < list_transcript.size() - 1; i++) {
-            for (int k = 0; k < list_transcript.get(i).size(); k++) {
-                boolean result = false;
-                int[] element_test = list_transcript.get(i).get(k);
-                for (int ii = 0; ii < list_transcript.size(); ii++) {
-                    for (int jj = 0; jj < list_transcript.get(ii).size(); jj++) {
-                        if ((Math.abs(element_test[0] - list_transcript.get(ii).get(jj)[0]) <= DELTA) && (Math.abs(element_test[1] - list_transcript.get(ii).get(jj)[1]) <= DELTA) && i != ii) {
-                            result = true;
-                            list_transcript.get(ii).remove(jj);
-                            jj--;
-                        }
-                    }
-                }
-                if (result) {
-                    list_transcript.get(i).remove(k);
-                }
-            }
-        }
-        for (int iii = 0; iii < list_transcript.size(); iii++) {
-            for (int j = 0; j < list_transcript.get(iii).size(); j++) {
-                String key = list_transcript.get(iii).get(j)[0] + " " + list_transcript.get(iii).get(j)[1];
-                map_result.put(key, iii);
-            }
-        }
-        return map_result;
-    }
-    
-    public TranscriptRecord asign_transcript(List<TranscriptRecord> transcriptrecord, LongreadRecord lrr, int DELTA, LinkedHashMap<String,Integer> map_result)
-    {
-        List<int[]> list_lrr = junctionsFromExons(lrr.getExons());
-        for (int j = 0; j < list_lrr.size(); j++) {
-            Set<String> keys = map_result.keySet();
-            for (String key : keys) {
-                String[] split_result = key.split(" ");
-                if ((Math.abs(list_lrr.get(j)[0] - Integer.valueOf(split_result[0])) <= DELTA) && (Math.abs(list_lrr.get(j)[1] - Integer.valueOf(split_result[1])) <= DELTA)) {
-                    return transcriptrecord.get(map_result.get(key));
-                }
-            }
-        }
-        return null;
-    }
-    */
     
     public boolean isSameJunction(Junction j1, Junction j2, int DELTA)
     {
