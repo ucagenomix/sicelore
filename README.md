@@ -264,11 +264,9 @@ command shown for fastq batch "0001.sub.fastq"
 
 ```bash  
 
-minimap2 -a -x splice -t 20 -N 100 $BUILD.mmi 0001.sub.fastq > 0001.sub.sam
+minimap2 -ax splice -uf --MD -N 100 --sam-hit-only -t 20 --junc-bed gencode.vM18.primary_assembly.annotation.bed $BUILD.mmi 0001.sub.fastq > 0001.sub.sam
 
-"/bin/awk '{ if($3 !="*") print $0 }' 0001.sub.sam > 0001.sub.match.sam
-
-samtools view -Sb 0001.sub.match.sam -o 0001.sub.unsorted.bam
+samtools view -Sb 0001.sub.sam -o 0001.sub.unsorted.bam
 
 samtools sort 0001.sub.unsorted.bam -o 0001.sub.bam
 
@@ -276,7 +274,12 @@ samtools index 0001.sub.bam
 
 ```
 
- 
+**--junc-bed** (required)  
+
+BED file consisting of annotated introns and their strands. With this option, minimap2 prefers splicing in annotations.
+
+can be generated with `paftools.js gff2bed -j ann.gtf' 
+
 
 <a id="nanopore-tagging"></a>
 
@@ -789,7 +792,7 @@ the maximal number of extensive non-matching sequences at either end, hard- or s
 
 STRICT for full exon-exon structure required for assignation
 
-SOFT for a more lenient way of assignation requirinf observation of isoform specific exon-exon junction 
+SOFT for a more lenient way of assignation requiring observation of an isoform specific exon-exon junction 
 
 **AMBIGUOUS_ASSIGN=** (required)  
 
@@ -905,7 +908,7 @@ the maximal number of extensive non-matching sequences at either end, hard- or s
 
 STRICT for full exon-exon structure required for assignation
 
-SOFT for a more lenient way of assignation requirinf observation of isoform specific exon-exon junction 
+SOFT for a more lenient way of assignation requiring observation of an isoform specific exon-exon junction 
 
 **AMBIGUOUS_ASSIGN=** (required)  
 
@@ -944,13 +947,11 @@ Molecule consensus sequences can then be mapped back to the reference genome to 
 
 ```bash
 
-minimap2 -a -x splice -t 20 -N 100 $BUILD.mmi molecules.fa > molecules.sam
+minimap2 -ax splice -uf --MD -N 100 --sam-hit-only -t 20 --junc-bed gencode.vM18.primary_assembly.annotation.bed $BUILD.mmi molecules.fa > molecules.sam
 
-"/bin/awk '{ if($3 !="*") print $0 }' molecules.sam > molecules.match.sam
+samtools view -Sb molecules.sam -o unsorted.bam
 
-samtools view -Sb molecules.match.sam -o molecules.unsorted.bam
-
-samtools sort molecules.unsorted.bam -o molecules.bam
+samtools sort unsorted.bam -o molecules.bam
 
 samtools index molecules.bam
 
