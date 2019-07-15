@@ -754,11 +754,9 @@ samtools index GEUS10xAttributes.umifound.bam
 
 **use IsoformMatrix (sicelore.jar)**
 
-SAM records matching known genes (gene name must be in IG tag) are analyzed for matching Gencode transcripts corresponding to the same gene and a transcript isoform count table for is generated. 
+SAM records matching known genes were grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping > 150 nt (MAXCLIP parameter) are discarded. To assign a UMI to a Gencode transcript two strategies are available names STRICT and SOFT (METHOD paramater). Using STRICT strategy, a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a 2 bases margin (DELTA parameter) of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, we analyze all its reads and assign the UMI the Gencode transcript supported by the majority of the reads. 
 
-A read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a  configurable margin ('DELTA' (default=5)) added or lacking sequences at exon boundaries, to allow for indels at exon junctions and unprecise mapping by minimap2. SAM records with extensive non-matching sequences at either end (hard- or soft clipping > 150 nt.) are discarded.  
-
-When more than one read is available for the molecule (UMI), all are processed and the TranscriptId is set to the most often identified transcript for the UMI. 
+In case of an equal number of reads support two different Gencode transcript, the UMI is considered as ambiguous and assigned/not assigned to an isoform (AMBIGUOUS_ASSIGN parameter). SOFT strategy allows to assign isoform to an UMI that do not recapitulate the full exon-exon structure of the isoform. Some reads corresponding to long RNAs are incomplete (lacking 5') due to limitations of the 10xGenomics library preparation. Some reads lack the 3' end since the oligod(T) priming and reverse transcription starts at room temperature (low stringency) resulting in priming at internal A-rich sequences of the RNA. We require in this mode the visualisation of an exon-exon junction specific to an isoform of the gene model processed. Briefly for a UMI matching Gene X, all gencode transcript of a gene model for the gene X are parsed, each unique exon-exon junction is associated to the list of isoforms carrying the junction. All the reads for the UMI are processed, for each exon-exon junction, a score of 1 is added to the list of isoforms carrying the junction. At the end of the process, the isoform with the highest score is selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and not assigned or asssigned to one of the ùatching isoform (AMBIGUOUS_ASSIGN=true).
 
 
 **parameters**
@@ -781,24 +779,26 @@ prefix used for output file names
 
 **DELTA=** (required)  
 
-the number of extra or lacking bases allowed at exon-exon junctions (default = 5)  
+the number of extra or lacking bases allowed at exon-exon junctions (default = 2)  
 
-**SOFT=** (required)  
+**MAXCLIP=** (required)  
 
-If set, causes a more lenient analysis. Some reads corresponding to long RNAs are incomplete (lacking 5') due to limitations of the 10xGenomics library preparation. 
+the maximal number of extensive non-matching sequences at either end, hard- or soft clipping to call the read as chimerix and discards it (default = 150)  
 
-Some reads lack the 3' end since the oligod(T) priming and reverse transcription starts at room temperature (low stringency) resulting in priming at internal A-rich 
+**METHOD=** (required)  
 
-sequences of the RNA. The SOFT mode is particluarly usefull when trying to quantify for instance the inclusion/exclusion of one specific exon that we know is specific of an isoform.
+STRICT for full exon-exon structure required for assignation
 
-For instance refflat use for minimal identification of flip and flop Gria2 isoforms (mm10):
+SOFT for a more leniant way of assignation requirinf observation of isoform specific exon-exon junction 
 
-```bash
+**AMBIGUOUS_ASSIGN=** (required)  
 
-Gria2   flip    chr3    -       80681449        80802835        80688549        80802835        5       80689102,80690403,80692284      80689351,80690518,80692532
-Gria2   flop    chr3    -       80681449        80802835        80688549        80802835        5       80689102,80691319,80692284      80689351,80691434,80692532
+Wether or not to assign a UMI that is ambiguous (>1 isoforms of the gene model fit its exon-exon structure) (default=false)
 
-```
+**ISOBAM=** (required)  
+
+Wether or not to output a BAM file containg a flag (IT) with the transcriptID called during this process (default=false)
+
 
 **output files**
 
@@ -828,7 +828,7 @@ isoform level number of molecules per cell barcode count matrix for subsequent s
 
 ```bash
 
-java -jar -Xmx44g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REFFLAT=refFlat_gencode.vM18.txt CSV=10xgenomics.barcodes.csv DELTA=5 SOFT=false PREFIX=sicelore
+java -jar -Xmx44g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REFFLAT=refFlat_gencode.vM18.txt CSV=10xgenomics.barcodes.csv DELTA=2 MAXCLIP=150 METHOD=SOFT AMBIGUOUS_ASSIGN=false PREFIX=sicelore
 
 ```
 
@@ -847,15 +847,15 @@ Briefly, each molecule are processed as follow depending the number of reads the
 
 read cDNA sequence; (ii) case of a 2-reads molecule, the consensus sequence is set as the cDNA sequence of the best quality read according
 
-to the minimal “de” minimap2 SAMrecord tag value; (iii) Case of a multi-reads molecule (i.e. > 2), a consensus sequence is set
+to the minimal "de" minimap2 SAMrecord tag value; (iii) Case of a multi-reads molecule (i.e. > 2), a consensus sequence is set
 
-using Biojava API multiple alignment using a maximum of 10 reads selected as the ones minimizing the “de” value.
+using Biojava API multiple alignment using a maximum of 10 reads selected as the ones minimizing the "de" value.
 
-The consensus sequence is then “racon” polished using the whole set of reads for the molecule. 
+The consensus sequence is then "racon" polished using the whole set of reads for the molecule. 
 
-Using a 20 cores compute nodes for muti-threading, and depending on the sequencing depth inducing a low/high number of multi-reads molecules, the speed of consensus sequence computation can be estimated at 30k / hour.
+Using a 20 cores compute nodes for muti-threading, and depending on the sequencing depth inducing a low/high number of multi-reads molecules, the speed of consensus sequence computation is dependent of the sequencing depth but can be estimated at 50k UMIs/ hour.
 
-For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
+For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster (> 500k UMIs / hour)
 
 
 ### splitting bam by chromosomes  
@@ -897,9 +897,19 @@ Consensus sequence in fasta format.
 
 the number of extra or lacking bases allowed at exon-exon junctions (default = 5)  
 
-**SOFT=** (required)  
+**MAXCLIP=** (required)  
 
-If set, causes a more lenient analysis (c.f. IsoformMatrix)
+the maximal number of extensive non-matching sequences at either end, hard- or soft clipping to call the read as chimerix and discards it (default = 150)  
+
+**METHOD=** (required)  
+
+STRICT for full exon-exon structure required for assignation
+
+SOFT for a more leniant way of assignation requirinf observation of isoform specific exon-exon junction 
+
+**AMBIGUOUS_ASSIGN=** (required)  
+
+Wether or not to assign a UMI that is ambiguous (>1 isoforms of the gene model fit its exon-exon structure) (default=false)
 
 **THREADS=,T=** (required)  
 
