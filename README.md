@@ -789,7 +789,7 @@ the maximal number of extensive non-matching sequences at either end, hard- or s
 
 STRICT for full exon-exon structure required for assignation
 
-SOFT for a more leniant way of assignation requirinf observation of isoform specific exon-exon junction 
+SOFT for a more lenient way of assignation requirinf observation of isoform specific exon-exon junction 
 
 **AMBIGUOUS_ASSIGN=** (required)  
 
@@ -905,7 +905,7 @@ the maximal number of extensive non-matching sequences at either end, hard- or s
 
 STRICT for full exon-exon structure required for assignation
 
-SOFT for a more leniant way of assignation requirinf observation of isoform specific exon-exon junction 
+SOFT for a more lenient way of assignation requirinf observation of isoform specific exon-exon junction 
 
 **AMBIGUOUS_ASSIGN=** (required)  
 
