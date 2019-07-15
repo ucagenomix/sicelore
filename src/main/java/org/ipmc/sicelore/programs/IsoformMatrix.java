@@ -32,16 +32,16 @@ public class IsoformMatrix extends CommandLineProgram
     public File REFFLAT;
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;
-    @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
+    @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=2)")
     public int DELTA = 2;
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=sicelore)")
     public String PREFIX = "sicelore";
-    @Argument(shortName = "ISOBAM", doc = "Wether or not to produce a bam file having geneId (IG) and TranscriptId (IT) SAM flags (default=true)", optional=true)
-    public boolean ISOBAM = true;
-    @Argument(shortName = "METHOD", doc = "Isoform assignment method (default=EXONHIGH)", optional=true)
-    public String METHOD = "EXONHIGH";
+    @Argument(shortName = "ISOBAM", doc = "Wether or not to produce a bam file having geneId (IG) and TranscriptId (IT) SAM flags (default=false)", optional=true)
+    public boolean ISOBAM = false;
+    @Argument(shortName = "METHOD", doc = "Isoform assignment method (STRICT or SOFT)")
+    public String METHOD = "SOFT";
     @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
@@ -56,7 +56,9 @@ public class IsoformMatrix extends CommandLineProgram
     public String USTAG = "US";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
-
+    @Argument(shortName = "AMBIGUOUS_ASSIGN", doc = "Wether or not to assign the UMI to an isoform if ambiguous (default=false)", optional=true)
+    public boolean AMBIGUOUS_ASSIGN = false;
+    
     public HashSet<String> DTEcells;
     private ProgressLogger pl;
     private final Log log;
@@ -91,12 +93,16 @@ public class IsoformMatrix extends CommandLineProgram
 
         loadDTEcells();
         log.info(new Object[]{"\tCells loaded\t\t[" + DTEcells.size() + "]"});
-
-        // 4mn and 9.6Gb for 1.450.000 SAMrecords [747.000 molecules]
+        
+        if(!"STRICT".equals(METHOD) && !"SOFT".equals(METHOD)){
+            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SOFT only"});
+            return;
+        }
+        
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, false, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, METHOD);
+        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
         
         Matrix matrix = dataset.produceMatrix(model, DTEcells);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});
