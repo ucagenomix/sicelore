@@ -13,7 +13,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", oneLineSummary = "Tag molecule bam file with IG/BC/U8 tags contained in molecule read name", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "SAMrecord IG/BC/U8 tagging from molecule bam read names.", oneLineSummary = "SAMrecord IG/BC/U8 tagging from molecule bam read names.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class AddBamMoleculeTags extends CommandLineProgram {
 
@@ -23,6 +23,16 @@ public class AddBamMoleculeTags extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output SAM or BAM file with tags")
     public File OUTPUT;
+    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
+    public String CELLTAG = "BC";
+    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
+    public String UMITAG = "U8";
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (default=IG)", optional=true)
+    public String GENETAG = "IG";
+    @Argument(shortName = "ISOTAG", doc = "Isoform name tag (default=IT)", optional=true)
+    public String ISOTAG = "IT";
+    @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
+    public String RNTAG = "RN";
 
     public AddBamMoleculeTags() {
         log = Log.getInstance(AddBamMoleculeTags.class);
@@ -43,19 +53,19 @@ public class AddBamMoleculeTags extends CommandLineProgram {
                 String[] info = str.split("\\|");
                 
                 if(info.length == 5){ // GENEID|TRANSCRIPTID|BC|U8|NBREADS --> isoform set before consensus
-                    r.setAttribute("IG", info[0]);
-                    //r.setAttribute("IT", info[1]);
-                    r.setAttribute("BC", info[2]);
-                    r.setAttribute("U8", info[3]);
+                    r.setAttribute(GENETAG, info[0]);
+                    r.setAttribute(ISOTAG, info[1]);
+                    r.setAttribute(CELLTAG, info[2]);
+                    r.setAttribute(UMITAG, info[3]);
                     // molecule longreads
-                    r.setAttribute("RN", new Integer(info[4]).intValue());
+                    r.setAttribute(RNTAG, new Integer(info[4]).intValue());
                 }
                 else if(info.length == 4){ // GENEID|BC|U8|NBREADS --> isoform set after consensus
-                    r.setAttribute("IG", info[0]);
-                    r.setAttribute("BC", info[1]);
-                    r.setAttribute("U8", info[2]);
+                    r.setAttribute(GENETAG, info[0]);
+                    r.setAttribute(CELLTAG, info[1]);
+                    r.setAttribute(UMITAG, info[2]);
                     // molecule longreads
-                    r.setAttribute("RN", new Integer(info[3]).intValue());
+                    r.setAttribute(RNTAG, new Integer(info[3]).intValue());
                 }
                 localSAMFileWriter.addAlignment(r);
             }

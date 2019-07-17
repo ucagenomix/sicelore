@@ -22,7 +22,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Compute isoform-level and gene-level expression matrices", oneLineSummary = "Compute isoform-level and gene-level expression matrices", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Isoform and gene level expression matrices production.", oneLineSummary = "Isoform and gene level expression matrices production.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IsoformMatrix extends CommandLineProgram
 {

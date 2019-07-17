@@ -136,8 +136,8 @@ dev.off()
 
 DefaultAssay(object = illu1141) <- "RNA"
 pdf("figures/fig.4d.pdf", width=6, height=6, useDingbats=FALSE)
-FeaturePlot(object = illu1141, features = c("Myl6"), cols=custom.pal, reduction="tsne")
-FeaturePlot(object = illu1141, features = c("Myl6"), cols=c("grey","red"), reduction="tsne")
+FeaturePlot(object = illu1141, features = c("Myl6"), cols=c("grey","red"), reduction="tsne", pt.size=2, min.cutoff = 0)
+FeaturePlot(object = illu1141, features = c("Myl6"), cols=c("grey","blue"), reduction="tsne", pt.size=2, min.cutoff = 0)
 dev.off()
 
 ```

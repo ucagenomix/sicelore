@@ -18,7 +18,7 @@ import org.ipmc.sicelore.utils.LongreadParser;
 import org.ipmc.sicelore.utils.MoleculeDataset;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Add reads from TARGETED bam for molecules present in INPUT bam", oneLineSummary = "Add reads from TARGETED bam for molecules present in INPUT bam", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Add reads (targeted exp.) for molecules in input bam (standard exp.).", oneLineSummary = "Add reads (targeted exp.) for molecules in input bam (standard exp.).", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class AddReadsToMolecules extends CommandLineProgram {
 
@@ -30,6 +30,10 @@ public class AddReadsToMolecules extends CommandLineProgram {
     public File TARGETED;
     @Argument(shortName = "O", doc = "The output SAM or BAM file with tags")
     public File OUTPUT;
+    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
+    public String CELLTAG = "BC";
+    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
+    public String UMITAG = "U8";
 
     public AddReadsToMolecules() {
         log = Log.getInstance(AddReadsToMolecules.class);
@@ -56,8 +60,8 @@ public class AddReadsToMolecules extends CommandLineProgram {
         try {
             for (SAMRecord r : localSamReader) {
                 pl.record(r);
-                String BC = (String)r.getAttribute("BC");
-                String U8 = (String)r.getAttribute("U8");
+                String BC = (String)r.getAttribute(CELLTAG);
+                String U8 = (String)r.getAttribute(UMITAG);
                 if(cles.contains(BC+":"+U8)){
                     rec++;
                     localSAMFileWriter.addAlignment(r);
@@ -66,23 +70,24 @@ public class AddReadsToMolecules extends CommandLineProgram {
             }
             localSamReader.close();
             
-            System.out.println("molecules\t\t"+cles.size());
-            System.out.println("records\t\t"+rec);
+            log.info(new Object[]{"\tinput bam file\trecords\t[" + rec + "]"});
+            log.info(new Object[]{"\tinput bam file\tmolecules\t[" + cles.size() + "]"});
             
             SamReader localSamReader2 = SamReaderFactory.makeDefault().open(TARGETED);
             
             for (SAMRecord r : localSamReader2) {
                 pl.record(r);
-                String BC = (String)r.getAttribute("BC");
-                String U8 = (String)r.getAttribute("U8");
+                String BC = (String)r.getAttribute(CELLTAG);
+                String U8 = (String)r.getAttribute(UMITAG);
                 if(cles.contains(BC+":"+U8)){
                     addrec++;
                     localSAMFileWriter.addAlignment(r);
                     mol2keep.add(BC+":"+U8);
                 }
             }
-            System.out.println("Added records\t"+addrec);
-            System.out.println("For nb molecules\t"+mol2keep.size());
+            
+            log.info(new Object[]{"\toutput bam file\tadded records\t[" + addrec + "]"});
+            log.info(new Object[]{"\toutput bam file\tfor molecules\t[" + mol2keep.size() + "]"});
             
             localSamReader2.close();
             localSAMFileWriter.close();

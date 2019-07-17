@@ -84,7 +84,7 @@ public class MoleculeDataset {
         return this.mapMolecules.get(isokey);
     }
     
-    public void setIsoforms(UCSCRefFlatParser model, int DELTA, String METHOD)
+    public void setIsoforms(UCSCRefFlatParser model, int DELTA, String METHOD, boolean AMBIGUOUS_ASSIGN)
     {
         Molecule molecule = null;
         
@@ -100,10 +100,10 @@ public class MoleculeDataset {
             // sort all selected isoforms on exons number (max to min)
             //Collections.sort(transcripts);
             
-            if("JSCORE".equals(METHOD))
-                this.setIsoformJunctionScore(molecule, transcripts, DELTA);
-            else if("ISOHIGH".equals(METHOD))
-                this.setIsoformIsoHigh(molecule, transcripts, DELTA);
+            if("SOFT".equals(METHOD))
+                this.setIsoformSoft(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
+            else if("STRICT".equals(METHOD))
+                this.setIsoformStrict(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
             
             // record womewhere what happened during this setIsoform
             
@@ -114,8 +114,8 @@ public class MoleculeDataset {
         
         log.info(new Object[]{"\tSetIsoforms\t\tend..."});
         log.info(new Object[]{"\tSetIsoforms\t\tmonoexon\t[" + this.monoexon + "]"});
-        log.info(new Object[]{"\tSetIsoforms\t\t 0 match\t[" + this.nomatch + "]"});
-        log.info(new Object[]{"\tSetIsoforms\t\t 1 match\t[" + this.onematch + "]"});
+        log.info(new Object[]{"\tSetIsoforms\t\tno match\t[" + this.nomatch + "]"});
+        log.info(new Object[]{"\tSetIsoforms\t\tone match\t[" + this.onematch + "]"});
         //log.info(new Object[]{"\tSetIsoforms\t\t>1 match set\t[" + this.multimatchset + "]"});
         log.info(new Object[]{"\tSetIsoforms\t\tambiguous\t[" + this.ambiguous + "]"});
 
@@ -136,7 +136,7 @@ public class MoleculeDataset {
         }
     }
 
-    public void setIsoformIsoHigh(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA)
+    public void setIsoformStrict(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, boolean AMBIGUOUS_ASSIGN)
     {
         List list1=null;
         
@@ -145,7 +145,6 @@ public class MoleculeDataset {
         
         for(Longread lr : longreads){
             List<LongreadRecord> records = lr.getLongreadrecords();
-            //LongreadRecord lrr = lr.getBestRecord();
 
             for(LongreadRecord lrr : records){
                 List list = junctionsFromExons(lrr.getExons());
@@ -156,19 +155,10 @@ public class MoleculeDataset {
                     if(map(list, list1, DELTA)) {
                         String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
 
-                        // candidates will be ranked on the number of  maximum exons,
-                        // nice when 5' degradation or quality loss of long read
-                        //if("EXONHIGH".equals(METHOD)){
-                        //    candidates.put(key, transcriptrecord.getExons().size());
-                        //}
-                        // candidates will be ranked on the number of read to isoform match
-                        // consistent option, but week when last 5p exons is lost because of long read QV loss
-                        //else if("NBHIGH".equals(METHOD)){
-                            if(candidates.containsKey(key))
-                                candidates.put(key, candidates.get(key) + 1);
-                            else
-                                candidates.put(key, 1);
-                        //}
+                        if(candidates.containsKey(key))
+                            candidates.put(key, candidates.get(key) + 1);
+                        else
+                            candidates.put(key, 1);
                     }
                 }
             }
@@ -189,17 +179,29 @@ public class MoleculeDataset {
                 }
             }
             */
-            int index = new Random().nextInt(bestCandidates.size());
-            Iterator<String> iter = bestCandidates.iterator();
-            for (int i = 0; i < index; i++) { iter.next(); }
-            String g = (String) iter.next();
-            molecule.setTranscriptId(g.split("\\|")[0]);
-            molecule.setGeneId(g.split("\\|")[1]);
             
-            if(bestCandidates.size() == 1)
+            if(bestCandidates.size() == 1){
                 this.onematch++;
-            else
-                this.ambiguous++; // note that here the ambiguous are set !!!
+                String g = (String)bestCandidates.iterator().next();
+                molecule.setTranscriptId(g.split("\\|")[0]);
+                molecule.setGeneId(g.split("\\|")[1]);
+            }
+            else{
+                this.ambiguous++;
+                int index = new Random().nextInt(bestCandidates.size());
+                String g = (String)(bestCandidates.toArray()[index]);
+                
+                if(AMBIGUOUS_ASSIGN){
+                    // set isoform randomly if AMBIGUOUS_ASSIGN=true
+                    molecule.setTranscriptId(g.split("\\|")[0]);
+                    molecule.setGeneId(g.split("\\|")[1]);
+                }
+                else{
+                    // we set the geneId at least
+                    molecule.setTranscriptId("undef");
+                    molecule.setGeneId(g.split("\\|")[1]);
+                }
+            }
         }
         else{
             this.nomatch++;
@@ -219,7 +221,7 @@ public class MoleculeDataset {
     }
     
     
-    public void setIsoformJunctionScore(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA)
+    public void setIsoformSoft(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, boolean AMBIGUOUS_ASSIGN)
     {
         HashMap<Junction, HashSet<TranscriptRecord>> mapper = new HashMap<Junction, HashSet<TranscriptRecord>>();
         List<Junction> junc = new ArrayList<Junction>();
@@ -335,14 +337,6 @@ public class MoleculeDataset {
                 molecule.setGeneId(tr.getGeneId());
             }
             else{
-                 // do we really choose one transcript if several are possible ? maybe better to unassigned here
-                //int index = new Random().nextInt(bestCandidates.size());
-                //Iterator<TranscriptRecord> iter = bestCandidates.iterator();
-                //for (int i = 0; i < index; i++) { iter.next(); }
-                //TranscriptRecord tr = (TranscriptRecord) iter.next();
-                //molecule.setTranscriptId(tr.getTranscriptId());
-                //molecule.setGeneId(tr.getGeneId());
-                
                 // choose on the number of junctions of transcript and number of junctions of reads
                 int nbJunctionsMaxValue=Collections.max(nbJunctions.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
                 HashSet<TranscriptRecord> newCandidates = new HashSet<TranscriptRecord>();
@@ -354,8 +348,6 @@ public class MoleculeDataset {
                         newCandidates.add(tr);
                 }
                 
-                //System.out.println(molecule + " --> " + bestCandidates.size() + ", " + nbJunctionsMaxValue + " exons, " + newCandidates.size());
-                
                 if(newCandidates.size() == 1){
                     TranscriptRecord tr = (TranscriptRecord)newCandidates.iterator().next();
                     molecule.setTranscriptId(tr.getTranscriptId());
@@ -364,16 +356,20 @@ public class MoleculeDataset {
                 }
                 else{
                     this.ambiguous++;
-                    // we set the geneId at least
-                    int index = new Random().nextInt(molecule.getGeneIds().size());
-                    Iterator<String> iter = molecule.getGeneIds().iterator();
-                    for (int i = 0; i < index; i++) { iter.next(); }
-                    molecule.setTranscriptId("undef");
-                    molecule.setGeneId((String) iter.next());
+                    int index = new Random().nextInt(newCandidates.size());
+                    TranscriptRecord tr = (TranscriptRecord)(newCandidates.toArray()[index]);
+                    
+                    if(AMBIGUOUS_ASSIGN){
+                        // set isoform randomly if AMBIGUOUS_ASSIGN=true
+                        molecule.setTranscriptId(tr.getTranscriptId());
+                        molecule.setGeneId(tr.getGeneId());
+                    }
+                    else{
+                        // we set the geneId at least
+                        molecule.setTranscriptId("undef");
+                        molecule.setGeneId(tr.getGeneId());
+                    }
                 }
-                
-                // choose also on closeness to the 5p of transcript
-                
             }
         }
     }

@@ -5,8 +5,6 @@ package org.ipmc.sicelore.utils;
  * @author kevin lebrigand
  * 
  */
-import java.util.*;
-
 public class Junction {
 
     private int start;

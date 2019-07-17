@@ -13,7 +13,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import org.biojava.nbio.core.sequence.DNASequence;
 import java.util.concurrent.*;
-import org.apache.commons.lang3.*;
 import org.biojava.nbio.alignment.Alignments;
 import org.biojava.nbio.core.alignment.template.Profile;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound;

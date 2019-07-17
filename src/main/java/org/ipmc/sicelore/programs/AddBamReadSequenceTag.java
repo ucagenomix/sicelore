@@ -15,7 +15,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Add read sequence and QV to SAMrecords", oneLineSummary = "Add read sequence and QV to SAMrecords", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "SAMrecord read sequence and QV tagging.", oneLineSummary = "SAMrecord read sequence and QV tagging.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class AddBamReadSequenceTag extends CommandLineProgram {
 

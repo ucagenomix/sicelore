@@ -13,7 +13,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Compute molecule consensus sequence", oneLineSummary = "Compute molecule consensus sequence", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Compute consensus sequence per molecule.", oneLineSummary = "Compute consensus sequence per molecule.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class ComputeConsensus extends CommandLineProgram {
 
@@ -28,16 +28,16 @@ public class ComputeConsensus extends CommandLineProgram {
     public File REFFLAT;
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
-    @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=10)")
-    public int DELTA = 5;
+    @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=2)")
+    public int DELTA = 2;
     @Argument(shortName = "RACON", doc = "Racon path")
     public String RACONPATH = "/share/apps/local/racon/bin/";
     @Argument(shortName = "MINIMAP2PATH", doc = "Minimap2 path")
     public String MINIMAP2PATH = "/share/apps/local/minimap2/";
     @Argument(shortName = "TMPDIR", doc = "TMPDIR")
     public String TMPDIR = "/share/data/scratch/sicelore/";
-    @Argument(shortName = "METHOD", doc = "Isoform assignment method (default=EXONHIGH)", optional=true)
-    public String METHOD = "EXONHIGH";
+    @Argument(shortName = "METHOD", doc = "Isoform assignment method (STRICT or SOFT)")
+    public String METHOD = "SOFT";
     @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
@@ -52,6 +52,8 @@ public class ComputeConsensus extends CommandLineProgram {
     public String USTAG = "US";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
+    @Argument(shortName = "AMBIGUOUS_ASSIGN", doc = "Wether or not to assign the UMI to an isoform if ambiguous (default=false)", optional=true)
+    public boolean AMBIGUOUS_ASSIGN = false;
 
     public ComputeConsensus() {
         log = Log.getInstance(ComputeConsensus.class);
@@ -60,7 +62,6 @@ public class ComputeConsensus extends CommandLineProgram {
 
     protected int doWork()
     {
-        int nb = 0;
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(REFFLAT);
 
@@ -69,12 +70,16 @@ public class ComputeConsensus extends CommandLineProgram {
 	LongreadRecord lrr = new LongreadRecord();
 	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,USTAG,MAXCLIP);
         
+        if(!"STRICT".equals(METHOD) && !"SOFT".equals(METHOD)){
+            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SOFT only"});
+            return 0;
+        }
         //System.out.println(System.getenv("PATH"));
         
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, true, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, METHOD);
+        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
         dataset.callConsensus(OUTPUT, nThreads);
 
         return 0;

@@ -17,7 +17,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "External jar file", oneLineSummary = "External jar file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Possorted_genome 10x bam file preprocessor (c.f.IlluminaParser-1.0.jar).", oneLineSummary = "Possorted_genome 10x bam file preprocessor (c.f.IlluminaParser-1.0.jar).", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtilsExternal.class)
 @DocumentedFeature
 public class BamSerializer extends CommandLineProgram {
 

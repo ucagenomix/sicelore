@@ -12,6 +12,6 @@ public class SiCeLoReUtils implements CommandLineProgramGroup {
     }
 
     public String getDescription() {
-        return "SiCeLoRe utils";
+        return "";
     }
 }

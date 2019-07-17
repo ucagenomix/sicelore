@@ -14,7 +14,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Split a bam cells-by-cells provided in .csv file", oneLineSummary = "Split a bam cells-by-cells provided in .csv file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Bam file cell-by-cell splitter.", oneLineSummary = "Bam file cell-by-cell splitter.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class SplitBamPerCell extends CommandLineProgram {
 
@@ -26,8 +26,8 @@ public class SplitBamPerCell extends CommandLineProgram {
     public File OUTPUT;
     @Argument(shortName = "CSV", doc = "The .csv cell barcode file (barcodes.tsv)")
     public File CSV;
-    @Argument(shortName = "CELL_FLAG", doc = "The cell barcode flag (default CB)")
-    public String CELL_FLAG;
+    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
+    public String CELLTAG = "BC";
 
     public SplitBamPerCell() {
         log = Log.getInstance(SplitBamPerCell.class);
@@ -68,7 +68,7 @@ public class SplitBamPerCell extends CommandLineProgram {
             for (Iterator localIterator = localSamReader.iterator(); localIterator.hasNext();) {
                 SAMRecord localObject = (SAMRecord) localIterator.next();
                 pl.record((SAMRecord) localObject);
-                String str2 = (String) ((SAMRecord) localObject).getAttribute(CELL_FLAG);
+                String str2 = (String) ((SAMRecord) localObject).getAttribute(CELLTAG);
                 if ((SAMFileWriter) localHashMap.get(str2) != null) {
                     ((SAMFileWriter) localHashMap.get(str2)).addAlignment((SAMRecord) localObject);
                 }

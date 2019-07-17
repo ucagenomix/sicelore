@@ -14,15 +14,9 @@ import java.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import org.ipmc.sicelore.utils.LongreadRecord;
-import org.ipmc.sicelore.utils.Longread;
-import org.ipmc.sicelore.utils.Matrix;
-import org.ipmc.sicelore.utils.Molecule;
-import org.ipmc.sicelore.utils.TranscriptRecord;
-import org.ipmc.sicelore.utils.UCSCRefFlatParser;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Output statistics for cellBC/UMI bam file", oneLineSummary = "Output statistics for cellBC/UMI bam file", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Compute reads statistics for Illumina or Nanopore bam file.", oneLineSummary = "Compute reads statistics for Illumina or Nanopore bam file.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class ReadBamStats extends CommandLineProgram {
 
@@ -89,9 +83,8 @@ public class ReadBamStats extends CommandLineProgram {
                 
                 if(this.DTEcells.contains(cb)){
                     this.incells.add(readName);
-                    if(gn != null){
+                    if(gn != null)
                         this.incellsGN.add(readName);
-                    }
                 }
                 else
                     this.outcells.add(readName);

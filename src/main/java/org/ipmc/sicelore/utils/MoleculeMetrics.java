@@ -22,6 +22,4 @@ public class MoleculeMetrics
     public double getPctId() {
         return pctId;
     }
-
-
 }
