@@ -220,7 +220,7 @@ DefaultAssay(object = illu1141) <- "ISO"
 illu1141 <- ScaleData(object = illu1141, verbose = FALSE)
 
 DefaultAssay(object = illu1141) <- "RNA"
-illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.1, thresh.use = 0.25)
 top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
 DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 
@@ -293,7 +293,7 @@ FeaturePlot(object = illu1141, features = c("Kcnk1","Gabra2","Scn2a1"), cols=cus
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8}
 
-illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
+illu1141.markers <- FindAllMarkers(object = illu1141, only.pos = TRUE, min.pct = 0.1, thresh.use = 0.25)
 top5.illu1141 <- illu1141.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
 DoHeatmap(illu1141, features=top5.illu1141$gene, size=3.5)
 

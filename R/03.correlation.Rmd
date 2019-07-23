@@ -12,6 +12,7 @@ output:
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
+setwd("/data/10x_data/10x_rainer/github")
 source("00.import.R")
 
 illu1141 <- readRDS("illu1141c.rds")

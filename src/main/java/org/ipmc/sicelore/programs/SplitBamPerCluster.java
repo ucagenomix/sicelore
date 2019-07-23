@@ -51,14 +51,17 @@ public class SplitBamPerCluster extends CommandLineProgram {
             BufferedReader localBufferedReader = new BufferedReader(new java.io.FileReader(CSV));
             str1 = localBufferedReader.readLine();
             str1 = localBufferedReader.readLine();
-            while (str1 != null) {
-                String[] localObject = str1.split(",");
+            while(str1 != null) {
+                
+                if("".equals(str1)){}
+                else{
+                    String[] localObject = str1.split(",");
 
-                localHashMap1.put(localObject[0], localObject[1]);
-                localHashMap1.put(localObject[0] + "-1", localObject[1]);
+                    localHashMap1.put(localObject[0], localObject[1]);
+                    localHashMap1.put(localObject[0] + "-1", localObject[1]);
 
-                if (!localHashMap2.containsKey(localObject[1])) {
-                    localHashMap2.put(localObject[1], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, new File(OUTPUT.getAbsolutePath() + "/" + localObject[1] + ".bam")));
+                    if (!localHashMap2.containsKey(localObject[1]))
+                        localHashMap2.put(localObject[1], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, new File(OUTPUT.getAbsolutePath() + "/" + localObject[1] + ".bam")));
                 }
                 str1 = localBufferedReader.readLine();
             }
