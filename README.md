@@ -15,13 +15,15 @@ requires:
 
 * Java 8,
 
+* [fastp]([https://github.com/OpenGene/fastp)
+
 * [Minimap2](https://github.com/lh3/minimap2),
 
 * [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/),
 
-* [racon](https://github.com/isovic/racon)
+* [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2)
 
-* [fastp]([https://github.com/OpenGene/fastp)
+* [racon](https://github.com/isovic/racon)
 
 * samtools
 
@@ -746,7 +748,7 @@ Requires: Picard-tools or Samtools
 
 ```bash  
 
-java -jar -Xmx44g ~/picard-tools-1.119/MergeSamFiles.jar INPUT=0001.sub.GEUS10xAttributes.bam INPUT=0002.sub.GEUS10xAttributes.bam INPUT=...  ASSUME_SORTED=true USE_THREADING=true TMP_DIR=/scratch/tmp/ MAX_RECORDS_IN_RAM=100000000 OUTPUT=GEUS10xAttributes.umifound.bam VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx44g ~/picard-tools-1.119/MergeSamFiles.jar INPUT=0001.sub.GEUS10xAttributes.bam INPUT=0002.sub.GEUS10xAttributes.bam INPUT=... ASSUME_SORTED=true USE_THREADING=true TMP_DIR=/scratch/tmp/ MAX_RECORDS_IN_RAM=100000000 OUTPUT=GEUS10xAttributes.umifound.bam VALIDATION_STRINGENCY=SILENT
 
 samtools index GEUS10xAttributes.umifound.bam
 
@@ -852,13 +854,11 @@ read cDNA sequence; (ii) case of a 2-reads molecule, the consensus sequence is s
 
 to the minimal "de" minimap2 SAMrecord tag value; (iii) Case of a multi-reads molecule (i.e. > 2), a consensus sequence is set
 
-using Biojava API multiple alignment using a maximum of 10 reads selected as the ones minimizing the "de" value.
+using poaV2 multiple alignment using all reads for the molecule. The consensus sequence is then "racon" polished. 
 
-The consensus sequence is then "racon" polished using the whole set of reads for the molecule. 
+Using a 20 cores compute nodes for muti-threading, and depending on the sequencing depth inducing a low/high number of multi-reads molecules, the speed of consensus sequence computation is dependent of the sequencing depth but can be estimated at 200k UMIs/ hour.
 
-Using a 20 cores compute nodes for muti-threading, and depending on the sequencing depth inducing a low/high number of multi-reads molecules, the speed of consensus sequence computation is dependent of the sequencing depth but can be estimated at 50k UMIs/ hour.
-
-For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster (> 500k UMIs / hour)
+For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
 
 
 ### splitting bam by chromosomes  
@@ -892,28 +892,6 @@ GEUS10xAttributes.umifound.chr1.bam file containing cellBC (BC tag) and UMI (U8 
 
 Consensus sequence in fasta format.
 
-**REFFLAT=** (required)  
-
-.txt file describing the gene model for the organism concerned (e.g. refFlat_gencode.vM18.txt in github /refFlat/ directory) 
-
-**DELTA=** (required)  
-
-the number of extra or lacking bases allowed at exon-exon junctions (default = 5)  
-
-**MAXCLIP=** (required)  
-
-the maximal number of extensive non-matching sequences at either end, hard- or soft clipping to call the read as chimerix and discards it (default = 150)  
-
-**METHOD=** (required)  
-
-STRICT for full exon-exon structure required for assignation
-
-SOFT for a more lenient way of assignation requiring observation of an isoform specific exon-exon junction 
-
-**AMBIGUOUS_ASSIGN=** (required)  
-
-Wether or not to assign a UMI that is ambiguous (>1 isoforms of the gene model fit its exon-exon structure) (default=false)
-
 **THREADS=,T=** (required)  
 
 Number of threads for multi-threading (typically number of cores of compute node)
@@ -922,20 +900,24 @@ Number of threads for multi-threading (typically number of cores of compute node
 
 Temporary directory
 
+**POAPATH=** (required)  
+
+poaV2 path to directory where to find executable (/share/apps/bin/)
+
 **RACONPATH=** (required)  
 
-Racon path to directory where to find executable (/bin/)
+Racon path to directory where to find executable (/share/apps/bin/)
 
 **MINIMAP2PATH=** (required)  
 
-Minimap2 path to directory where to find executable (/bin/)
+Minimap2 path to directory where to find executable (/share/apps/bin/)
 
 
 code below is for chromosome 1, repeat for all chromosomes 
 
 ```bash
 
-java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa REFFLAT=refFlat_gencode.vM18.txt T=20 DELTA=5 SOFT=false TMPDIR=/tmp/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
+java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
 
 ```
 
@@ -943,9 +925,23 @@ java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1
 
 ## 8) Re-map consensus sequences to reference genome  
 
+If compute consensus has been split per chromosome, you need to deduplicate molecules for reads mapping to several genomic position such as reads coming from genes having pseudogenes.
+
+First you need to concatenate fasta file for all chromosomes then use ***ComputeConsensus*** pipeline (sicelore.jar)
+
+```bash
+
+cat */molecules.chr*.fa > molecules.fa
+
+java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecule.fa O=deduplicate.fa
+
+```
+
 Molecule consensus sequences can then be mapped back to the reference genome to generate a molecule .bam file for further analysis such as SNP calling or identification of RNA editing.  
 
 ```bash
+
+java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecule.fa O=deduplicate.fa TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
 
 minimap2 -ax splice -uf --MD -N 100 --sam-hit-only -t 20 --junc-bed gencode.vM18.primary_assembly.annotation.bed $BUILD.mmi molecules.fa > molecules.sam
 
@@ -957,8 +953,7 @@ samtools index molecules.bam
 
 ```
 
-For visualization purpose, Gene (IG), cellBC (BC) and UMIs (U8) tags can be added to the SAM records using the ***AddBamMoleculeTags*** pipeline (sicelore.jar).
-
+CellBC / UMI tags can be added to the SAM records using the ***AddBamMoleculeTags*** pipeline (sicelore.jar).
 
 ``` bash  
 
