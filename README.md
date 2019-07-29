@@ -927,7 +927,7 @@ java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1
 
 If compute consensus has been split per chromosome, you need to deduplicate molecules for reads mapping to several genomic position such as reads coming from genes having pseudogenes.
 
-First you need to concatenate fasta file for all chromosomes then use ***ComputeConsensus*** pipeline (sicelore.jar)
+First you need to concatenate fasta file for all chromosomes then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
 
 ```bash
 
@@ -940,8 +940,6 @@ java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecule.fa O=deduplicate.fa
 Molecule consensus sequences can then be mapped back to the reference genome to generate a molecule .bam file for further analysis such as SNP calling or identification of RNA editing.  
 
 ```bash
-
-java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecule.fa O=deduplicate.fa TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
 
 minimap2 -ax splice -uf --MD -N 100 --sam-hit-only -t 20 --junc-bed gencode.vM18.primary_assembly.annotation.bed $BUILD.mmi molecules.fa > molecules.sam
 
