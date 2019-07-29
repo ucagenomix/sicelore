@@ -100,7 +100,7 @@ public class IsoformMatrix extends CommandLineProgram
         }
         
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-        LongreadParser bam = new LongreadParser(INPUT, false, false);
+        LongreadParser bam = new LongreadParser(INPUT, false, true);
         MoleculeDataset dataset = new MoleculeDataset(bam);
         dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
         
@@ -159,6 +159,7 @@ public class IsoformMatrix extends CommandLineProgram
             BufferedReader fichier = new BufferedReader(new FileReader(CSV));
             String line = fichier.readLine();
             while (line != null) {
+                line = line.replace("-1", "");
                 DTEcells.add(line);
                 line = fichier.readLine();
             }

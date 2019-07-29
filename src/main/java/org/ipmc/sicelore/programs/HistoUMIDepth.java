@@ -60,7 +60,7 @@ public class HistoUMIDepth extends CommandLineProgram
         if("longread".equals(TYPE)){
             log.info(new Object[]{"\tloadLongreadsBam"});
             
-            LongreadParser bam = new LongreadParser(INPUT, false, false);
+            LongreadParser bam = new LongreadParser(INPUT, false, true);
             MoleculeDataset dataset = new MoleculeDataset(bam);
             
             Set cles = dataset.getMapMolecules().keySet();
@@ -123,14 +123,12 @@ public class HistoUMIDepth extends CommandLineProgram
             for (SAMRecord r : localSamReader) {
                 pl.record(r);
                 String name = r.getReadName();
+                String UB = (String)r.getAttribute("UB");
                 String CB = (String)r.getAttribute("CB");
                 if(CB != null)
                     CB = CB.replace("-1", "");
                 
-                String UB = (String)r.getAttribute("UB");
-                String GN = (String)r.getAttribute("GN");
-                
-                if(GN != null && CB != null && UB != null && this.DTEcells.contains(CB)){
+                if(CB != null && UB != null && this.DTEcells.contains(CB)){
                     if((value = (HashSet<String>)mr.get(CB+"|"+UB)) != null)
                         value.add(name);
                     else{
@@ -160,6 +158,7 @@ public class HistoUMIDepth extends CommandLineProgram
             BufferedReader fichier = new BufferedReader(new FileReader(CSV));
             String line = fichier.readLine();
             while (line != null) {
+                line = line.replace("-1", "");
                 DTEcells.add(line);
                 line = fichier.readLine();
             }

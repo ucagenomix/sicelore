@@ -9,5 +9,5 @@ import htsjdk.samtools.SAMRecord;
 
 public interface LongreadModelParser {
 
-    public LongreadRecord parseSAMRecord(SAMRecord r, boolean primary_only) throws LongreadParseException;
+    public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException;
 }

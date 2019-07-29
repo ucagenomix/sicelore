@@ -255,7 +255,7 @@ public class MoleculeDataset {
         
         HashSet<TranscriptRecord> h = null;
         HashMap<TranscriptRecord, Integer> scoring = new HashMap<TranscriptRecord, Integer>();
-        HashMap<Integer, Integer> nbJunctions = new HashMap<Integer, Integer>();
+        //HashMap<Integer, Integer> nbJunctions = new HashMap<Integer, Integer>();
         List<Longread> longreads = molecule.getLongreads();
         
         for(Longread lr : longreads){
@@ -264,12 +264,12 @@ public class MoleculeDataset {
                 List<Junction> lrr_junc = junctionsListFromExon(lrr.getExons());
                 
                 // record nb junction of SAM record
-                if(lrr_junc.size() > 0){
-                    if(nbJunctions.containsKey(lrr_junc.size()))
-                        nbJunctions.put(lrr_junc.size(), nbJunctions.get(lrr_junc.size())+1);
-                    else
-                        nbJunctions.put(lrr_junc.size(), 1);
-                }
+                //if(lrr_junc.size() > 0){
+                //    if(nbJunctions.containsKey(lrr_junc.size()))
+                //        nbJunctions.put(lrr_junc.size(), nbJunctions.get(lrr_junc.size())+1);
+                //    else
+                //        nbJunctions.put(lrr_junc.size(), 1);
+                //}
                 
                 for(int i=0; i<lrr_junc.size(); i++){
                     Set cles = mapper.keySet();
@@ -338,26 +338,26 @@ public class MoleculeDataset {
             }
             else{
                 // choose on the number of junctions of transcript and number of junctions of reads
-                int nbJunctionsMaxValue=Collections.max(nbJunctions.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-                HashSet<TranscriptRecord> newCandidates = new HashSet<TranscriptRecord>();
+                //int nbJunctionsMaxValue=Collections.max(nbJunctions.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+                //HashSet<TranscriptRecord> newCandidates = new HashSet<TranscriptRecord>();
                 
-                Iterator<TranscriptRecord> iterator = bestCandidates.iterator();
-                while(iterator.hasNext()){
-                    TranscriptRecord tr = iterator.next();
-                    if(tr.getJunctions().size() == nbJunctionsMaxValue)
-                        newCandidates.add(tr);
-                }
+                //Iterator<TranscriptRecord> iterator = bestCandidates.iterator();
+                //while(iterator.hasNext()){
+                //    TranscriptRecord tr = iterator.next();
+                //    if(tr.getJunctions().size() == nbJunctionsMaxValue)
+                //        newCandidates.add(tr);
+                //}
                 
-                if(newCandidates.size() == 1){
-                    TranscriptRecord tr = (TranscriptRecord)newCandidates.iterator().next();
-                    molecule.setTranscriptId(tr.getTranscriptId());
-                    molecule.setGeneId(tr.getGeneId());
-                    this.onematch++;
-                }
-                else{
+                //if(newCandidates.size() == 1){
+                //    TranscriptRecord tr = (TranscriptRecord)newCandidates.iterator().next();
+                //    molecule.setTranscriptId(tr.getTranscriptId());
+                //    molecule.setGeneId(tr.getGeneId());
+                //    this.onematch++;
+                //}
+                //else{
                     this.ambiguous++;
-                    int index = new Random().nextInt(newCandidates.size());
-                    TranscriptRecord tr = (TranscriptRecord)(newCandidates.toArray()[index]);
+                    int index = new Random().nextInt(bestCandidates.size());
+                    TranscriptRecord tr = (TranscriptRecord)(bestCandidates.toArray()[index]);
                     
                     if(AMBIGUOUS_ASSIGN){
                         // set isoform randomly if AMBIGUOUS_ASSIGN=true
@@ -369,7 +369,7 @@ public class MoleculeDataset {
                         molecule.setTranscriptId("undef");
                         molecule.setGeneId(tr.getGeneId());
                     }
-                }
+                //}
             }
         }
     }
@@ -542,7 +542,7 @@ public class MoleculeDataset {
             ConcurrencyTools.shutdown();
 
             try {
-                oneNanoporeReadexecutor.awaitTermination(1, TimeUnit.MINUTES);
+                oneNanoporeReadexecutor.awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
                 log.info(new Object[]{"Error:\t[" + ex + "]"});
             }

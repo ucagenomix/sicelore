@@ -152,6 +152,7 @@ public class SNPMatrix extends CommandLineProgram {
             BufferedReader fichier = new BufferedReader(new FileReader(CSV));
             String line = fichier.readLine();
             while (line != null) {
+                line=line.replace("-1","");
                 DTEcells.add(line);
                 line = fichier.readLine();
             }

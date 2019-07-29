@@ -75,22 +75,13 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         record.geneId = (String) r.getAttribute(GENETAG);
         record.barcode = (String) r.getAttribute(CELLTAG);
         record.umi = (String) r.getAttribute(UMITAG);
-        
         record.mapqv = r.getMappingQuality();
         
-        if (record.geneId == null || record.barcode == null || record.umi == null || r.getReadUnmappedFlag())
-            return null;
+        if (record.barcode == null || record.umi == null || r.getReadUnmappedFlag())
+             return null;
         
         try {
             record.name = r.getReadName();
-            // IG flag is Illumina gene Name (from Rainer)
-            //if ((String) r.getAttribute("GE") != null) {
-            //    record.geneIds = ((String) r.getAttribute("GE")).split(",");
-            //}
-            
-            //record.isIlluminaGeneFound = ((String) r.getAttribute("B0") != null) ? true : false; 
-               
-            
             //record.chrom = r.getReferenceName();
             //record.txStart = r.getAlignmentStart();
             //record.txEnd = r.getAlignmentEnd();
@@ -113,107 +104,101 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             String[] cigarsize = cigar.split("[A-Z]");
             cigar = cigar.replaceAll("[0-9]+[IDS]","");
             
-                
-            // is possible to set IG if we have a GE but it will induce bad correlation with illumina profiling
-            // seems to be difference in term of GTF used for both analysis: cellranger and dropseq.jar add GE tag
-            // 50% are Gm.... in this case, very few real interesting genes, few exeample are:
-            // Amdhd1, Atxn7l1os1, Bcas3os1, Boll, Ccdc42os, Dnah17, Dnm3os, Greb1, Il4, March10, Mixl1, Prg4, Prr15l, Slc39a5, Tm4sf20
-            
-            if (record.geneId != null && record.barcode != null && record.umi != null){
-                String str = null;
-                String readSequence = (String)r.getAttribute(USTAG);
-                
-                // detect softclipping starting or ending reads
-                if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])){ sizeStartToClip = new Integer(cigarsize[0]).intValue(); }
-                if ("H".equals(cigartype[cigartype.length - 1]) || "S".equals(cigartype[cigartype.length - 1])) { sizeEndToClip = new Integer(cigarsize[cigarsize.length - 1]).intValue(); }
-                
-                // Strand "+" process
-                if(! r.getReadNegativeStrandFlag()){
-                    if(sizeEndToClip < MAXCLIP){
-                        if(load_sequence){
-                            // need to trim sizeStartToClip bases at start in case of chimeria
-                            if(sizeStartToClip > MAXCLIP){
-                                //System.out.println(record.name+"\t"+record.geneId+"\t"+sizeStartToClip+"\t"+tsoEnd+"\n"+readSequence);
-                                if(sizeStartToClip > umiEnd)
-                                    record.isReversed = true;
-                                else
-                                    str = readSequence.substring(sizeStartToClip, umiEnd);
-                                //System.out.println(str+"\n");
-                            }
-                            else{
-                               if(tsoEnd > umiEnd)
-                                   record.isReversed = true;
-                               else
-                                   str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, umiEnd);
-                            }
+            String str = null;
+            String readSequence = (String)r.getAttribute(USTAG);
+
+            // detect softclipping starting or ending reads
+            if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])){ sizeStartToClip = new Integer(cigarsize[0]).intValue(); }
+            if ("H".equals(cigartype[cigartype.length - 1]) || "S".equals(cigartype[cigartype.length - 1])) { sizeEndToClip = new Integer(cigarsize[cigarsize.length - 1]).intValue(); }
+
+            // Strand "+" process
+            if(! r.getReadNegativeStrandFlag()){
+                if(sizeEndToClip < MAXCLIP){
+                    if(load_sequence){
+                        // need to trim sizeStartToClip bases at start in case of chimeria
+                        if(sizeStartToClip > MAXCLIP){
+                            //System.out.println(record.name+"\t"+record.geneId+"\t"+sizeStartToClip+"\t"+tsoEnd+"\n"+readSequence);
+                            if(sizeStartToClip > umiEnd)
+                                record.isReversed = true;
+                            else
+                                str = readSequence.substring(sizeStartToClip, umiEnd);
+                            //System.out.println(str+"\n");
+                        }
+                        else{
+                           if(tsoEnd > umiEnd)
+                               record.isReversed = true;
+                           else
+                               str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, umiEnd);
                         }
                     }
-                    else{ record.isChimeria = true; }
                 }
-                // Strand "-" process
-                else{
-                    if(sizeStartToClip < MAXCLIP){
-                        if(load_sequence){
-                            // need to trim sizeStartToClip bases at start in case of chimeria
-                            if(sizeEndToClip > MAXCLIP){
-                                //System.out.println(record.name+"\t"+record.geneId+"\t"+sizeEndToClip+"\t"+tsoEnd+"\n"+readSequence);
-                                if(sizeEndToClip > umiEnd)
-                                    record.isReversed = true;
-                                else
-                                   str = readSequence.substring(sizeEndToClip, umiEnd);
-                                //System.out.println(str+"\n");
-                            }
-                            else{
-                               if(tsoEnd > umiEnd)
-                                   record.isReversed = true;
-                               else
-                                   str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, umiEnd);
-                            }
-                        }
-                    }
-                    else{ record.isChimeria = true; }
-                }
-                 
-                if(sizeStartToClip > MAXCLIP || sizeEndToClip > MAXCLIP)
-                    record.isChimeria = true;
-                    
-                if(load_sequence && !record.isChimeria && !record.isReversed)
-                    record.cdna = str.getBytes();
-
-                cigar = cigar.replaceAll("[0-9]+[IDS]","");
-                cigartype = cigar.split("[0-9]+");
-                cigarsize = cigar.split("[A-Z]");
-
-                // init exons
-                int block_index = 0;
-                int s = blocks.get(0).getReferenceStart();
-                int e = blocks.get(0).getLength();
-                for (int i = 0; i < cigarsize.length - 1; i++) {
-                    AlignmentBlock currBlock = blocks.get(block_index);
-
-                    if ("M".equals(cigartype[i + 1])) {
-                        block_index++;
-                    }
-                    else if ("N".equals(cigartype[i + 1])) {
-                        exon_starts += s + ",";
-                        exon_ends += e + ",";
-                        s = currBlock.getReferenceStart();
-                    }
-                    e = currBlock.getReferenceStart() + currBlock.getLength();
-                }
-                exon_starts += s + ",";
-                exon_ends += e + ",";
-
-                int[] exonStarts = LongreadRecord.toIntArray(exon_starts);
-                int[] exonEnds = LongreadRecord.toIntArray(exon_ends);
-                record.exons = new ArrayList<int[]>();
-                for (int i = 0; i < exonStarts.length; i++)
-                    record.exons.add(new int[]{exonStarts[i], exonEnds[i]});
+                else{ record.isChimeria = true; }
             }
+            // Strand "-" process
+            else{
+                if(sizeStartToClip < MAXCLIP){
+                    if(load_sequence){
+                        // need to trim sizeStartToClip bases at start in case of chimeria
+                        if(sizeEndToClip > MAXCLIP){
+                            //System.out.println(record.name+"\t"+record.geneId+"\t"+sizeEndToClip+"\t"+tsoEnd+"\n"+readSequence);
+                            if(sizeEndToClip > umiEnd)
+                                record.isReversed = true;
+                            else
+                               str = readSequence.substring(sizeEndToClip, umiEnd);
+                            //System.out.println(str+"\n");
+                        }
+                        else{
+                           if(tsoEnd > umiEnd)
+                               record.isReversed = true;
+                           else
+                               str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, umiEnd);
+                        }
+                    }
+                }
+                else{ record.isChimeria = true; }
+            }
+
+            if(sizeStartToClip > MAXCLIP || sizeEndToClip > MAXCLIP)
+                record.isChimeria = true;
+
+            if(load_sequence && !record.isChimeria && !record.isReversed)
+                record.cdna = str.getBytes();
+
+            cigar = cigar.replaceAll("[0-9]+[IDS]","");
+            cigartype = cigar.split("[0-9]+");
+            cigarsize = cigar.split("[A-Z]");
+
+            // init exons
+            int block_index = 0;
+            int s = blocks.get(0).getReferenceStart();
+            int e = blocks.get(0).getLength();
+            for (int i = 0; i < cigarsize.length - 1; i++) {
+                AlignmentBlock currBlock = blocks.get(block_index);
+
+                if ("M".equals(cigartype[i + 1])) {
+                    block_index++;
+                }
+                else if ("N".equals(cigartype[i + 1])) {
+                    exon_starts += s + ",";
+                    exon_ends += e + ",";
+                    s = currBlock.getReferenceStart();
+                }
+                e = currBlock.getReferenceStart() + currBlock.getLength();
+            }
+            exon_starts += s + ",";
+            exon_ends += e + ",";
+
+            int[] exonStarts = LongreadRecord.toIntArray(exon_starts);
+            int[] exonEnds = LongreadRecord.toIntArray(exon_ends);
+            record.exons = new ArrayList<int[]>();
+            for (int i = 0; i < exonStarts.length; i++)
+                record.exons.add(new int[]{exonStarts[i], exonEnds[i]});
+            
         } catch (Exception e) { throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: ", e); }
 
         return record;
     }
+    
     /*
     public static String complementWC(String dna) {
         StringBuilder builder = new StringBuilder();

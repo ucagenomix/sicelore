@@ -24,20 +24,16 @@ public class ComputeConsensus extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output .fasta file of consensus sequences")
     public File OUTPUT;
-    @Argument(shortName = "REFFLAT", doc = "The refFlat gene model file")
-    public File REFFLAT;
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
-    @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=2)")
-    public int DELTA = 2;
     @Argument(shortName = "RACON", doc = "Racon path")
     public String RACONPATH = "/share/apps/local/racon/bin/";
+    @Argument(shortName = "POA", doc = "PoaV2 path")
+    public String POAPATH = "/share/apps/local/bio-pipeline/poaV2/";
     @Argument(shortName = "MINIMAP2PATH", doc = "Minimap2 path")
     public String MINIMAP2PATH = "/share/apps/local/minimap2/";
     @Argument(shortName = "TMPDIR", doc = "TMPDIR")
     public String TMPDIR = "/share/data/scratch/sicelore/";
-    @Argument(shortName = "METHOD", doc = "Isoform assignment method (STRICT or SOFT)")
-    public String METHOD = "SOFT";
     @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
@@ -52,8 +48,6 @@ public class ComputeConsensus extends CommandLineProgram {
     public String USTAG = "US";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
-    @Argument(shortName = "AMBIGUOUS_ASSIGN", doc = "Wether or not to assign the UMI to an isoform if ambiguous (default=false)", optional=true)
-    public boolean AMBIGUOUS_ASSIGN = false;
 
     public ComputeConsensus() {
         log = Log.getInstance(ComputeConsensus.class);
@@ -63,23 +57,16 @@ public class ComputeConsensus extends CommandLineProgram {
     protected int doWork()
     {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(REFFLAT);
 
 	Molecule m = new Molecule();
-	m.setStaticParams(TMPDIR,RACONPATH,MINIMAP2PATH);
+	m.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
 	LongreadRecord lrr = new LongreadRecord();
 	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,USTAG,MAXCLIP);
-        
-        if(!"STRICT".equals(METHOD) && !"SOFT".equals(METHOD)){
-            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SOFT only"});
-            return 0;
-        }
-        //System.out.println(System.getenv("PATH"));
-        
-        UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
+
+        // load_sequence = true
+        // lond_only_geneId_records = false
         LongreadParser bam = new LongreadParser(INPUT, true, false);
-        MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
+        MoleculeDataset dataset = new MoleculeDataset(bam);        
         dataset.callConsensus(OUTPUT, nThreads);
 
         return 0;

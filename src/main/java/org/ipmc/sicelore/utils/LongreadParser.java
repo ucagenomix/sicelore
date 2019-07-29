@@ -20,12 +20,14 @@ public class LongreadParser implements LongreadModelParser {
     private int not_primary_records = 0;
     private int mapqv0_records = 0;
     private boolean load_sequence = false;
+    private boolean lond_only_geneId_records = true;
     
     HashMap<String, Longread> mapLongreads;
 
-    public LongreadParser(File bam, boolean load_sequence, boolean primary_only)
+    public LongreadParser(File bam, boolean load_sequence, boolean lond_only_geneId_records)
     {
         this.load_sequence = load_sequence;
+        this.lond_only_geneId_records = lond_only_geneId_records;
         
         Longread longread = null;
         log = Log.getInstance(LongreadParser.class);
@@ -42,14 +44,9 @@ public class LongreadParser implements LongreadModelParser {
         try {
             for(SAMRecord r : inputSam) {
                 pl.record(r);
-                LongreadRecord lrr = parseSAMRecord(r, primary_only);
+                LongreadRecord lrr = parseSAMRecord(r);
                 total_records++;
-                
-                //if(total_records%1000000 == 0){
-                //    System.gc();System.gc();System.gc();System.gc();System.gc();System.gc();
-                //    log.info(new Object[]{"\tSystem.gc() done..."});
-                //}
-                
+
                 // IG/BC/U8
                 if (lrr != null) {
                     valid_records++;
@@ -80,14 +77,15 @@ public class LongreadParser implements LongreadModelParser {
         //log.info(new Object[]{"\tTotal reads multiSAM\t[" + multiRec.size() + "]"});
     }
 
-    public LongreadRecord parseSAMRecord(SAMRecord r, boolean primary_only) throws LongreadParseException
+    public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException
     {
         LongreadRecord record = LongreadRecord.fromSAMRecord(r, this.load_sequence);
         if(record == null) { unvalid_records++; return null; }
         if(record.getIsChimeria()) { chimeria_records++; return null; }
         if(record.getIsReversed()) { reversed_records++; return null; }
         //if(record.getMapqv() == 0) { mapqv0_records++; return null; }
-        //if(primary_only && record.getIsSecondaryOrSupplementary()) { not_primary_records++; return null; }
+        if(this.lond_only_geneId_records && record.getGeneId() == null) { return null; }
+        
         return record;
     }
 
