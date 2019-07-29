@@ -844,21 +844,11 @@ java -jar -Xmx44g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REF
  
 **use ComputeConsensus (sicelore.jar)**
 
-The pipeline allows to compute the consensus sequence for each molecule identified in the INPUT .bam file.
+The pipeline allows to compute the consensus sequence for molecules in .bam file. First step is similar to IsoformMatrix pipeline except that the cDNA sequence defined as (tsoEnd(TE tag) ... umiEnd(UE tag)) is loaded so that it can be used for consensus sequence computation. 
 
-First steps is similar to the IsoformMatrix pipeline except that the cDNA sequence defined as (tsoEnd(TE tag) ... umiEnd(UE tag)) is loaded so that it can be used for consensus sequence computation. 
+Briefly, each molecule are processed as follow depending the number of reads the molecule behave: (i)case of a 1-read molecule, the consensus sequence is set to the read cDNA sequence; (ii) case of a 2-reads molecule, the consensus sequence is set as the cDNA sequence of the best quality read according to the minimal "de" minimap2 SAMrecord tag value; (iii) Case of a multi-reads molecule (i.e. > 2), a consensus sequence is comppute using ***poaV2*** multiple alignment using all reads for the molecule. The consensus sequence is then ***racon*** polished. 
 
-Briefly, each molecule are processed as follow depending the number of reads the molecule behave: (i)case of a 1-read molecule, the consensus sequence is set to the 
-
-read cDNA sequence; (ii) case of a 2-reads molecule, the consensus sequence is set as the cDNA sequence of the best quality read according
-
-to the minimal "de" minimap2 SAMrecord tag value; (iii) Case of a multi-reads molecule (i.e. > 2), a consensus sequence is set
-
-using poaV2 multiple alignment using all reads for the molecule. The consensus sequence is then "racon" polished. 
-
-Using a 20 cores compute nodes for muti-threading, and depending on the sequencing depth inducing a low/high number of multi-reads molecules, the speed of consensus sequence computation is dependent of the sequencing depth but can be estimated at 200k UMIs/ hour.
-
-For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
+The speed of consensus sequence computation is dependant on the UMI sequencing depth wich induce a low/high number of multi-reads molecules. Using a 20 cores compute node for muti-threading (T=20), the speed is observed around 200k UMIs/ hour. For time calculation optimization, this step should be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
 
 
 ### splitting bam by chromosomes  
