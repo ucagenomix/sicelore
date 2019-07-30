@@ -145,7 +145,7 @@ public class Molecule implements Callable<String>
     }
     
     public String getLabel() {
-        return this.barcode + "|" + this.umi + "|" + this.longreads.size();
+        return this.barcode + "-" + this.umi + "-" + this.longreads.size();
     }
     
     public String toString() {

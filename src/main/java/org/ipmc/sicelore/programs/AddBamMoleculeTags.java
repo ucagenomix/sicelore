@@ -50,7 +50,7 @@ public class AddBamMoleculeTags extends CommandLineProgram {
             for (SAMRecord r : localSamReader) {
                 pl.record(r);
                 String str = r.getReadName();
-                String[] info = str.split("\\|");
+                String[] info = str.split("-");
                 
                 if(info.length == 5){ // GENEID|TRANSCRIPTID|BC|U8|NBREADS --> v1.0
                     r.setAttribute(GENETAG, info[0]);
