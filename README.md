@@ -10,7 +10,7 @@ Typically starting with a short read bam file from the 10xGenomics single cell c
 
  
 
-[![GitHub license]()](([https://github.com/ucagenomix/sicelore2/blob/master/LICENCE.md)](https://github.com/ucagenomix/sicelore2/blob/master/LICENCE.md)))
+[![GitHub license]()](([https://github.com/ucagenomix/sicelore2/blob/master/LICENCE.md)]([https://github.com/ucagenomix/sicelore2/blob/master/LICENCE.md))](https://github.com/ucagenomix/sicelore2/blob/master/LICENCE.md))))
 
  
 
@@ -30,17 +30,19 @@ requires:
 
  
 
-* [Minimap2]([https://github.com/lh3/minimap2](https://github.com/lh3/minimap2)),
+* [Minimap2]([https://github.com/lh3/minimap2]([https://github.com/lh3/minimap2)](https://github.com/lh3/minimap2))),
 
  
 
-* [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/](http://mccarrolllab.com/download/1276/)),
+* [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/]([http://mccarrolllab.com/download/1276/)](http://mccarrolllab.com/download/1276/))),
 
+ 
 
-* [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2)
+* [poa]([https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2))
 
+ 
 
-* [racon]([https://github.com/isovic/racon](https://github.com/isovic/racon))
+* [racon]([https://github.com/isovic/racon]([https://github.com/isovic/racon)](https://github.com/isovic/racon)))
 
  
 
@@ -68,7 +70,7 @@ requires:
 
  
 
-                Parses short read data and retrieves info on used cell barcodes and UMIs.
+Parses short read data and retrieves info on used cell barcodes and UMIs.
 
  
 
@@ -76,7 +78,7 @@ requires:
 
  
 
-                Pre-scan of Nanopore reads for poly(A) tails -> stranded reads.
+Pre-scan of Nanopore reads for poly(A) tails -> stranded reads.
 
  
 
@@ -88,7 +90,7 @@ requires:
 
  
 
-                Adds gene names, read sequence and QV values. Required for barcode and UMI assignment
+Adds gene names, read sequence and QV values. Required for barcode and UMI assignment
 
  
 
@@ -100,7 +102,7 @@ requires:
 
  
 
-                Identifies matching Gencode transcript isoforms and generates isoform count table.
+Identifies matching Gencode transcript isoforms and generates isoform count table.
 
  
 
@@ -108,7 +110,7 @@ requires:
 
  
 
-                Generates consensus sequence for transcripts from multiple reads for UMI.
+Generates consensus sequence for transcripts from multiple reads for UMI.
 
  
 
@@ -116,7 +118,7 @@ requires:
 
  
 
-                Consensus sequences are re-mapped to the reference genome
+Consensus sequences are re-mapped to the reference genome
 
  
 
@@ -124,15 +126,15 @@ requires:
 
  
 
-* Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr)>
+* Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr]([mailto:lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr))>
 
  
 
-![Twitter Follow]([https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)%5d(https://twitter.com/kevinlebrigand))
+![Twitter Follow]([https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)]([https://twitter.com/kevinlebrigand](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)%5d(https://twitter.com/kevinlebrigand)](https://twitter.com/kevinlebrigand%5d(https:/img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)%5d(https://twitter.com/kevinlebrigand)))
 
  
 
-* Rainer Waldmann <[waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr)>
+* Rainer Waldmann <[waldmann@ipmc.cnrs.fr]([mailto:waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr))>
 
  
 
@@ -452,7 +454,7 @@ BED file consisting of annotated introns and their strands. With this option, mi
 
  
 
-can be generated with `paftools.js gff2bed -j ann.gtf'  (Paftools is part of the minimap distribution)
+can be generated with `paftools.js gff2bed -j ann.gtf' (Paftools is part of the minimap distribution)
 
  
 
@@ -468,7 +470,7 @@ can be generated with `paftools.js gff2bed -j ann.gtf'  (Paftools is part of the
 
  
 
-Adds gene names to Nanopore SAMrecords GE tag using [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/](http://mccarrolllab.com/download/1276/)).
+Adds gene names to Nanopore SAMrecords GE tag using [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/]([http://mccarrolllab.com/download/1276/)](http://mccarrolllab.com/download/1276/))).
 
  
 
@@ -616,7 +618,7 @@ The output BAM, written with new Gene/Exon tag
 
  
 
-The Nanopore .fastq file  previously used for [minimap2 mapping](#minimap2-mapping)
+The Nanopore .fastq file previously used for [minimap2 mapping](#minimap2-mapping)
 
  
 
@@ -650,11 +652,15 @@ For barcode assignment the putative barcode sequence flanking the 10xGenomics ad
 
 The maximal edit distance can be fixed or dynamic. Dynamic edit distance adapts the maximal edit distance to the complexity of the search set.
 
+ 
+
 **bcMaxEditDistances.xml** contains maximal edit distances allowed for different false assignment percentages.
 
  
 
 For UMI assignment, matching UMIs are only searched when a cell barcode was identified. Matching UMIs are searched for the same cell and the same gene or genomic region in the Illumina data. Just as the barcode edit distance, the UMI edit distance can be fixed or dynamically adjusted to the complexity of the search set.
+
+ 
 
 **umiMaxEditDistances.xml** contains maximal edit distances allowed for different false assignment percentages.
 
@@ -792,7 +798,7 @@ Maximal percentage of false BC association. Will dynamically adjust BC edit dist
 
  
 
-Uses data from simulation in file bcMaxEditDistances.xml  (can be changes in config.xml) in current working directory and if not found there in application root overrides fixed BC edit distance parameter.
+Uses data from simulation in file bcMaxEditDistances.xml (can be changes in config.xml) in current working directory and if not found there in application root overrides fixed BC edit distance parameter.
 
  
 
@@ -820,7 +826,7 @@ Maximal percentage of false UMI association. Will dynamically adjustUMI edit dis
 
  
 
-Uses simulation data from  umiMaxEditDistances.xml in current working directory and if not found there in application root. Overrides fixed umi edit distance parameters.
+Uses simulation data from umiMaxEditDistances.xml in current working directory and if not found there in application root. Overrides fixed umi edit distance parameters.
 
  
 
@@ -860,31 +866,33 @@ Window to search for poly(A/T) at both extremities, defaults to :100 (default in
 
  
 
-* **-n,--incrBCedit** (related to --bcedit)
-
- 
-
-increase BC edit distance by one for genes expressed in less than 300 cells (defined in config.xml). Will only affect testing barcodes associated with gene/genomic region. Won't affect testing for all selected 10x barcodes or empty drop barcodes. Ignored unless fixed edit distance is used
-
- 
-
-* **-m,--incrumiedit**
-
- 
-
-increase umi edit distance by one for genes with less than 50 umis (defined in config.xml) for gene in given cell.
-
- 
-
-Ignored when dynamic edit distance is used (--maxUMIfalseMatchPercent).
-
- 
-
 * **-e,--randomBarcode; -f,--randomUMI**
 
  
 
-performs random Barcode or UMI Simulation. If a previously scanned and BC and UMI annotated file (the file with all entries not just the entries with found BC/UMIs) is rescanned with this option the max edit distance is the ED of the previously found match if any. Provide the barcode and UMI assigned BAM file (the file with all sam entries not just the BC/UMI assigned) as input BAM for the random barcode or umi scan (retrieves edit sdistance info for found BCs and UMIs there).
+performs random Barcode or UMI Simulation. If a previously scanned and BC and UMI annotated file (the file with all entries not just the entries with found BC/UMIs) is rescanned with this option the max edit distance is the ED of the previously found match if any. Provide the barcode and UMI assigned BAM file (the file with all sam entries not just the BC/UMI assigned) as input BAM for the random barcode or umi scan (retrieves edit sdistance info for found BCs and UMIs there -> will do the random scan with same ED for the SAM entry).
+
+ 
+
+* **-n,--bcEDlimitDyn**   
+
+when set, will limit the maximal edit distance to the given value. E.g. set to 3 -> will never test ED=4 even if few cells express gene or genomic region. Will speed up parsing.
+
+default; no limit
+
+only effective when dynamic barcode edit distance (--maxBCfalseMatchPercent) used.
+
+ 
+
+* **-m,--umiEDlimitDyn**   
+
+when set, will limit the maximal UMI edit distance to the given value. 
+
+default; no limit
+
+only effective when dynamic umi edit distance (--maxUMIfalseMatchPercent) is used.
+
+ 
 
  
 
@@ -1164,8 +1172,6 @@ If "AD" is in string it is very likely that read is from a concatameric cDNA.
 
  
 
- 
-
 <a id="isoformmatrix"></a>
 
  
@@ -1210,11 +1216,13 @@ samtools index GEUS10xAttributes.umifound.bam
 
  
 
-SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping  (MAXCLIP parameter, defaults to > 150 nt ) are discarded. To assign a UMI to a Gencode transcript a STRICT and a SOFT strategy is  (METHOD parameter). Using STRICT strategy, a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a 2 bases margin (DELTA parameter) of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
+SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping  are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript a STRICT and a SOFT strategy is available(METHOD parameter). Using STRICT strategy, a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a 2 bases margin (DELTA parameter, default 2) of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
 
-If an equal number of reads supports two different Gencode transcript, the UMI is considered as ambiguous and randomly assigned to one of the top scoring isoforms (AMBIGUOUS_ASSIGN=true) / or not assigned to an isoform ( default, AMBIGUOUS_ASSIGN=false). 
+If an equal number of reads supports two different Gencode transcript, the UMI is considered as ambiguous and randomly assigned to one of the top scoring isoforms (AMBIGUOUS_ASSIGN=true) / or not assigned to an isoform ( default, AMBIGUOUS_ASSIGN=false).
 
-The SOFT strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal  priming of the oligo(dT) RT primer on A rich sequences within the transcript  since reverse transcription starts at room temperature (3' truncation). The SOFT mode allows to assign such truncated reads if the available structure allows to assign it  unanimously to one Genecode isoform.  In SOFT mode, for every UMI each genome mapped read was examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a two bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 was added to each Gencode isoform carrying the junction. Finally, if just one isoform had the highest score it was selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and not assigned or assigned to one of the best matching isoforms (AMBIGUOUS_ASSIGN=true).
+ 
+
+The SOFT strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal priming of the oligo(dT) RT primer on A rich sequences within the transcript since reverse transcription starts at room temperature (3' truncation). The SOFT mode allows to assign such truncated reads if the available structure allows to assign it unanimously to one Genecode isoform. In SOFT mode, for every UMI each genome mapped read is examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a two bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 is added to each Gencode isoform carrying the junction. Finally, if just one isoform has the highest score it gets selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and not assigned or assigned to one of the best matching isoforms (AMBIGUOUS_ASSIGN=true).
 
  
 
@@ -1226,7 +1234,7 @@ The SOFT strategy allows to assign an isoform to an UMI that does not recapitula
 
  
 
-Barcode and UMI assigned GEUS10xAttributes.umifound.bam file containing the cellBC (BC tag) and UMI (U8 tag) with the gene mame in the IG tag. SAMrecords lacking any of those 3 required fields are not   analyzed.
+Barcode and UMI assigned GEUS10xAttributes.umifound.bam file containing the cellBC (BC tag) and UMI (U8 tag) with the gene mame in the IG tag. SAMrecords lacking any of those 3 required fields are not analyzed.
 
  
 
@@ -1378,8 +1386,7 @@ Briefly, each molecule is processed as follows depending the number of reads the
 
  
 
-The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about  200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
-
+The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
 
  
 
@@ -1455,16 +1462,19 @@ Temporary directory
 
  
 
-**POAPATH=** (required)  
+**POAPATH=** (required)
+
+ 
 
 Path to the directory with the poa executable.
 
+ 
 
 **RACONPATH=** (required)
 
  
 
-Path to the directory with the Racon executable. 
+Path to the directory with the Racon executable.
 
  
 
@@ -1472,7 +1482,7 @@ Path to the directory with the Racon executable.
 
  
 
-Path to the directory with the Minimap2 executable. 
+Path to the directory with the Minimap2 executable.
 
  
 
@@ -1499,22 +1509,30 @@ java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1
 ## 8) Re-map consensus sequences to reference genome
 
  
+
 If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from gene having several copies in the genome.
 
+ 
 
 First we need to concatenate all chromosomes fasta file then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
 
+ 
+
 ```bash
 
+ 
 
 cat */molecules.chr*.fa > molecules.fa
 
+ 
 
 java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecule.fa O=deduplicate.fa
 
+ 
 
 ```
 
+ 
 
 Molecule consensus sequences can then be re-mapped to the reference genome to generate a molecule .bam file for further analysis such as SNP calling or identification of RNA editing.
 

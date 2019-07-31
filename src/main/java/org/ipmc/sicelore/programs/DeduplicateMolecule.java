@@ -52,7 +52,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
 
                     id = id.replace(">", "");
                     id = id.replace("\\|", "-");
-                    String[] ids = id.split("\\|");
+                    String[] ids = id.split("-");
                     String key = ids[0]+ids[1];
                     int rn = new Integer(ids[2]).intValue();
 
