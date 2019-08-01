@@ -13,15 +13,15 @@ requires:
 
 * Java 8,
 
-* [Minimap2]([https://github.com/lh3/minimap2]([https://github.com/lh3/minimap2)](https://github.com/lh3/minimap2))),
+* [Minimap2]([https://github.com/lh3/minimap2](https://github.com/lh3/minimap2)),
 
-* [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/]([http://mccarrolllab.com/download/1276/)](http://mccarrolllab.com/download/1276/))),
+* [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/](http://mccarrolllab.com/download/1276/)),
 
 * [poa]([https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2))
 
-* [racon]([https://github.com/isovic/racon]([https://github.com/isovic/racon)](https://github.com/isovic/racon)))
+* [racon]([https://github.com/isovic/racon](https://github.com/isovic/racon))
 
-* [fastp]([https://github.com/OpenGene/fastp)
+* [fastp]([https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp))
 
 * samtools
 
