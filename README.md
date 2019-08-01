@@ -1,11 +1,8 @@
-# SiCeLoRe<?xml:namespace prefix = "o" ns = "urn:schemas-microsoft-com:office:office" />
+# SiCeLoRe
 
 Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated to the cell barcode and UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore long read sequencing data.
 
 Typically starting with a short read bam file from the 10xGenomics single cell cellranger pipeline and Nanopore long reads, the workflow integrates several sequential steps for cell barcode and UMI assignment to Nanopore reads (guided by Illumina data), transcript isoform identification, generation of transcript isoform count matrices and generation of consensus sequences (UMI-guided error-correction) for RNA molecules (UMIs).
-
-
-[![GitHub license]](https://github.com/ucagenomix/sicelore/blob/master/LICENCE.md)
 
 
 # Installation
@@ -65,10 +62,6 @@ Consensus sequences are re-mapped to the reference genome
 ## Authors
 
 * Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr]([mailto:lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr))>
-
-[![Twitter Follow]](https://twitter.com/kevinlebrigand)
-
-
 
 * Rainer Waldmann <[waldmann@ipmc.cnrs.fr]([mailto:waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr))>
 
