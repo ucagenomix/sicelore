@@ -33,6 +33,18 @@ median(illu1141@meta.data$nFeature_ISOG)
 median(illu1141@meta.data$nFeature_RNA)
 median(illu1141@meta.data$nFeature_ISO)
 
+
+dim(illu1141@assays$ISO@counts)
+
+df <- Matrix::rowSums(illu1141@assays$RNA@counts)
+write.table(df, "out.txt")
+
+
+df
+
+barplot(table(Matrix::rowSums(illu1141@assays$RNA@counts)))
+
+
 ```
 
 # Illumina molecules profiled with Nanopore reads (190 cells)
