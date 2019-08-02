@@ -86,7 +86,7 @@ public class IsoformMatrix extends CommandLineProgram
         File GENEMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genes_metrics.txt");
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cells_metrics.txt");
         File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
-        //File MOLMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_ecarts_metrics.txt");
+        File MOLMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molecules_metrics.txt");
 
 	LongreadRecord lrr = new LongreadRecord();
 	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,USTAG,MAXCLIP);
@@ -113,8 +113,6 @@ public class IsoformMatrix extends CommandLineProgram
         matrix.writeCellMetrics(CELLMETRICS);
          log.info(new Object[]{"\twriteGeneMetrics\t[start]"});
         matrix.writeGeneMetrics(GENEMETRICS);
-        
-        //dataset.writeMoleculeMetrics(MOLMETRICS);
 
         log.info(new Object[]{"\tMatrix cells\t\t[" + matrix.getCellMetrics().size() + "]"});
         log.info(new Object[]{"\tMatrix genes\t\t[" + matrix.getGeneMetrics().size() + "]"});
