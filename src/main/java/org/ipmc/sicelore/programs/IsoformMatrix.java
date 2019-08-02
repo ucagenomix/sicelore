@@ -25,7 +25,7 @@ import picard.cmdline.CommandLineProgram;
 @CommandLineProgramProperties(summary = "Isoform and gene level expression matrices production.", oneLineSummary = "Isoform and gene level expression matrices production.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IsoformMatrix extends CommandLineProgram
-{
+{ 
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
     @Argument(shortName = "REFFLAT", doc = "The refFlat gene model file")
