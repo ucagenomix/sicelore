@@ -13,15 +13,15 @@ requires:
 
 * Java 8,
 
-* [Minimap2]([https://github.com/lh3/minimap2](https://github.com/lh3/minimap2)),
+* [Minimap2](https://github.com/lh3/minimap2),
 
-* [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/](http://mccarrolllab.com/download/1276/)),
+* [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/),
 
-* [poa]([https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2))
+* [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2)
 
-* [racon]([https://github.com/isovic/racon](https://github.com/isovic/racon))
+* [racon](https://github.com/isovic/racon)
 
-* [fastp]([https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp))
+* [fastp](https://github.com/OpenGene/fastp)
 
 * samtools
 
@@ -61,9 +61,11 @@ Consensus sequences are re-mapped to the reference genome
 
 ## Authors
 
-* Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr]([mailto:lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr))>
+* Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr)>
 
-* Rainer Waldmann <[waldmann@ipmc.cnrs.fr]([mailto:waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr))>
+[![Twitter Follow](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand)
+
+* Rainer Waldmann <[waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr)>
 
 <a id="parsing-illumina-data"></a>
 
@@ -191,7 +193,7 @@ Can be omitted for small runs (< 5 million reads)
 
 Prior to mapping the fastqs are split into chunks.
 
-uses [fastp]([https://github.com/OpenGene/fastp)
+uses [fastp](https://github.com/OpenGene/fastp)
 
 Mapping, [tagging with gene names](#nanopore-tagging) and [Barcode/UMI assignment](#bc-assignment) are sequentially done with those batches to allow paralellization.
 
@@ -229,7 +231,7 @@ can be generated with **`paftools.js gff2bed -j ann.gtf'** (Paftools is part of 
 
 ### add gene names to Nanopore SAM records
 
-Adds gene names to Nanopore SAMrecords GE tag using [Drop-seq tools v1.13]([http://mccarrolllab.com/download/1276/]([http://mccarrolllab.com/download/1276/)](http://mccarrolllab.com/download/1276/)).
+Adds gene names to Nanopore SAMrecords GE tag using [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/).
 
 If another tag is used for gene names. The Gene name SAM tag needs to be changed using the TAG argument in the dropseq.jar command line.
 
@@ -313,7 +315,7 @@ The Nanopore .fastq file previously used for [minimap2 mapping](#minimap2-mappin
 
 - Searches for cell barcodes and UMIs in genome matched Nanopore BAM files.
 
-- Uses the barcode/UMI info of the Illumina short read data ( output of [IlluminaParser.jar](#parsing-illumina-data)) to guide barcode assignment.
+- Uses the barcode/UMI info of the Illumina short read data (output of [IlluminaParser.jar](#parsing-illumina-data)) to guide barcode assignment.
 
 - Will re-scan for poly(A) and adapter since positions are needed to extract potential cell barcode and UMI sequences.
 
@@ -627,7 +629,7 @@ Barcode and UMI assigned GEUS10xAttributes.umifound.bam file containing the cell
 
 **REFFLAT=** (required)
 
-Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from UCSC (http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/)
+Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from [UCSC](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/)
 
 ```bash
 
@@ -701,7 +703,7 @@ java -jar -Xmx44g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REF
 
 The pipeline allows to compute the consensus sequence for molecule in .bam file. First step is similar to IsoformMatrix pipeline except that all the molecules are loaded, even those not Gene annotated and that the cDNA sequence defined as (tsoEnd(TE tag) ... umiEnd(UE tag)) is loaded so that it can be used for consensus sequence computation.
 
-Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value (smaller value = better match); (iii) More than two reads per molecule, a consensus sequence is comppute using ***poaV2*** multiple alignment using all reads for the molecule. The consensus sequence is then ***racon*** polished using the whole set of reads for the molecule.
+Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value (smaller value = better match); (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using all reads for the molecule. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the whole set of reads for the molecule.
 
 The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
 
