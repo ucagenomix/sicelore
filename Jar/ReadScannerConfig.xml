@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+<Parameters>
+    <general>
+        <minReadLength>200</minReadLength>
+<!--        <nCPU>1</nCPU>-->
+    </general>
+  
+    <polyAT>
+        <!-- minimal length of polyA polyT -->
+        <polyATlength>15</polyATlength>
+        <!-- minimal fraction of polyA polyT -->
+        <fractionATInPolyAT>0.75</fractionATInPolyAT>
+        <!-- searches max this distance from end for polyA or poly T -->
+        <windowSearchForPolyA>100</windowSearchForPolyA>
+    </polyAT>
+    <adapter>
+        <!-- pre-barcode adapter seq, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
+<!--<adapterseq>ACACGACGCTCTTCCGATCT</adapterseq>-->
+        <adapterseq>CTTCCGATCT</adapterseq>
+        <!-- max number of needleman wunsch mismatches in adapter sequence-->  
+        <maxAdapterNeedlemanMismatches>3</maxAdapterNeedlemanMismatches>
+    </adapter>
+    <tso>
+        <!-- TSO sequence optional - will search for TSO if TSOseq is given here or on command line , searching just for the end of TSO is often more sensitive-->
+        <tsoSeq>GCAGAGTACATG</tsoSeq>
+        <!-- max number of needleman wunsch mismatches in TSO sequence-->
+        <maxTSO_NeedlemanMismatches>3</maxTSO_NeedlemanMismatches>
+        <!-- distance from end searched for TSO -->
+        <windowForTSOsearch>50</windowForTSOsearch>  
+    </tso>
+</Parameters>

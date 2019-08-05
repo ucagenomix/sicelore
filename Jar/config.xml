@@ -1,0 +1,339 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+<!--<Parameters nanoporeBAMgenelist_seperator="," /> -->
+<Parameters>
+    <general>
+        <!--Max number of threads, if omitted will use  all cpus available -->
+        <!--
+        <N_Threads>5</N_Threads>
+        -->
+        <!--Number of nanopore SAM records processed in each thread  
+Don't set too low should be > 300 -->
+        <sam_read_chunk_size>500</sam_read_chunk_size>
+        <!--If no output file is specified, given directory is created in user.home directory -->
+        <output_directory>Nanopore_BC_UMIfinder</output_directory>
+        <!--If no output file is specified, will create outputfile = Nanoporeinputfile + output_filesuffix + .bam
+        if file exists will add integer before .bam to make file name unique        -->
+        <output_filesuffix>10xAttributes</output_filesuffix>
+        <minReadLength>200</minReadLength>
+        <!-- outfile for logs, if absent defaults to stdout-->
+    </general>
+    <nanopore>
+        <!-- The region from the 3' end (poly A) of nanopore data to be searched for matching Illumina data. Should be bigger than
+        max fragment size used for Illumina seq. Note: Illumina read is the 5' of the most 3' fragment        --> 
+        <windowSizeForNanoporeMatching>500</windowSizeForNanoporeMatching>
+    </nanopore>
+    
+    <files>
+        <!--
+        if false will use stringent input BAM validation
+        -->
+        <lenient_input_BAM_validation>true</lenient_input_BAM_validation>
+        <!--Seperator when multiple genes are in Nanopore Bam Entry -->
+        <nanoporeBAMgenelist_seperator>,</nanoporeBAMgenelist_seperator> 
+        <!-- sam tag with seq to analyze. If empty or not two char long, read in sam entry will be analyzed.
+        if two char tag is given, the read in this SAM tag will be analyzed. All positions refer to the analyzed read-->
+        <sequence_sam-tag>US</sequence_sam-tag> 
+        <!-- Gene name attribute in Nanopore BAM -->
+        <gene_name_attribute>GE</gene_name_attribute>
+        <!-- mean QV attribute in Nanopore BAM 
+        leave empty or comment out if not used-->
+        <!--<QV-tag>UQ</QV-tag> -->   
+    </files>
+    <polyAT>
+        <!-- minimal length of polyA polyT -->
+        <polyATlength>15</polyATlength>
+        <!-- minimal fraction of polyA polyT -->
+        <fractionATInPolyAT>0.75</fractionATInPolyAT>
+        <!-- minimal length to flag internal polyA polyT (used to search artefactual dimers)-->
+        <internalpATlength>20</internalpATlength>
+        <!-- minimal fraction of polyA polyT to search for internal adapter when polyAT-->
+        <internalFractionATInPolyAT>0.75</internalFractionATInPolyAT>
+        <!-- minimal polyA polyT length to flag internal polyAT. If internal adapter found polyAT is allways reported even if below this cutoff-->
+        <internalMinPolyATlengthForReporting>20</internalMinPolyATlengthForReporting>
+        <!-- searches max this distance from end for polyA or poly T -->
+        <windowSearchForPolyA>100</windowSearchForPolyA>
+    </polyAT>
+    <adapter>
+        <!-- pre-barcode adapter seq, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
+        <adapterseq>CTTCCGATCT</adapterseq>
+        <!-- max number of needleman wunsch mismatches in adapter sequence-->  
+        <maxAdapterNeedlemanMismatches>3</maxAdapterNeedlemanMismatches>
+    </adapter>
+    <tso>
+        <!-- TSO sequence optional - will search for TSO if TSOseq is given here or on command line , searching just for the end of TSO is often more sensitive-->
+        <tsoSeq>GTACATGG</tsoSeq>
+        <!-- max number of needleman wunsch mismatches in TSO sequence-->
+        <maxTSO_NeedlemanMismatches>3</maxTSO_NeedlemanMismatches>
+        <!-- distance from end searched for TSO -->
+        <windowForTSOsearch>50</windowForTSOsearch>  
+    </tso>
+    
+    <barcodes>
+        <!-- 
+          XML file with dynamic UMI edit distances
+          If just filename is given will search in user home and if not found in application install directory
+          If complete path is given will look only for given file path
+        -->
+        <edit_distance_xml>bcMaxEditDistances.xml</edit_distance_xml>
+        <!--
+        *************************************************************************** 
+         Search for Illumina barcode in genomic region of nanopore data if data corresponding to Nanopore gene not found
+         in Illumina data
+        -->
+        <test_BC_Genomic_Regions>true</test_BC_Genomic_Regions>  
+               <!--
+         *************************************************** 
+         Search for Illumina barcode only in  genomic region of nanopore data won't search for corresponding Illumina gened
+         in Illumina data
+        -->
+        <test_ONLY_BC_Genomic_Regions>false</test_ONLY_BC_Genomic_Regions>         
+        <!-- cell_BC_bailout_after_ED: OPTIONAL cell bc comp with Illumina won't check higher ed if something
+         found. tests all possibillities til bailoutIfFoundAfterED and keeps
+         going to next level only if nothing found. 
+        No bailout makes only sense if correct stats for edit distance diff between best and second best match are required
+        For optimal speed set it to 0 
+        Comment out or enter 'null' if no bailout-->
+        <cell_BC_bailout_after_ED>2</cell_BC_bailout_after_ED>
+        
+        <!-- OPTIONAL increase ED if < maxBCsforincrementBC_ED cell BCs to test for this gene 
+        only used if fixed edit distance is used--> 
+        <incrementBC_ED_ifFewBCs>false</incrementBC_ED_ifFewBCs> 
+        <!-- 
+        Only used when fixed edit distance limit is used
+         maxBCsforincrementBC_ED: OPTIONAL if given, max ED for searching corresponding Illumina cell BC with same gene expressed will be increased by one 
+         for Genes that are found in less than maxBCsforincrementBC_ED cells -> has to compare with less BCs -> higher ED possible
+        -->
+        <maxBCsforincrementBC_ED>300</maxBCsforincrementBC_ED>
+        <!-- REQUIRED check estimated pos +/- this offset. Taken also into account for max ED calculation when dynamic ED is used-->
+        <bc_posplusminus>1</bc_posplusminus>
+        <!-- REQUIRED Maximal ED to check all cell associated 10x BCs including the ones that do not have the actual gene expressed-->
+        <maxEDtoCheckBCAll10xBCs>3</maxEDtoCheckBCAll10xBCs>
+        <!-- REQUIRED Maximal ED to check all 10x BCs - there are hundreds of thousands 10X BCs, testing for a too high ED will find rong matches-->
+        <maxEDtoCheckBCEmptyDrops>2</maxEDtoCheckBCEmptyDrops>
+    </barcodes>
+    
+    <umis>
+        <!-- 
+          XML file with dynamic UMI edit distances
+          If just filename is given will search in user home and if not found in application install directory
+          If complete path is given will look only only for given file path
+        -->
+        <edit_distance_xml>umiMaxEditDistances.xml</edit_distance_xml>
+        <!-- 
+        Don't use for now!!!!!!
+          search for just 5' part of UMI, requires dynamic edit distance for UMIs set and the presence of data for this UMI length in the 
+            corresponding XML file for UMIs
+        -->
+        <!--
+                <umi_length_reduced>7</umi_length_reduced>
+        -->
+        <!-- 
+         OPTIONAL if given, max ED for searching corresponding Illumina cell UMIs for gene in cell  will be increased by one 
+         for Genes that have less than this umis in given cell -> has to compare with less UMIs -> higher ED possible
+         Only used if fixed edit distance used
+        -->
+        <maxUMIsforincrementUMI_ED>50</maxUMIsforincrementUMI_ED> 
+        <!-- REQUIRED check estimated pos +/- this offset. Taken also into account for max ED calculation when dynamic ED is used-->
+        <umi_posplusminus>1</umi_posplusminus>
+        <!--
+        umi_bailout_afterED>: Stops testing higher Ed when found at or below this ED. If set will be faster 
+        but diff between best and second best match will be wrong in some cases.
+        Comment out if no bailout
+        --> 
+        <!-- <umi_bailout_afterED></umi_bailout_afterED> -->  
+    </umis>
+    
+    <!-- Samflags will be added to output BAM if set here 
+    To edit a flag, change the text after <samFlag>
+        To removea flag comment the complete section for the flag
+        e.g.
+         <NEITHER_POLY_NOR_POLYT>
+                          <samFlag>A0</samFlag>
+                <description>Neither polyA nor polyT</description>
+        </NEITHER_POLY_NOR_POLYT>
+        or delete it       
+    --> 
+    <samFlags>
+        <illuminaSAMtag>
+            <IlluminaGene>
+                <samFlag>IG</samFlag>
+                <description>Gene in Illumina data for which match was found</description>
+            </IlluminaGene>  
+        </illuminaSAMtag>
+        <polyATFindingSAMtag>
+            <READ_TOO_SHORT>
+                <samFlag>AX</samFlag>
+                <description>Read too short, not analyzed</description>
+            </READ_TOO_SHORT>
+            <PRE_POLYT_TOO_SHORT>
+                <samFlag>AZ</samFlag>
+                <description>Pre-polyT sequence too short</description>
+            </PRE_POLYT_TOO_SHORT>
+            <NEITHER_POLY_NOR_POLYT>
+                <samFlag>A0</samFlag>
+                <description>Neither polyA nor polyT</description>
+            </NEITHER_POLY_NOR_POLYT>
+            <POLYAT_END>
+                <samFlag>PE</samFlag>
+                <description>End of polyA or polyT</description>
+            </POLYAT_END>
+            <INTERNAL_POLYAT>
+                <samFlag>PI</samFlag>
+                <description>Internal polyAT (evtl. adapter).</description>    
+            </INTERNAL_POLYAT>   
+        </polyATFindingSAMtag>
+        <adapterFindingSAMtag>        
+            <!-- Adapter found on both end of read - likely a chimeric cDNA  -->
+            <BOTH_POLYA_AND_POLYT_ADAPTER>
+                <samFlag>A2</samFlag>
+                <description>Both polyA and polyT</description>
+            </BOTH_POLYA_AND_POLYT_ADAPTER>
+            <!-- Read was reversed for analysis - means polyA found at 3' of read-->
+            <REVERSE_READ>
+                <samFlag>AR</samFlag>
+                <description>Read is reverse</description>
+            </REVERSE_READ>
+            <ADAPTER_NOT_FOUND>
+                <samFlag>AM</samFlag>
+                <description>Adapter not found</description>
+            </ADAPTER_NOT_FOUND>
+            <TOO_MANY_MISMATCHES>
+                <samFlag>AT</samFlag>
+                <description>Too many adapter mismatches</description>
+            </TOO_MANY_MISMATCHES>
+ 
+            <ADAPTER_START>
+                <samFlag>AB</samFlag>
+                <description>Adapter start (1-based)</description>
+            </ADAPTER_START>
+            <ADAPTER_END>
+                <samFlag>AE</samFlag>
+                <description>Adapter end (1-based)</description>
+            </ADAPTER_END>
+        </adapterFindingSAMtag>
+        <tSOFindingSAMtag>
+<!--            <TSO_NOT_SCANNED>
+                <samFlag>TS</samFlag>
+                <description>Not scanned for TSO</description>
+            </TSO_NOT_SCANNED>-->
+            <TSO_NOT_FOUND>
+                <samFlag>TN</samFlag>
+                <description>TSO not found</description>
+            </TSO_NOT_FOUND>
+            <TSO_TOO_MANY_MISMATCHES>
+                <samFlag>TM</samFlag>
+                <description>TSO too many mismatches</description>
+            </TSO_TOO_MANY_MISMATCHES>
+            <TSO_BEGIN>
+                <samFlag>TB</samFlag>
+                <description>TSO begin (1-based)</description>
+            </TSO_BEGIN>
+            <TSO_END>
+                <samFlag>TE</samFlag>
+                <description>TSO end (1-based)</description>
+            </TSO_END>
+        </tSOFindingSAMtag>
+        <barcodeFindingSAMtag>
+            <BC_NONE_FOUND>
+                <samFlag>BN</samFlag>
+                <description>Barcode not found</description>
+            </BC_NONE_FOUND>
+            <GENE_NOT_FOUND_IN_ILLUMINA>
+                <samFlag>B0</samFlag>
+                <description>Gene not found in Illumina data</description>
+            </GENE_NOT_FOUND_IN_ILLUMINA>
+            <GENOMIC_REGION_NOT_FOUND_IN_ILLUMINA>
+                <samFlag>B7</samFlag>
+                <description>Genomic region not found in Illumina data</description>  
+            </GENOMIC_REGION_NOT_FOUND_IN_ILLUMINA>
+            <FOUND_FOR_ILLUMINA_CELL_GENE>
+                <samFlag>BF</samFlag>
+                <description>Cell BC found for matching Illumina Cell BC for data for same gene in same cell</description>
+            </FOUND_FOR_ILLUMINA_CELL_GENE>
+            <FOUND_FOR_ILLUMINA_CELL_GENOMIC_REGION>
+                <samFlag>BR</samFlag>
+                <description>Cell BC found for matching Illumina Cell BC for data for same genomic region in same cell</description>
+            </FOUND_FOR_ILLUMINA_CELL_GENOMIC_REGION>
+            <BC_ONLY_FOUND_IN_ALL_PASSED_10xBCs>
+                <samFlag>BT</samFlag>
+                <description>Cell BC only found for a cell that does not have Illumina data for this gene</description>
+            </BC_ONLY_FOUND_IN_ALL_PASSED_10xBCs>
+            <BC_IN_EMPTY_DROPS>
+                <samFlag>B9</samFlag>
+                <description>Cell BC only found in Illumina empty drops data</description>
+            </BC_IN_EMPTY_DROPS>
+            <NO_GENE_IN_NANOPORE_SAM>
+                <samFlag>BG</samFlag>
+                <description>No gene in Nanopore SAM</description>
+            </NO_GENE_IN_NANOPORE_SAM>
+            <POSTADAPTER_SEQ_PLUS_POLYT_TOOSHORT>
+                <samFlag>BS</samFlag>
+                <description>Seq between adapter and polyAT too short to identify BC/UMI</description>
+            </POSTADAPTER_SEQ_PLUS_POLYT_TOOSHORT>
+            <MORE_THAN_ONE_MATCH>
+                <samFlag>BM</samFlag>
+                <description>More than one BC match with equal quality</description>
+            </MORE_THAN_ONE_MATCH>
+            <BARCODE_ED>
+                <samFlag>B1</samFlag>
+                <description>BC edit distance (mutation cycles used)</description>
+            </BARCODE_ED>
+            <BARCODE_ED_SECOND_BEST_MATCH>
+                <samFlag>B2</samFlag>
+                <description>BC edit distance second best match (mutation cycles used)</description>
+            </BARCODE_ED_SECOND_BEST_MATCH>
+            <BARCODE_START>
+                <samFlag>BB</samFlag>
+                <description>Barcode start (1-based)</description>
+            </BARCODE_START>
+            <BARCODE_END>
+                <samFlag>BE</samFlag>
+                <description>Barcode end (1-based)</description>
+            </BARCODE_END>
+            <CELL_BC>
+                <samFlag>BC</samFlag>
+                <description>Cell BC sequence</description>
+            </CELL_BC>
+        </barcodeFindingSAMtag>
+        <umiFindingSamTags>
+            <MORE_THAN_ONE_MATCH>
+                <samFlag> U9</samFlag>
+                <description>More than one match with equal quality</description>
+            </MORE_THAN_ONE_MATCH>
+            <POSTBARCODE_SEQ_PLUS_POLYT_TOOSHORT>
+                <samFlag>UT</samFlag>
+                <description>Umi scan aborted: Post BC sequence too short</description>
+            </POSTBARCODE_SEQ_PLUS_POLYT_TOOSHORT>
+            <UMI_EDIT_DISTANCE>
+                <samFlag>U1</samFlag>
+                <description>UMI edit distance (mutation cycles)</description>
+            </UMI_EDIT_DISTANCE>
+            <UMI_EDIT_DISTANCE_SECOND_BEST_MATCH>
+                <samFlag>U2</samFlag>
+                <description>UMI edit distance (mutation cycles) of second best match (if any)</description>
+            </UMI_EDIT_DISTANCE_SECOND_BEST_MATCH>
+            <UMI_START>
+                <samFlag>UB</samFlag>
+                <description>UMI start (1 based)</description>
+            </UMI_START>
+            <UMI_END>
+                <samFlag>UE</samFlag>
+                <description>UMI end (one based)</description>
+            </UMI_END>
+            <UMI_sequence>
+                <samFlag>U8</samFlag>
+                <description>UMI sequence'U8</description>
+            </UMI_sequence> 
+            <UMI_match_with_reduced_length>
+                <samFlag>UR</samFlag>
+                <description>UMI was found after scan with reduced UMI length</description>
+            </UMI_match_with_reduced_length> 
+        </umiFindingSamTags>
+    </samFlags>
+</Parameters>
