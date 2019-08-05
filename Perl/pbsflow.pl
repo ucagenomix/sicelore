@@ -294,7 +294,6 @@ sub tagBamWithBarcodes {
 		@cmds=();
  		push(@cmds, "cd ".$jarpath);
 		push(@cmds, $javapath." -jar -Xmx22000m NanoporeBC_UMI_finder-1.0.jar -i ".$pathdir.$jobs[$i].".GEUS.bam -o ".$pathdir.$jobs[$i].".GEUS10xAttributes.bam -k ".$parameters->{obj}." --maxUMIfalseMatchPercent 1 --maxBCfalseMatchPercent 5 --logFile ".$pathdir.$jobs[$i].".log");
-  		push(@cmds, $samtoolspath." index ".$pathdir."/GEUS10xAttributes_umifound_.bam");
   		createJob($job_dir, $ext, $core_unit, @cmds);
 		$index = $i+1;
 		print JOBS $index."\t".$parameters->{results_dir}."/".$job_dir."/scripts/".$job_name.".sh\n";
