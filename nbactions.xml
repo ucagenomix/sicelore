@@ -10,7 +10,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath org.ipmc.sicelore.cmdline.SiCeLoReMain IsoformExpressionMatrix INPUT=C:\Users\hbkcl\Desktop\prom190c_pass3runs_GEUS10xAttributes.umifound.allrecords_pkm.bam REFFLAT=C:\Users\hbkcl\Desktop\refFlat_gencode.vM18_pkm.txt CSV=C:\Users\hbkcl\Desktop\prom190c_pass3runs_GEUS10xAttributes.umifound.allrecords_pkm.bam.bai MATRIX=C:\Users\hbkcl\Desktop\matrixout.txt DELTA=10 METRICS=C:\Users\hbkcl\Desktop\out.txt</exec.args>
+                <exec.args>-classpath  %classpath org.ipmc.sicelore.cmdline.SiCeLoReMain IsoformExpressionMatrix INPUT=C:\Users\hbkcl\Desktop\prom190c_pass3runs_GEUS10xAttributes.umifound.allrecords_pkm.bam REFFLAT=C:\Users\hbkcl\Desktop\refFlat_gencode.vM18_pkm.txt CSV=C:\Users\hbkcl\Desktop\prom190c_pass3runs_GEUS10xAttributes.umifound.allrecords_pkm.bam.bai MATRIX=C:\Users\hbkcl\Desktop\matrixout.txt DELTA=10 METRICS=C:\Users\hbkcl\Desktop\out.txt</exec.args>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
