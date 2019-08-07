@@ -1,6 +1,6 @@
 # SiCeLoRe
 
-Acronyme for **Si**ngle **Ce**ll **Lo**ng **Re**ad is a suite of tools dedicated to cellBC (cell barcode) and UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore long read sequencing data.
+Acronyme for **Si**ngle **Ce**ll **Lo**ng **Re**ad is a suite of tools dedicated to cellBC (cell barcode) / UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore long read sequencing data.
 
 Typically starting with an Illumina short read bam file from 10xGenomics single cell cellranger pipeline and Nanopore long reads, the workflow integrates several sequential steps for cellBC and UMI assignment to Nanopore reads (guided by Illumina data), transcript isoform identification, generation of isoform count matrices and generation of consensus sequences (UMI-guided error-correction) for RNA molecules (UMIs).
 
@@ -770,15 +770,15 @@ Temporary directory
 
 **POAPATH=** (required)
 
-Path to the directory with the poa executable.
+Path to the directory where to find poa executable (and also blosum80.mat) 
 
 **RACONPATH=** (required)
 
-Path to the directory with the Racon executable.
+Path to the directory where to find Racon executable.
 
 **MINIMAP2PATH=** (required)
 
-Path to the directory with the Minimap2 executable.
+Path to the directory where to find Minimap2 executable.
 
 **CELLTAG=**
 
