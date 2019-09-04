@@ -673,6 +673,10 @@ TSO end tag (default=TE)
 
 UMI end tag (default=UE)
 
+**POLYAENDTAG=**
+
+PolyA end tag (default=PE)
+
 **USTAG=**
 
 Fastq sequence tag (default=US)
@@ -726,7 +730,7 @@ java -jar -Xmx22g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REF
 
 **use ComputeConsensus (sicelore.jar)**
 
-The pipeline allows to compute the consensus sequence for molecule in BAM file. First step is similar to IsoformMatrix pipeline except that all the molecules are loaded (even those not Gene annotated (GE SAM tag)) and that the cDNA sequence defined as (tsoEnd(TE tag) ... umiEnd(UE tag)) is loaded so that it can be used for consensus sequence computation.
+The pipeline allows to compute the consensus sequence for molecule in BAM file. First step is similar to IsoformMatrix pipeline except that all the molecules are loaded (even those not Gene annotated (GE SAM tag)) and that the cDNA sequence defined as (tsoEnd(TE tag) ... polyAEnd(PE tag)) is loaded so that it can be used for consensus sequence computation.
 
 Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value (smaller value = better match); (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using all reads for the molecule. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the whole set of reads for the molecule.
 
@@ -799,6 +803,10 @@ TSO end tag (default=TE)
 **UMIENDTAG=**
 
 UMI end tag (default=UE)
+
+**POLYAENDTAG=**
+
+PolyA end tag (default=PE)
 
 **USTAG=**
 
