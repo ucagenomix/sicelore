@@ -30,7 +30,7 @@ my $picardmerger		= "/share/apps/local/picard-tools-1.119/MergeSamFiles.jar";
 my $tmpdir			= "/tmp/";
 
 my $parameters = {};
-$parameters->{chunks}		= 12;
+$parameters->{chunks}		= 10;
 $parameters->{build}		= "mm10";
 $parameters->{PREFIX} 		= "sicelore";
 $parameters->{fastq}		= "<path to scanned fastq file>";# NanoporeReadScanner-0.5.jar scanned fastq file (cf. https://github.com/ucagenomix/sicelore/blob/master/README.md)
@@ -49,6 +49,7 @@ my @jobs;
 fastqsplitter();
 # detect chunks jobs
 detectJobs();
+
 if(@jobs > 0){
 	minimap2();
 	tagBamWithGeneExon();
@@ -249,8 +250,7 @@ sub tagBamWithGeneExon {
 		my $pathdir = $parameters->{results_dir}."/".$job_dir."/";
 		
 		@cmds=();
-		push(@cmds, "cd ".$dropseqpath);
-		push(@cmds, $javapath." -jar -Xmx22g dropseq.jar TagReadWithGeneExon I=".$pathdir.$jobs[$i].".minimap.bam O=".$pathdir.$jobs[$i].".GE.bam ANNOTATIONS_FILE=".$parameters->{GTF}." TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT");
+		push(@cmds, $javapath." -jar -Xmx22g ".$parameters->{sicelore}." AddGeneNameTag I=".$pathdir.$jobs[$i].".minimap.bam O=".$pathdir.$jobs[$i].".GE.bam REFFLAT=".$parameters->{REFFLAT}." GENETAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT");
 		push(@cmds, "samtools index ".$pathdir.$jobs[$i].".GE.bam");
  		createJob($job_dir, $ext, $core_unit, @cmds);
 		$index = $i+1;
