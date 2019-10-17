@@ -77,8 +77,9 @@ Detecting fusion transcripts cell by cell
 
 ## Quick run analysis
 
-We provide in Data directory a subsampling of reads for the Mus musculus Clta locus for the 190 cells dataset.
+We provide test data as a subsampling of reads for the Mus musculus Clta locus for the 190 cells dataset.
 It requires minimap2, samtools and java 1.8 in your path as well as racon and poa (including blosum80.mat in same folder) for consensus calling part.
+The whole process takes under 4 mn to run and produce files in output_dir directory.
 
 ```
 
