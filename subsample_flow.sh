@@ -11,10 +11,10 @@ mkdir output_dir
 java -jar Jar/IlluminaParser-1.0.jar -i Data/190c.clta.illumina.bam -o output_dir/190c.clta.illumina.bam.obj -t Barcodes/cellBC.190.tsv -b CB -g GN -u UB
 
 # scan nanopore reads
-java -jar Jar/NanoporeReadScanner-0.5.jar -i Data/190c.clta.nanopore.reads.fq -o output_dir/190c.clta.nanopore.reads.scanned.fq
+java -jar Jar/NanoporeReadScanner-0.5.jar -i Data/190c.clta.nanopore.reads.fq -o output_dir
 
 # map reads to genome
-minimap2 -ax splice -uf --MD --sam-hit-only -t 4 --junc-bed Gencode/gencode.v18.mm10.junctions.bed Data/chr4.fa.gz output_dir/190c.clta.nanopore.reads.scanned.fq > output_dir/minimap.sam
+minimap2 -ax splice -uf --MD --sam-hit-only -t 4 --junc-bed Gencode/gencode.v18.mm10.junctions.bed Data/chr4.fa.gz output_dir/passed/190c.clta.nanopore.readsFWD.fq > output_dir/minimap.sam
 samtools view -Sb output_dir/minimap.sam -o output_dir/minimap.unsorted.bam
 samtools sort output_dir/minimap.unsorted.bam -o output_dir/minimap.bam
 samtools index output_dir/minimap.bam
