@@ -3,11 +3,6 @@
 # need Java.1.8 in JAVA_HOME
 java=`which $JAVA_HOME`
 
-# clone repository should have been done already
-# git clone https://github.com/ucagenomix/sicelore.git
-# cd sicelore
-# ./subsample_flow.sh
-
 # create output directory
 mkdir output_dir
 
