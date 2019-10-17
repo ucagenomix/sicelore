@@ -24,7 +24,7 @@ java -jar -Xmx12g Jar/Sicelore-1.0.jar AddGeneNameTag I=output_dir/minimap.bam O
 samtools index output_dir/GE.bam
 
 # tag reads with fastq sequence
-java -jar -Xmx12g Jar/Sicelore-1.0.jar AddBamReadSequenceTag I=output_dir/GE.bam O=output_dir/GEUS.bam FASTQ=Data/190c.clta.nanopore.reads.fq VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g Jar/Sicelore-1.0.jar AddBamReadSequenceTag I=output_dir/GE.bam O=output_dir/GEUS.bam FASTQ=output_dir/passed/190c.clta.nanopore.readsFWD.fq VALIDATION_STRINGENCY=SILENT
 samtools index output_dir/GEUS.bam
 
 # tag reads with cellBC/UMI barcodes
@@ -34,6 +34,6 @@ java -jar -Xmx12g Jar/NanoporeBC_UMI_finder-1.0.jar -i output_dir/GEUS.bam -o ou
 java -jar -Xmx12g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT GENETAG=GE I=output_dir/GEUS10xAttributes_umifound_.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=output_dir PREFIX=sicelore VALIDATION_STRINGENCY=SILENT
 
 # compute consensus sequence
-java -jar -Xmx12g Jar/Sicelore-1.0.jar ComputeConsensus T=10 I=output_dir/GEUS10xAttributes.umifound_.bam O=output_dir/consensus.fa
+java -jar -Xmx12g Jar/Sicelore-1.0.jar ComputeConsensus T=10 I=output_dir/GEUS10xAttributes_umifound_.bam O=output_dir/consensus.fa
 
 # ...
