@@ -45,4 +45,17 @@ $java -jar -Xmx4g Jar/Sicelore-1.0.jar ComputeConsensus T=10 I=output_dir/GEUS10
 
 # map molecules to genome
 $minimap2 -ax splice -uf --MD --sam-hit-only -t 4 --junc-bed Gencode/gencode.v18.mm10.junctions.bed Data/chr4.fa.gz output_dir/consensus.fa > output_dir/molecule.sam
- 
+$samtools view -Sb output_dir/molecule.sam -o output_dir/molecule.unsorted.bam
+$samtools sort output_dir/molecule.unsorted.bam -o output_dir/molecule.bam
+$samtools index output_dir/molecule.bam
+
+# add cellBC/UMI tags
+$java -jar -Xmx4g Jar/Sicelore-1.0.jar AddBamMoleculeTags I=output_dir/molecule.bam O=output_dir/molecule.tags.bam
+$samtools index output_dir/molecule.tags.bam
+	
+# add gene name tag
+$java -jar -Xmx4g Jar/Sicelore-1.0.jar AddGeneNameTag I=output_dir/molecule.tags.bam O=output_dir/molecule.tags.GE.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt GENETAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+$samtools index output_dir/molecule.tags.GE.bam
+	
+# generate molecule isoform matrix
+$java -jar -Xmx4g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT GENETAG=GE I=output_dir/molecule.tags.GE.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=output_dir PREFIX=sicelore.molecules VALIDATION_STRINGENCY=SILENT
