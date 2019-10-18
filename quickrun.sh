@@ -8,6 +8,18 @@ minimap2=`which minimap2`
 samtools=`which samtools`
 tmp_dir="${PWD}/output_dir/tmp/"
 
+if [ -z "$java" ] || [ -z "$poa" ] || [ -z "$samtools" ] || [ -z "$minimap2" ] || [ -z "$racon" ]
+then
+    echo -e "\nMissing path to required softwares:"
+    echo -e "\tjava=$java"
+    echo -e "\tpoa=$poa"
+    echo -e "\tsamtools=$samtools"
+    echo -e "\tminimap2=$minimap2"
+    echo -e "\tracon=$racon"
+    echo -e "\nPlease update your \$PATH and rerun.\n\n"
+    exit
+fi
+
 # create output directory
 mkdir output_dir
 mkdir $tmp_dir
