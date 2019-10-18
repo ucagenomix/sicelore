@@ -78,8 +78,8 @@ Detecting fusion transcripts cell by cell
 ## Quick run analysis
 
 We provide test data as a subsampling of reads for the Mus musculus Clta locus for the 190 cells dataset.
-It requires minimap2, samtools and java 1.8 in your path as well as racon and poa (including blosum80.mat in same folder) for consensus calling part.
-The whole process takes under 4 mn to run and produce files in output_dir directory.
+It requires java 1.8 (JAVA_HOME), minimap2, samtools in your PATH as well as racon and poa (including blosum80.mat in same folder) for consensus calling part.
+This test script should takes under 5mn to run, output files are located in ./output_dir directory.
 
 ```
 
@@ -88,6 +88,7 @@ cd sicelore
 chmod +x quickrun.sh
 dos2unix quickrun.sh
 export JAVA_HOME=<path to Java 1.8>
+export PATH=$PATH:<minimap2path>:<samtoolspath>:<raconpath>:<poapath>
 ./quickrun.sh
 
 ```
