@@ -684,25 +684,29 @@ Wether or not to output a BAM file containg a flag (IT) with the transcriptID ca
 
 **output files**
 
-**PREFIX**_cells_metrics.txt
+**PREFIX**_cellmetrics.txt
 
 cell by cell metrics (number of reads, number of UMIs, %age of isoform assigned molecules).
 
-**PREFIX**_genes_metrics.txt
+**PREFIX**_genemetrics.txt
 
 gene by gene metrics (total molecules, %age of molecules isoform assigned)
 
-**PREFIX**_isoforms_metrics.txt
+**PREFIX**_isometrics.txt
 
 isoform by isoform metrics (total molecules)
 
-**PREFIX**_genes_matrix.txt
+**PREFIX**_genematrix.txt
 
 gene level number of molecules per cell barcode count matrix for subsequent statistical analysis
 
-**PREFIX**_isoforms_matrix.txt
+**PREFIX**_isomatrix.txt
 
 isoform level number of molecules per cell barcode count matrix for subsequent statistical analysis
+
+**PREFIX**_molinfos.txt
+
+molecules (UMI/BC) read number and isoform information
 
 #### Example
 
@@ -848,6 +852,10 @@ Molecules bam file including cell barcode and UMI tags
 
 .csv file listing describing, one per line, the SNPs in quantification
 
+**RN_min** (required)
+
+Minimum number of reads for a molecule to be taken into account for SNP calling (default=0, meaning all molecules)
+
 **OUTPUT=,O=** (required)
 
 Output directory.
@@ -871,6 +879,10 @@ Cell Barcode / SNPs matrix molecules count. Two lines per SNP is reported, one f
 **PREFIX_metrics.txt**
 
 Number of total molecules in datasets per SNPs (ref. and alt. alleles)
+
+**PREFIX**_molinfos.txt
+
+per molecules (UMI/BC) SNP information
 
 <a id="fusion-calling"></a>
 
@@ -944,7 +956,7 @@ Output directory
 
 **PREFIX**
 
-Prefix for _matrix.txt and _metrics.txt tab-delimited output text files
+Prefix for _matrix.txt, _metrics.txt and _molinfos.txt tab-delimited output text files
 
 ```
 
@@ -962,3 +974,6 @@ Cell Barcode / fusion transcript matrix molecule counts
 
 Total number of molecules per fusion transcripts detected in dataset
 
+**PREFIX**_molinfos.txt
+
+per molecules (UMI/BC) fusion information
