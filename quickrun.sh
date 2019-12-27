@@ -46,7 +46,7 @@ $java -jar -Xmx4g Jar/Sicelore-1.0.jar AddBamReadSequenceTag I=$output_dir/GE.ba
 $samtools index $output_dir/GEUS.bam
 
 # tag reads with cellBC/UMI barcodes
-$java -jar -Xmx4g Jar/NanoporeBC_UMI_finder-1.0.jar -i $output_dir/GEUS.bam -o $output_dir/GEUS10xAttributes.bam -k $output_dir/190c.clta.illumina.bam.obj --maxUMIfalseMatchPercent 1 --maxBCfalseMatchPercent 5 --logFile $output_dir/out.log
+$java -jar -Xmx4g Jar/NanoporeBC_UMI_finder-1.0.jar -i $output_dir/GEUS.bam -o $output_dir/GEUS10xAttributes.bam -k $output_dir/190c.clta.illumina.bam.obj --ncpu 8 --maxUMIfalseMatchPercent 1 --maxBCfalseMatchPercent 5 --logFile $output_dir/out.log
 $samtools index $output_dir/GEUS10xAttributes.bam
 $samtools index $output_dir/GEUS10xAttributes_umifound_.bam
 
