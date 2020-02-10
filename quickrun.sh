@@ -71,4 +71,5 @@ $java -jar -Xmx4g Jar/Sicelore-1.0.jar AddGeneNameTag I=$output_dir/molecule.tag
 $samtools index $output_dir/molecule.tags.GE.bam
 	
 # generate molecule isoform matrix
-$java -jar -Xmx4g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT GENETAG=GE I=$output_dir/molecule.tags.GE.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=$output_dir PREFIX=sicmol VALIDATION_STRINGENCY=SILENT
+$java -jar -Xmx4g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT ISOBAM=true GENETAG=GE I=$output_dir/molecule.tags.GE.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=$output_dir PREFIX=sicmol VALIDATION_STRINGENCY=SILENT
+$samtools index $output_dir/sicmol_isobam.bam
