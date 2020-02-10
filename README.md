@@ -629,11 +629,11 @@ samtools index GEUS10xAttributes.umifound.bam
 
 **uses IsoformMatrix (sicelore.jar)**
 
-SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript a STRICT and a SOFT strategy is available(METHOD parameter). Using ***STRICT*** strategy, a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a 2 bases margin (DELTA parameter, default 2) of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
+SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript a STRICT and a SOFT strategy is available(METHOD parameter). Using ***STRICT*** strategy (default mode), a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a DELTA (default 2) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
 
-If an equal number of reads supports two different Gencode transcript, the UMI is considered as ambiguous and randomly assigned to one of the top scoring isoforms (AMBIGUOUS_ASSIGN=true) / or not assigned to an isoform ( default, AMBIGUOUS_ASSIGN=false).
+If an equal number of reads supports two different Gencode transcript, the UMI is considered as ambiguous and randomly assigned to one of the top scoring isoforms (AMBIGUOUS_ASSIGN=true) or not assigned to an isoform (default mode, AMBIGUOUS_ASSIGN=false).
 
-The ***SOFT*** strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal priming of the oligo(dT) RT primer on A rich sequences within the transcript since reverse transcription starts at room temperature (3' truncation). The SOFT mode allows to assign such truncated reads if the available structure allows to assign it unanimously to one Genecode isoform. In SOFT mode, for every UMI each genome mapped read is examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a two bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 is added to each Gencode isoform carrying the junction. Finally, if just one isoform has the highest score it gets selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and not assigned or assigned to one of the best matching isoforms (AMBIGUOUS_ASSIGN=true).
+The ***SOFT*** strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation. Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal priming of the oligo(dT) RT primer on A rich sequences within the transcript since reverse transcription starts at room temperature (3' truncation). The SOFT mode allows to assign such truncated reads if the available structure allows to assign it unanimously to one Genecode isoform. In SOFT mode, for every UMI each genome mapped read is examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a DELTA (2 default) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 is added to each Gencode isoform carrying the junction. Finally, if just one isoform has the highest score it gets selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and assigned (AMBIGUOUS_ASSIGN=true) or not assigned (AMBIGUOUS_ASSIGN=false) to one of the best matching isoforms.
 
 **parameters**
 
@@ -670,13 +670,13 @@ the maximal number of extensive non-matching sequences at either end, hard- or s
 
 **METHOD=** (required)
 
-STRICT full exon-exon structure required for assignation
+STRICT full exon-exon structure required for assignation (default mode)
 
 SOFT more lenient way of assignation requiring observation of an isoform specific exon-exon junction
 
 **AMBIGUOUS_ASSIGN=**
 
-Whether or not to assign a UMI that is ambiguous (>1 isoforms of the gene model fit its exon-exon structure) (default=false)
+Whether or not to assign an UMI that has 2 or more matching transcript model (default=false)
 
 **ISOBAM=**
 
@@ -728,6 +728,8 @@ Briefly, each molecule is processed as follows depending the number of reads the
 
 The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
 
+MINIMAP2, POA and RACON path are detected from your PATH variable, please add executables path to your PATH variable.
+
 ### splitting bam by chromosomes
 
 ```
@@ -759,18 +761,6 @@ Number of threads for multi-threading (typically number of cores of compute node
 **TMPDIR=** (required)
 
 Temporary directory
-
-**POAPATH=** (required)
-
-Path to the directory with the poa executable.
-
-**RACONPATH=** (required)
-
-Path to the directory with the Racon executable.
-
-**MINIMAP2PATH=** (required)
-
-Path to the directory with the Minimap2 executable.
 
 example below is for chromosome 1, repeat for all chromosomes
 
