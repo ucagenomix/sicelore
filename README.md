@@ -1,9 +1,8 @@
 # SiCeLoRe
 
-Acronyme for [Si]ngle [Ce]ll [Lo]ng [Re]ad is a suite of tools dedicated to the cell barcode and UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore long read sequencing data.
+SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode / UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore or PacBIo long read sequencing data.
 
-Typically starting with a short read bam file from the 10xGenomics single cell cellranger pipeline and Nanopore long reads, the workflow integrates several sequential steps for cell barcode and UMI assignment to Nanopore reads (guided by Illumina data), transcript isoform identification, generation of transcript isoform count matrices and generation of consensus sequences (UMI-guided error-correction) for RNA molecules (UMIs).
-
+Typically starting with a single cell short read bam file and Nanopore or PacBio long reads, the workflow integrates several sequential steps for cell barcode and UMI assignment to long reads (guided by short read data), transcript isoform identification, generation of molecules consensus sequences (UMI-guided error-correction) and production of [isoforms / junctions / SNPs x cells] count matrices for new modalities integration into standard single cell RNA-seq statistical analysis.
 
 # Installation
 
@@ -629,11 +628,11 @@ samtools index GEUS10xAttributes.umifound.bam
 
 **uses IsoformMatrix (sicelore.jar)**
 
-SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript a STRICT and a SOFT strategy is available(METHOD parameter). Using ***STRICT*** strategy (default mode), a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a DELTA (default 2) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
+SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript a STRICT and a SCORE strategy is available(METHOD parameter). Using ***STRICT*** strategy (default mode), a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a DELTA (default 2) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
 
 If an equal number of reads supports two different Gencode transcript, the UMI is considered as ambiguous and randomly assigned to one of the top scoring isoforms (AMBIGUOUS_ASSIGN=true) or not assigned to an isoform (default mode, AMBIGUOUS_ASSIGN=false).
 
-The ***SOFT*** strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation. Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal priming of the oligo(dT) RT primer on A rich sequences within the transcript since reverse transcription starts at room temperature (3' truncation). The SOFT mode allows to assign such truncated reads if the available structure allows to assign it unanimously to one Genecode isoform. In SOFT mode, for every UMI each genome mapped read is examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a DELTA (2 default) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 is added to each Gencode isoform carrying the junction. Finally, if just one isoform has the highest score it gets selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and assigned (AMBIGUOUS_ASSIGN=true) or not assigned (AMBIGUOUS_ASSIGN=false) to one of the best matching isoforms.
+The ***SCORE*** strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation. Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal priming of the oligo(dT) RT primer on A rich sequences within the transcript since reverse transcription starts at room temperature (3' truncation). This mode allows to assign such truncated reads if the available structure allows to assign it unanimously to one Genecode isoform. In SCORE mode, for every UMI each genome mapped read is examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a DELTA (2 default) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 is added to each Gencode isoform carrying the junction. Finally, if just one isoform has the highest score it gets selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and assigned (AMBIGUOUS_ASSIGN=true) or not assigned (AMBIGUOUS_ASSIGN=false) to one of the best matching isoforms.
 
 **parameters**
 
@@ -672,11 +671,11 @@ the maximal number of extensive non-matching sequences at either end, hard- or s
 
 STRICT full exon-exon structure required for assignation (default mode)
 
-SOFT more lenient way of assignation requiring observation of an isoform specific exon-exon junction
+SCORE more lenient way of isoform assignation
 
 **AMBIGUOUS_ASSIGN=**
 
-Whether or not to assign an UMI that has 2 or more matching transcript model (default=false)
+Only active for SCORE mode, whether or not to assign an UMI that has 2 or more matching transcript model (default=false)
 
 **ISOBAM=**
 
@@ -686,27 +685,35 @@ Wether or not to output a BAM file containg a flag (IT) with the transcriptID ca
 
 **PREFIX**_cellmetrics.txt
 
-cell by cell metrics (number of reads, number of UMIs, %age of isoform assigned molecules).
+cell by cell metrics (cellBC, nbReads, nbUmis, nbIsoformSet, nbIsoformNotSet).
 
 **PREFIX**_genemetrics.txt
 
-gene by gene metrics (total molecules, %age of molecules isoform assigned)
+gene by gene metrics (geneId, nbUmis, nbIsoformSet, nbIsoformNotSet)
 
 **PREFIX**_isometrics.txt
 
-isoform by isoform metrics (total molecules)
+isoform by isoform metrics (geneId, transcriptId, nbExons, nbUmis)
+
+**PREFIX**_juncmetrics.txt
+
+exon-exon junction by junction metrics (junctionId, nbUmis)
 
 **PREFIX**_genematrix.txt
 
-gene level number of molecules per cell barcode count matrix for subsequent statistical analysis
+gene level [geneId x cellBC] count matrix 
 
 **PREFIX**_isomatrix.txt
 
-isoform level number of molecules per cell barcode count matrix for subsequent statistical analysis
+isoform level [transcriptId x cellBC] count matrix 
+
+**PREFIX**_juncmatrix.txt
+
+junction level [junctionId x cellBC] count matrix 
 
 **PREFIX**_molinfos.txt
 
-molecules (UMI/BC) read number and isoform information
+molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, geneId, transcriptId)
 
 #### Example
 
@@ -817,12 +824,12 @@ Consensus sequence show higher sequence accuracy than raw nanopore reads and we 
 
 * Sicelore.jar
 
-* SNPs descriptor comma-separated .csv file (snp_description.csv), one SNP per line as follow:
+* SNPs descriptor comma-separated .csv file (snp_description.csv), one position per line as follow:
 
 ```
-name,gene,chromosome,start,end,strand,pos,ref,alt
-rs11554290,NRAS,1,114704469,114716894,-,114713908,A,G
-rs237057,SRSF2,17,76734115,76737374,-,76737017,C,T
+chromosome,position,strand,name
+17,45662949,-,Tmem63b          // SNP call at one position
+7,25010643|25010650,-,Grik5    // SNP association call at two positions (limited to 2)
 ...
 ```
 
@@ -840,7 +847,7 @@ Molecules bam file including cell barcode and UMI tags
 
 **SNP=** (required)
 
-.csv file listing describing, one per line, the SNPs in quantification
+.csv file listing describing, one per line, the SNP to call
 
 **RN_min** (required)
 
@@ -864,11 +871,11 @@ java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam CSV=barcodes.csv SNP
 
 **PREFIX_matrix.txt**
 
-Cell Barcode / SNPs matrix molecules count. Two lines per SNP is reported, one for reference and one for alternative alleles
+Cell Barcode / SNP matrix molecules count.
 
 **PREFIX_metrics.txt**
 
-Number of total molecules in datasets per SNPs (ref. and alt. alleles)
+Number of total molecules in datasets per SNP / bases observed
 
 **PREFIX**_molinfos.txt
 

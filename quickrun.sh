@@ -51,7 +51,7 @@ $samtools index $output_dir/GEUS10xAttributes.bam
 $samtools index $output_dir/GEUS10xAttributes_umifound_.bam
 
 # generate isoform matrix
-$java -jar -Xmx4g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT GENETAG=GE I=$output_dir/GEUS10xAttributes_umifound_.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=$output_dir PREFIX=sicread VALIDATION_STRINGENCY=SILENT
+#$java -jar -Xmx4g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT GENETAG=GE I=$output_dir/GEUS10xAttributes_umifound_.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=$output_dir PREFIX=sicread VALIDATION_STRINGENCY=SILENT
 
 # compute consensus sequence
 $java -jar -Xmx4g Jar/Sicelore-1.0.jar ComputeConsensus T=10 I=$output_dir/GEUS10xAttributes_umifound_.bam O=$output_dir/consensus.fa TMPDIR=$tmp_dir
@@ -73,3 +73,8 @@ $samtools index $output_dir/molecule.tags.GE.bam
 # generate molecule isoform matrix
 $java -jar -Xmx4g Jar/Sicelore-1.0.jar IsoformMatrix DELTA=2 METHOD=STRICT ISOBAM=true GENETAG=GE I=$output_dir/molecule.tags.GE.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=$output_dir PREFIX=sicmol VALIDATION_STRINGENCY=SILENT
 $samtools index $output_dir/sicmol_isobam.bam
+
+# cleaning
+cd $output_dir
+rm -fr failed GE.bam GE.bam.bai GEUS.bam GEUS.bam.bai GEUS10xAttributes.bam GEUS10xAttributes.bam.bai minimap.bam minimap.bam.bai minimap.sam minimap.unsorted.bam molecule.bam molecule.bam.bai molecule.sam molecule.tags.bam molecule.tags.bam.bai molecule.unsorted.bam out.log passed tmp
+
