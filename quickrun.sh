@@ -76,5 +76,5 @@ $samtools index $output_dir/sicmol_isobam.bam
 
 # cleaning
 cd $output_dir
-rm -fr failed GE.bam GE.bam.bai GEUS.bam GEUS.bam.bai GEUS10xAttributes.bam GEUS10xAttributes.bam.bai minimap.bam minimap.bam.bai minimap.sam minimap.unsorted.bam molecule.bam molecule.bam.bai molecule.sam molecule.tags.bam molecule.tags.bam.bai molecule.unsorted.bam out.log passed tmp
+rm -fr failed 190c.clta.illumina.bam.obj consensus.fa GEUS10xAttributes_umifound_.bam GEUS10xAttributes_umifound_.bam.bai molecule.tags.GE.bam molecule.tags.GE.bam.bai GE.bam GE.bam.bai GEUS.bam GEUS.bam.bai GEUS10xAttributes.bam GEUS10xAttributes.bam.bai minimap.bam minimap.bam.bai minimap.sam minimap.unsorted.bam molecule.bam molecule.bam.bai molecule.sam molecule.tags.bam molecule.tags.bam.bai molecule.unsorted.bam out.log passed tmp
 
