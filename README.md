@@ -44,23 +44,27 @@ Adds gene names, read sequence and QV values. Required for barcode and UMI assig
 
 [5) Barcode and UMI assignment to Nanopore SAM records](#bc-assignment)
 
-[6) Transcript isoform expression quantification](#IsoformMatrix)
-
-Identifies matching Gencode transcript isoforms and generates isoform count table.
-
-[7) Consensus sequence calculation for RNA molecules (UMIs)](#ComputeConsensus)
+[6) Consensus sequence calculation for RNA molecules (UMIs)](#ComputeConsensus)
 
 Generates consensus sequence for transcripts from multiple reads for UMI.
 
-[8) Re-mapping of consensus for RNA molecules to the genome](#molecule-consensus-mapping)
+[7) Mapping of molecules consensus sequences to the reference genome with minimap2](#molecule-consensus-mapping)
 
-Consensus sequences are re-mapped to the reference genome
+Consensus sequences are mapped to the reference genome
 
-[9) SNP calling](#snp-calling)
+[8) Tag molecule SAM records with gene names, cell barcodes and UMI sequence](#molecule-tagging)
+
+Adds gene names, cell barcode and UMI sequence. Required for [cell x genes/isoforms/junctions] matrices generation
+
+[9) Transcript isoform expression quantification](#IsoformMatrix)
+
+Identifies matching Gencode transcript isoforms and generates [cell x genes/isoforms/junctions] matrices.
+
+[10) SNP calling](#snp-calling)
 
 Calling nucleotide polymorphism cell by cell
 
-[10) Fusions gene calling](#fusion-calling)
+[11) Fusions gene calling](#fusion-calling)
 
 Detecting fusion transcripts cell by cell
 
@@ -210,7 +214,7 @@ If "null" is given as output directory it won't write but just generate some sta
 
 ## 3) Mapping of Nanopore reads to the reference genome with minimap2
 
-### fastq splitting into chunks for paralellization
+**fastq splitting into chunks for paralellization**
 
 Can be omitted for small runs (< 5 million reads)
 
@@ -218,15 +222,13 @@ Prior to mapping the fastqs are split into chunks.
 
 uses [fastp](https://github.com/OpenGene/fastp)
 
-Mapping, [tagging with gene names](#nanopore-tagging) and [Barcode/UMI assignment](#bc-assignment) are sequentially done with those batches to allow paralellization.
-
 ```
 
 fastp -i nanopore_reads.fastq -Q -A --thread 20 --split_prefix_digits=4 --out1=sub.fastq --split=24
 
 ```
 
-### parallel minimap2 mapping
+**parallel minimap2 mapping*
 
 command shown for fastq batch "0001.sub.fastq"
 
@@ -251,19 +253,20 @@ can be generated with **`paftools.js gff2bed -j ann.gtf'** (Paftools is part of 
 
 ### add gene names to Nanopore SAM records
 
-Adds gene names to Nanopore SAMrecords GE tag using **AddGeneNameTag** (sicelor.jar) pipeline, long read optimization of code from [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/).
+**uses AddGeneNameTag (sicelor.jar)**
+
+Add gene names to Nanopore SAMrecords GE tag using **AddGeneNameTag** (sicelor.jar) pipeline, long read optimization of code from [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/).
 
 If another tag is used for gene names, the Gene name SAM tag needs to be changed using the TAG argument in command line.
 
 Rapid, all jobs can be run on one compute node or distributed on a cluster.
 
-uses **AddGeneNameTag** (sicelor.jar)
 
 command shown is for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddBamReadSequenceTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
 samtools index 0001.sub.GE.bam
 
 ```
@@ -301,6 +304,8 @@ Gene function tag (default=XF)
 
 ### add read sequence and QV values to Nanopore SAM records
 
+**uses AddBamReadSequenceTag (sicelor.jar)**
+
 SAMrecords are tagged with read sequence (US tag) and read quality (UQ tag). Is used for BC/UMI assignment and molecule consensus calculation.
 
 QVs are currently just used to generate some QV stats during BC and UMI assignment -> adding QVs is optional.
@@ -309,7 +314,6 @@ Fast, all jobs can be run on one compute node.
 
 command shown for BAM batch "0001.sub.bam"
 
-uses **AddBamReadSequenceTag** (sicelor.jar)
 
 ```
 
@@ -607,15 +611,12 @@ If "AD" is in string it is very likely that read is from a concatameric cDNA.
 
 **U8** UMI sequence
 
-<a id="isoformmatrix"></a>
 
-## 6) Transcript isoform expression quantification
-
-### merge bam files
+### merge all batches GEUS10xAttributes.bam bam files
 
 Cell barcode and UMI assigned Bam files need to be merged.
 
-Requires: Picard-tools or Samtools
+**use Picard-tools or Samtools**
 
 ```
 
@@ -624,9 +625,118 @@ samtools index GEUS10xAttributes.umifound.bam
 
 ```
 
-### isoform expression quantification
+<a id="computeConsensus"></a>
+
+## 6) Generate consensus sequences
+
+**use ComputeConsensus (sicelore.jar)**
+
+The pipeline allows to compute the consensus sequence for molecule in .bam file. First step is loading all the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
+
+Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value (smaller value = better match); (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using all reads for the molecule. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the whole set of reads for the molecule.
+
+The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
+
+MINIMAP2, POA and RACON path are detected from your PATH variable, please add executables path to your PATH variable.
+
+
+**splitting bam by chromosomes**
+
+```
+
+@jobs = ('1','2','X','MT','3','4',..all chromosomes..);
+for($i=0; $i<@jobs; $i++){
+    samtools view -Sb GEUS10xAttributes.umifound.bam ".$jobs[$i]." -o GEUS10xAttributes.umifound.chr".$jobs[$i].".bam
+    samtools index GEUS10xAttributes.umifound.chr".$jobs[$i].".bam
+}
+
+```
+
+**ComputeConsensus pipeline**
+
+**INPUT=** (required)
+
+GEUS10xAttributes.umifound.chr1.bam file containing cellBC (BC tag) and UMI (U8 tag) assigned Nanopore SAM entries with the gene mame in the IG tag. SAMrecords lacking any of those 3 required fields are discarded from further analysis.
+
+**OUTPUT=** (required)
+
+Consensus sequence in fasta format for all molecules detected. Name of each molecules set to CellBC(BC), UMIs(U8) and read number RN) ">BC|UMI|RN"
+
+**THREADS=,T=** (required)
+
+Number of threads for multi-threading (typically number of cores of compute node)
+
+**TMPDIR=** (required)
+
+Temporary directory
+
+**example below is for chromosome 1, repeat for all chromosomes**
+
+```
+
+java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa T=20 TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
+
+```
+
+<a id="molecule-consensus-mapping"></a>
+
+## 7) Mapping of molecules consensus sequences to the reference genome with minimap2
+
+If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from genes having multiple copies in the genome.
+
+First we need to concatenate all chromosomes fasta file then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
+
+```
+
+cat */molecules.chr*.fa > molecules.fa
+java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecules.fa O=deduplicate.fa
+
+```
+
+Molecule consensus sequences can then be mapped to the reference genome to generate a molecules.bam BAM file for further analysis.
+
+```
+
+minimap2 -ax splice -uf --sam-hit-only -t 20 --junc-bed junctions.bed $BUILD.mmi molecules.fa > molecules.sam
+samtools view -Sb molecules.sam -o unsorted.bam
+samtools sort unsorted.bam -o molecules.bam
+samtools index molecules.bam
+
+```
+
+<a id="molecule-tagging"></a>
+
+## 8) Tag molecule SAM records with gene names, cell barcodes, UMI sequence and reads number
+
+**uses AddGeneNameTag (sicelor.jar)** 
+
+Add gene name tag (GE) to molecules SAM records
+
+```
+
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
+samtools index molecules.GE.bam
+
+```
+
+**uses AddBamMoleculeTags (sicelor.jar)**
+
+Add CellBC (BC), UMIs (U8) and read number (RN) tags from molecule read name to molecules SAM records
+
+``` 
+
+java -jar -Xmx22g sicelor.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
+samtools index molecules.GE.tags.bam
+
+```
+
+<a id="isoformmatrix"></a>
+
+## 9) Transcript isoform expression quantification
 
 **uses IsoformMatrix (sicelore.jar)**
+
+This step can be done at the reads level but prefer using it at the molecules level after consensus calling as describes in the protocole. In case of processing at the read level here is the algotithm used.
 
 SAM records matching known genes are grouped by UMI and analyzed for matching Gencode v18 transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript a STRICT and a SCORE strategy is available(METHOD parameter). Using ***STRICT*** strategy (default mode), a read is assigned to a given transcript when it recapitulates the full exon-exon junction layout authorizing a DELTA (default 2) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
 
@@ -634,11 +744,9 @@ If an equal number of reads supports two different Gencode transcript, the UMI i
 
 The ***SCORE*** strategy allows to assign an isoform to an UMI that does not recapitulate the full exon-exon structure of the isoform. Some single cell reads are incomplete due to limitations of the 10xGenomics library preparation. Those incomplete cDNAs are likely mainly due to partial degradation of RNA before reverse transcription (5' truncation) or internal priming of the oligo(dT) RT primer on A rich sequences within the transcript since reverse transcription starts at room temperature (3' truncation). This mode allows to assign such truncated reads if the available structure allows to assign it unanimously to one Genecode isoform. In SCORE mode, for every UMI each genome mapped read is examined for exon junctions matching the junctions present in the Gencode transcripts for the corresponding gene, authorizing a DELTA (2 default) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each found exon-exon junction, a score of 1 is added to each Gencode isoform carrying the junction. Finally, if just one isoform has the highest score it gets selected as the isoform for the UMI. If more than one Gencode transcript obtain the highest score, the UMI is considered as ambiguous and assigned (AMBIGUOUS_ASSIGN=true) or not assigned (AMBIGUOUS_ASSIGN=false) to one of the best matching isoforms.
 
-**parameters**
-
 **INPUT=** (required)
 
-Barcode and UMI assigned GEUS10xAttributes.umifound.bam file containing the cellBC (BC tag) and UMI (U8 tag) with the gene mame in the IG tag. SAMrecords lacking any of those 3 required fields are not analyzed.
+Barcode and UMI assigned GEUS10xAttributes.umifound.bam (or <b>molecules.GE.tags.bam</b> file) file containing the cellBC (BC tag) and UMI (U8 tag) with the gene mame in the IG tag. SAMrecords lacking any of those 3 required fields are not analyzed.
 
 **CSV=** (required)
 
@@ -654,6 +762,10 @@ gtfToGenePred -genePredExt -geneNameAsName2 gencode.vM18.primary_assembly.annota
 paste <(cut -f 12 gencode.vM18.primary_assembly.annotation.refflat.txt) <(cut -f 1-10 gencode.vM18.primary_assembly.annotation.refflat.txt) > refFlat.txt
 
 ```
+
+**OUTDIR**
+
+Output directory where output files are created
 
 **PREFIX=** (required)
 
@@ -680,6 +792,8 @@ Only active for SCORE mode, whether or not to assign an UMI that has 2 or more m
 **ISOBAM=**
 
 Wether or not to output a BAM file containg a flag (IT) with the transcriptID called during this process (default=false)
+
+
 
 **output files**
 
@@ -715,131 +829,25 @@ junction level [junctionId x cellBC] count matrix
 
 molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, geneId, transcriptId)
 
-#### Example
+
 
 ```
 
-java -jar -Xmx44g sicelor.jar IsoformMatrix I=GEUS10xAttributes.umifound.bam REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=SOFT AMBIGUOUS_ASSIGN=false PREFIX=out
-
-```
-
-<a id="computeConsensus"></a>
-
-## 7) Generate consensus sequences
-
-**use ComputeConsensus (sicelore.jar)**
-
-The pipeline allows to compute the consensus sequence for molecule in .bam file. First step is similar to IsoformMatrix pipeline except that all the molecules are loaded, even those not Gene annotated and that the cDNA sequence defined as (tsoEnd(TE tag) ... umiEnd(UE tag)) is loaded so that it can be used for consensus sequence computation.
-
-Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value (smaller value = better match); (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using all reads for the molecule. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the whole set of reads for the molecule.
-
-The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
-
-MINIMAP2, POA and RACON path are detected from your PATH variable, please add executables path to your PATH variable.
-
-### splitting bam by chromosomes
-
-```
-
-@jobs = ('1','2','X','MT','3','4',..all chromosomes..);
-for($i=0; $i<@jobs; $i++){
-    samtools view -Sb GEUS10xAttributes.umifound.bam ".$jobs[$i]." -o GEUS10xAttributes.umifound.chr".$jobs[$i].".bam
-    samtools index GEUS10xAttributes.umifound.chr".$jobs[$i].".bam
-}
-
-```
-
-### ComputeConsensus pipeline
-
-**parameters**
-
-**INPUT=** (required)
-
-GEUS10xAttributes.umifound.chr1.bam file containing cellBC (BC tag) and UMI (U8 tag) assigned Nanopore SAM entries with the gene mame in the IG tag. SAMrecords lacking any of those 3 required fields are discarded from further analysis.
-
-**OUTPUT=,O=** (required)
-
-Consensus sequence in fasta format.
-
-**THREADS=,T=** (required)
-
-Number of threads for multi-threading (typically number of cores of compute node)
-
-**TMPDIR=** (required)
-
-Temporary directory
-
-example below is for chromosome 1, repeat for all chromosomes
-
-```
-
-java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa T=20 TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
-
-```
-
-<a id="molecule-consensus-mapping"></a>
-
-## 8) Re-map consensus sequences to reference genome
-
-If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from gene having several copies in the genome.
-
-First we need to concatenate all chromosomes fasta file then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
-
-```
-
-cat */molecules.chr*.fa > molecules.fa
-java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecule.fa O=deduplicate.fa
-
-```
-
-Molecule consensus sequences can then be re-mapped to the reference genome to generate a molecule .bam file for further analysis such as SNP calling or identification of RNA editing.
-
-```
-
-minimap2 -ax splice -uf --sam-hit-only -t 20 --junc-bed junctions.bed $BUILD.mmi molecules.fa > molecules.sam
-samtools view -Sb molecules.sam -o unsorted.bam
-samtools sort unsorted.bam -o molecules.bam
-samtools index molecules.bam
-
-```
-
-CellBC (BC) and UMIs (U8) tags can be added to the SAM records using ***AddBamMoleculeTags*** (sicelore.jar).
-
-``` 
-
-java -jar -Xmx22g sicelor.jar AddBamMoleculeTags I=molecule.bam O=molecule.tags.bam
-samtools index molecules.tags.bam
+java -jar -Xmx44g sicelor.jar IsoformMatrix I=molecules.tags.GE.bam REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 
 ```
 
 <a id="snp-calling"></a>
 
-## 9) Calling Single Nucleotide Polymorphisms cell by cell
+## 10) Calling Single Nucleotide Polymorphisms cell by cell
 
 **use SNPMatrix (sicelore.jar)**
 
-Consensus sequence show higher sequence accuracy than raw nanopore reads and we can now call SNPs using the generated molecules bam file. 
-
-### Required files
-
-* Sicelore.jar
-
-* SNPs descriptor comma-separated .csv file (snp_description.csv), one position per line as follow:
-
-```
-chromosome,position,strand,name
-17,45662949,-,Tmem63b          // SNP call at one position
-7,25010643|25010650,-,Grik5    // SNP association call at two positions (limited to 2)
-...
-```
-
-### SNPMatrix pipeline
-
-**parameters**
+Consensus sequence show higher sequence accuracy than raw nanopore reads and we can now call SNPs using the generated molecules bam file (molecules.tags.GE.bam)
 
 **INPUT=** (required)
 
-Molecules bam file including cell barcode and UMI tags
+Molecules bam file (molecules.tags.GE.bam) including cell barcode and UMI tags
 
 **CSV=** (required)
 
@@ -847,13 +855,20 @@ Molecules bam file including cell barcode and UMI tags
 
 **SNP=** (required)
 
-.csv file listing describing, one per line, the SNP to call
+SNPs descriptor comma-separated .csv file (snp_description.csv), one position or 2-positions per line as follow:
+
+```
+chromosome,position,strand,name
+17,45662949,-,Tmem63b          // SNP call at one position
+7,25010643|25010650,-,Grik5    // SNP association call at 2-positions (limited to 2)
+...
+```
 
 **RN_min** (required)
 
 Minimum number of reads for a molecule to be taken into account for SNP calling (default=0, meaning all molecules)
 
-**OUTPUT=,O=** (required)
+**OUTPUT=** (required)
 
 Output directory.
 
@@ -883,15 +898,13 @@ per molecules (UMI/BC) SNP information
 
 <a id="fusion-calling"></a>
 
-## 9) Detecting fusion transcripts cell by cell
+## 11) Detecting fusion transcripts cell by cell
 
 **use ExportClippedReads and FusionDetector (sicelore.jar)**
 
 First step is exporting hard and soft clipped reads from dataset. A fusion transcript read map the genome in more than one unique location. It gives two differents minimap2 SAM records each including a portion of starting or ending clipping. Those reads might also comes from chimeric molecules produced during amplification step (i.e. PCR artefacts). Those PCR artefacts are arising mainly between transcripts having a high sequence similarity  and might preferentially happens wih highly expressed genes.
 
 ### ExportClippedReads pipeline
-
-**parameters**
 
 **INPUT=** (required)
 
@@ -936,8 +949,6 @@ java -jar -Xmx22000m NanoporeBC_UMI_finder.jar -i clipped_reads.GEUS.bam -o clip
 ```
 
 ### FusionDetector pipeline
-
-**parameters**
 
 **INPUT=** (required)
 
