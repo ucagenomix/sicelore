@@ -777,7 +777,19 @@ the number of extra or lacking bases allowed at exon-exon junctions (default = 2
 
 **MAXCLIP=**
 
-the maximal number of extensive non-matching sequences at either end, hard- or soft clipping to call the read as chimerix and discards it (default = 150)
+Maximum number of extensive non-matching sequences at either end, hard- or soft clipping to call the read as chimeric and discards it (default = 150)
+
+**GENETAG=**
+
+Gene name tag (default = GE)
+
+**UMITAG=**
+
+UMI sequence tag (default = U8)
+
+**CELLTAG=**
+
+Cell tag (default = BC)
 
 **METHOD=** (required)
 
@@ -792,8 +804,6 @@ Only active for SCORE mode, whether or not to assign an UMI that has 2 or more m
 **ISOBAM=**
 
 Wether or not to output a BAM file containg a flag (IT) with the transcriptID called during this process (default=false)
-
-
 
 **output files**
 
@@ -829,11 +839,9 @@ junction level [junctionId x cellBC] count matrix
 
 molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, geneId, transcriptId)
 
-
-
 ```
 
-java -jar -Xmx44g sicelor.jar IsoformMatrix I=molecules.tags.GE.bam REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
+java -jar -Xmx44g sicelor.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 
 ```
 
@@ -961,7 +969,7 @@ clipped_reads.GEUS10xAttributes.umifound.bam file containing cellBC (BC tag) and
 **OUTPUT=,O=** (required)
 
 Output directory
-
+ 
 **PREFIX**
 
 Prefix for _matrix.txt, _metrics.txt and _molinfos.txt tab-delimited output text files
