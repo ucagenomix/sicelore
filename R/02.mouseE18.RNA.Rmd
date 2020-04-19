@@ -1,0 +1,181 @@
+---
+title: "E18 mouse brain, 02 - RNA integration"
+author: 'K.Lebrigand, R.Waldmann'
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    code_folding: none
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 15px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = FALSE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+```
+
+# Loading data
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+#setwd(".")
+source("00.import.R")
+
+s190 <- readRDS("output/s190.rds")
+s951 <- readRDS("output/s951.rds")
+
+```
+
+# Integration (RNA)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+anchors <- FindIntegrationAnchors(object.list = c(s190, s951), assay=c("RNA","RNA"), dims = 1:30)
+s1141 <- IntegrateData(anchorset = anchors, dims = 1:30)
+DefaultAssay(object = s1141) <- "integrated"
+s1141 <- ScaleData(object = s1141, verbose = FALSE)
+s1141 <- RunPCA(object = s1141, npcs = 30, verbose = FALSE)
+ElbowPlot(object = s1141)
+
+s1141 <- RunTSNE(object = s1141, reduction = "pca", dims = 1:11)
+s1141 <- FindNeighbors(object = s1141, do.plot=TRUE, dims = 1:11)
+s1141 <- FindClusters(object = s1141, resolution=0.8)
+
+DimPlot(object = s1141, reduction = "tsne", group.by = "sample")
+DimPlot(object = s1141, reduction = "tsne")
+
+s1141 <- NormalizeData(object = s1141, assay = "ISOG")
+s1141 <- scale_my_data(s1141, assay="ISOG")
+s1141 <- NormalizeData(object = s1141, assay = "ISO")
+s1141 <- scale_my_data(s1141, assay="ISO")
+s1141 <- NormalizeData(object = s1141, assay = "JUNC")
+s1141 <- scale_my_data(s1141, assay="JUNC")
+s1141 <- NormalizeData(object = s1141, assay = "EDIT")
+s1141 <- scale_my_data(s1141, assay="EDIT")
+
+```
+
+# Gene Markers Heatmap
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8 }
+
+DefaultAssay(object = s1141) <- "RNA"
+s1141 <- ScaleData(object = s1141, verbose = FALSE)
+
+s1141.markers <- FindAllMarkers(object = s1141, only.pos = TRUE)
+top5.s1141 <- s1141.markers %>% group_by(cluster) %>% top_n(6, avg_logFC)
+DoHeatmap(s1141, features=top5.s1141$gene, size=3.5)
+
+write.table(s1141.markers, file="output/markers.clusters.csv", sep=",")
+
+```
+
+# Correlation between clusters
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+saveRDS(s1141, "output/rna.clusters.rds")
+
+mnmat <- c()
+uniq <- unique(s1141@active.ident)
+for(i in 1:length(uniq)){
+  mnmat <- cbind(mnmat, apply(as.matrix(s1141@assays$RNA@data[, s1141@meta.data$integrated_snn_res.0.8==uniq[i]]), 1, mean))
+}
+
+colnames(mnmat) <- as.vector(unique(s1141@active.ident))
+ct=cor(mnmat)
+pheatmap(ct)
+
+```
+
+# Clusters re-labelling, saving .rds file
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+new.cluster.ids <- c("mature GABAergic","imature Glutamatergic","mature Glutamatergic","imature GABAergic","mature Glutamatergic", "cycling radial glia","intermediate progenitor","imature Glutamatergic","radial glia","Cajal-Retzius")
+names(x = new.cluster.ids) <- levels(x = s1141)
+s1141 <- RenameIdents(object = s1141, new.cluster.ids)
+
+my_levels <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+# Relevel object@ident
+s1141@active.ident <- factor(x = s1141@active.ident, levels = my_levels)
+DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
+
+s1141[['illumina.ident']] <- s1141@active.ident
+saveRDS(s1141, "output/rna.labels.rds")
+
+pdf("figures/fig.2d.pdf", width=12, height=12, useDingbats=FALSE)
+DimPlot(object = s1141, reduction = "tsne", group.by="illumina.ident", label = FALSE, pt.size = 2)
+dev.off();
+
+```
+
+# Dotplot
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+DotPlot(object = s1141, features = c("Dbi","Vim","Fabp7","Top2a","Ccnd2","Cenpf","Mki67","Pou3f2","Pou3f3","Sox11","Eomes","Neurog2","Pax6","Ascl1","Camk2b","Crym","Opcml","Foxp1","Grin2b","Mef2c","Neurod2","Neurod6","Rbfox3","Neurod1","H3f3b","Meis2","Mafb","Maf","Sst","Arx","Sox6","Htr3a","Tcf4","Tubb2a","Npy","Meg3","Reln","Lhx5","Snhg11")) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+
+```
+
+# Gene markers
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=20}
+
+DefaultAssay(object = s1141) <- "RNA"
+
+#pdf("/home/lebrigand/10x_rainer/figures/Illumina.featurePlots.pdf", width=20, height=4, useDingbats=FALSE)
+FeaturePlot(object = s1141, features = c("Emx1","Gad2","Dlx2","Vim"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = s1141, features = c("Sox2","Pax6","Eomes","Tbr1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = s1141, features = c("Tubb3","Reln","Aif1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = s1141, features = c("Meis2","Gpm6a","Sox5","Arpp21"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = s1141, features = c("Camk2b","Camkv","Grin2b","Cacna1e"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+FeaturePlot(object = s1141, features = c("Kcnk1","Gabra2","Scn2a1"), cols=custom.pal, pt.size = 1, reduction="tsne", ncol=4)
+#dev.off()
+
+```
+
+# Heatmap
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8}
+
+DefaultAssay(object = s1141) <- "RNA"
+s1141.markers <- FindAllMarkers(object = s1141, only.pos = TRUE)
+top5.s1141 <- s1141.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
+DoHeatmap(s1141, features=top5.s1141$gene, size=3.5)
+
+write.table(s1141.markers, file="output/markers.label.csv", sep=",")
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
+

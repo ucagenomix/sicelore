@@ -1,0 +1,252 @@
+---
+title: "E18 mouse brain, 01 - setup"
+author: 'K.Lebrigand, R.Waldmann'
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    code_folding: none
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 15px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = FALSE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+
+```
+
+# Loading data
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+#setwd(".")
+source("00.import.R")
+
+data <- Read10X("data/190c/illumina/")
+s190 <- CreateSeuratObject(data)
+s190[['sample']] <- "s190"
+
+mito.genes <- grep(pattern = "^mt-", x = rownames(s190@assays$RNA), value = TRUE)
+dropouts <- Matrix::colSums(s190@assays$RNA@data == 0)/nrow(s190@assays$RNA)
+ribo.genes <- grep(pattern = "^Rp[sl]", x = rownames(s190@assays$RNA), value = TRUE)
+percent.mito <- Matrix::colSums(s190@assays$RNA[mito.genes, ])/Matrix::colSums(s190@assays$RNA)
+percent.ribo <- Matrix::colSums(s190@assays$RNA[ribo.genes, ])/Matrix::colSums(s190@assays$RNA)
+s190[['percent.mito']] <- percent.mito
+s190[['percent.ribo']] <- percent.ribo
+s190[['dropouts']] <- dropouts
+VlnPlot(s190, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+dim(s190@assays$RNA)
+s190 <- subset(s190, subset = dropouts < 0.95)
+dim(s190@assays$RNA)
+VlnPlot(s190, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+s190 <- NormalizeData(s190, normalization.method = "LogNormalize", scale.factor = 10000)
+s190 <- ScaleData(s190)
+s190 <- FindVariableFeatures(object = s190, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+length(VariableFeatures(s190))
+s190 <- RunPCA(s190, features = VariableFeatures(s190), verbose = FALSE)
+ElbowPlot(object = s190)
+
+s190 <- RunTSNE(object = s190, dims = 1:7)
+s190 <- FindNeighbors(object = s190, do.plot=TRUE, dims = 1:7)
+s190 <- FindClusters(object = s190, resolution=0.6)
+DimPlot(object = s190, reduction = "tsne", pt.size = 2, label=TRUE)
+
+```
+
+# Cellranger Illumina profiling (951c)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=14}
+
+data <- Read10X("data/951c/illumina/")
+s951 <- CreateSeuratObject(data)
+s951[['sample']] <- "s951"
+
+mito.genes <- grep(pattern = "^mt-", x = rownames(s951@assays$RNA), value = TRUE)
+dropouts <- Matrix::colSums(s951@assays$RNA@data == 0)/nrow(s951@assays$RNA)
+ribo.genes <- grep(pattern = "^Rp[sl]", x = rownames(s951@assays$RNA), value = TRUE)
+percent.mito <- Matrix::colSums(s951@assays$RNA[mito.genes, ])/Matrix::colSums(s951@assays$RNA)
+percent.ribo <- Matrix::colSums(s951@assays$RNA[ribo.genes, ])/Matrix::colSums(s951@assays$RNA)
+s951[['percent.mito']] <- percent.mito
+s951[['percent.ribo']] <- percent.ribo
+s951[['dropouts']] <- dropouts
+VlnPlot(s951, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+dim(s951@assays$RNA)
+s951 <- subset(s951, subset = dropouts < 0.95)
+dim(s951@assays$RNA)
+VlnPlot(s951, features = c("nFeature_RNA", "nCount_RNA","dropouts","percent.ribo","percent.mito"), ncol=5, cols = "lightsteelblue3")
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+s951 <- NormalizeData(s951, normalization.method = "LogNormalize", scale.factor = 10000)
+s951 <- ScaleData(s951)
+s951 <- FindVariableFeatures(object = s951, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+length(VariableFeatures(s951))
+s951 <- RunPCA(s951, features = VariableFeatures(s951), verbose = FALSE)
+ElbowPlot(object = s951)
+s951 <- RunTSNE(object = s951, dims = 1:10)
+s951 <- FindNeighbors(object = s951, do.plot=TRUE, dims = 1:10)
+s951 <- FindClusters(object = s951, resolution=0.6)
+DimPlot(object = s951, reduction = "tsne", pt.size = 2, label=TRUE)
+
+s190 <- RenameCells(s190, add.cell.id = "s190")
+s951 <- RenameCells(s951, add.cell.id = "s951")
+
+```
+
+# Adding Nanopore data (ISOG / ISO / JUNC / EDIT)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+prefix190 <- "data/190c/nanopore/s190_"
+prefix951 <- "data/951c/nanopore/s951_"
+
+all = read.delim(paste(prefix951,"cellmetrics.txt",sep=""), stringsAsFactors = F)
+rownames(all) <- paste("s951_",all$cellBC,sep="")
+vect <- colnames(s951@assays$RNA)
+data = all[vect,2:ncol(all)]
+s951[['reads']] <- data$nbReads
+s951[['nbIsoformSet']] <- data$nbIsoformSet 
+s951[['nbIsoformNotSet']] <- data$nbIsoformNotSet
+
+all = read.delim(paste(prefix951,"genematrix.txt",sep=""), stringsAsFactors = F)
+data = all[,2:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) <- all$geneId
+vect <- colnames(s951@assays$RNA)
+data <- data[vect]
+s951[["ISOG"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "ISOG")
+
+all = read.delim(paste(prefix951,"isomatrix.txt",sep=""), stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="..")
+vect <- colnames(s951@assays$RNA)
+idx <- grep("undef", rownames(data), invert = TRUE)
+data <- data[idx,vect]
+s951[["ISO"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "ISO")
+
+all = read.delim(paste(prefix951,"juncmatrix.txt",sep=""), stringsAsFactors = F)
+data = all[,2:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) = str_replace(all$junctionId, ":", "..")
+dim(data)
+vect <- colnames(s951@assays$RNA)
+data <- data[,vect]
+data <- data[which(Matrix::rowSums(data)>9),]
+dim(data)
+s951[["JUNC"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "JUNC")
+
+all = read.delim(paste(prefix951,"gria2matrix.txt",sep=""), stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s951@assays$RNA)
+data <- data[,vect]
+s951[["EDIT"]] <- CreateAssayObject(counts = data)
+s951 <- NormalizeData(object = s951, assay = "EDIT")
+
+edited <- grep("\\.\\.G", rownames(s951@assays$EDIT@counts))
+nonedited <- grep("\\.\\.A", rownames(s951@assays$EDIT@counts))
+s951[['edited']] <- Matrix::colSums(s951@assays$EDIT@counts[edited,])
+s951[['nonedited']] <- Matrix::colSums(s951@assays$EDIT@counts[nonedited,])
+
+all = read.delim(paste(prefix190,"cellmetrics.txt",sep=""), stringsAsFactors = F)
+rownames(all) <- paste("s190_",all$cellBC,sep="")
+vect <- colnames(s190@assays$RNA)
+data = all[vect,2:ncol(all)]
+s190[['reads']] <- data$nbReads
+s190[['nbIsoformSet']] <- data$nbIsoformSet 
+s190[['nbIsoformNotSet']] <- data$nbIsoformNotSet
+
+all = read.delim(paste(prefix190,"genematrix.txt",sep=""), stringsAsFactors = F)
+data = all[,2:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) <- all$geneId
+vect <- colnames(s190@assays$RNA)
+data <- data[vect]
+s190[["ISOG"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "ISOG")
+
+all = read.delim(paste(prefix190,"isomatrix.txt",sep=""), stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="..")
+vect <- colnames(s190@assays$RNA)
+idx <- grep("undef", rownames(data), invert = TRUE)
+data <- data[idx,vect]
+s190[["ISO"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "ISO")
+
+all = read.delim(paste(prefix190,"juncmatrix.txt",sep=""), stringsAsFactors = F)
+data = all[,2:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = str_replace(all$junctionId, ":", "..")
+dim(data)
+vect <- colnames(s190@assays$RNA)
+data <- data[,vect]
+data <- data[which(Matrix::rowSums(data)>9),]
+dim(data)
+s190[["JUNC"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "JUNC")
+
+all = read.delim(paste(prefix190,"gria2matrix.txt",sep=""), stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s190@assays$RNA)
+data <- data[,vect]
+s190[["EDIT"]] <- CreateAssayObject(counts = data)
+s190 <- NormalizeData(object = s190, assay = "EDIT")
+
+# Cadps   14:12475056..G
+edited <- grep("\\.\\.G", rownames(s190@assays$EDIT@counts))
+nonedited <- grep("\\.\\.A", rownames(s190@assays$EDIT@counts))
+s190[['edited']] <- Matrix::colSums(s190@assays$EDIT@counts[edited,])
+s190[['nonedited']] <- Matrix::colSums(s190@assays$EDIT@counts[nonedited,])
+
+saveRDS(s190, "./output/s190.rds")
+saveRDS(s951, "./output/s951.rds")
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
+

@@ -1,0 +1,106 @@
+---
+title: "E18 mouse brain, 06 - editing"
+author: 'K.Lebrigand, R.Waldmann'
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    code_folding: none
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 15px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = FALSE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+```
+
+# Loading data
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+#setwd(".")
+source("00.import.R")
+
+s1141 <- readRDS("output/rna.labels.rds")
+clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+
+s1141[['Gria2count']] <- Matrix::colSums(s1141@assays$EDIT@counts[c("Gria2-3:80692286..G","Gria2-3:80706912..A"),])
+s1141[['Gria2.ratio.86']] <- (s1141@assays$EDIT@data["Gria2-3:80692286..G",]*100) / (s1141@assays$EDIT@data["Gria2-3:80692286..A",]+s1141@assays$EDIT@data["Gria2-3:80692286..G",])
+s1141[['Gria2.ratio.12']] <- (s1141@assays$EDIT@data["Gria2-3:80706912..G",]*100) / (s1141@assays$EDIT@data["Gria2-3:80706912..A",]+s1141@assays$EDIT@data["Gria2-3:80706912..G",])
+s1141[['editingCount']] <- Matrix::colSums(s1141@assays$EDIT@counts)
+s1141[['editA']] <- Matrix::colSums(s1141@assays$EDIT@counts[grep("..A",rownames(s1141@assays$EDIT@counts)),])
+s1141[['editG']] <- Matrix::colSums(s1141@assays$EDIT@counts[grep("..G",rownames(s1141@assays$EDIT@counts)),])
+s1141[['editRatio']] <- s1141[['editG']]*100/s1141[['editingCount']]
+
+```
+
+# Viewing Gria2 editing
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=12}
+
+genes.liste <- c('Gria2')
+
+DefaultAssay(object = s1141) <- "EDIT"
+for(i in 1:length(genes.liste)){
+  x <- unique(rownames(s1141@assays$EDIT@data)[grep(paste("^",genes.liste[i],"-",sep=""), rownames(s1141@assays$EDIT@data))])
+  
+  if(length(x)>1){
+    print(FeaturePlot(s1141, features = sort(x, decreasing=TRUE), pt.size = 1, ncol=4))
+    print(DotPlot(s1141, features = sort(x, decreasing=TRUE)) + RotatedAxis())
+  }
+}
+
+```
+
+# Global editing story
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=8}
+
+ggplot(data=s1141@meta.data, aes(x=illumina.ident,y=editRatio, group=illumina.ident))+
+  geom_boxplot(outlier.shape = NA, fill='#466cb9', color="black")
+
+sub <- subset(s1141, subset = editingCount > 10)
+ggplot(data=sub@meta.data, aes(x=illumina.ident,y=editRatio, group=illumina.ident))+
+  geom_boxplot(outlier.shape = NA, fill='#466cb9', color="black")
+
+FeaturePlot(s1141, features = c("editingCount","editRatio"))
+VlnPlot(s1141, features = c("editingCount","editRatio"))
+
+DefaultAssay(object = s1141) <- "RNA"
+FeaturePlot(s1141, features = c("Adar","Adarb1","Adarb2"), ncol=3)
+avg <- AverageExpression(object = s1141, return.seurat = TRUE, assay="RNA")
+pheatmap(avg@assays$RNA@scale.data[c("Adar","Adarb1","Adarb2"),], cluster_rows=FALSE, cluster_cols=TRUE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan")
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
+

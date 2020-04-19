@@ -1,0 +1,202 @@
+---
+title: "E18 mouse brain, 04 - switch analysis"
+author: 'K.Lebrigand, R.Waldmann'
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    code_folding: none
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 15px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = FALSE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+```
+
+# Loading data
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+#setwd(".")
+source("00.import.R")
+
+s1141 <- readRDS("output/rna.labels.rds")
+clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+
+```
+
+# Isoform switch detection
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+DefaultAssay(object = s1141) <- "ISO"
+total <- data.frame()
+totaladj <- data.frame()
+for (i in (1:7)){
+  k <- i+1
+  for (j in (k:8)){
+    if(i != j){
+      print(paste(i, " ", j, " ",clusters[i], " vs ", clusters[j], sep=""))
+      
+      markers <- FindMarkers(object = s1141, ident.1=clusters[i], ident.2=clusters[j])
+      markers$cluster <- clusters[j]
+      markers$contrast <- paste(clusters[i], "vs", clusters[j], sep=" ")
+      markers[which(markers$avg_logFC>0),]$cluster <- clusters[i]
+      markers$geneId <- sapply(strsplit(rownames(markers), "\\.\\."), `[`, 1)
+      markers$transcriptId <- sapply(strsplit(rownames(markers), "\\.\\."), `[`, 2)
+      markers <- markers[markers$p_val < 0.05,]
+      all.genes <- unique(markers$geneId)
+      for (k in (1:length(all.genes))){
+         sub <- markers[which(markers$geneId == all.genes[k]),]
+         nb.clusters <- unique(sub$cluster)
+         nb.transcripts <- unique(sub$transcriptId)
+        
+         if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
+           total <- rbind(total, sub)
+         }
+      }
+      #print (dim(total))
+      #print (length(unique(total$geneId)))
+      markers <- markers[markers$p_val_adj < 0.05,]
+      all.genes <- unique(markers$geneId)
+      for (k in (1:length(all.genes))){
+         sub <- markers[which(markers$geneId == all.genes[k]),]
+         nb.clusters <- unique(sub$cluster)
+         nb.transcripts <- unique(sub$transcriptId)
+        
+         if(length(nb.clusters) > 1 & length(nb.transcripts) > 1){
+           totaladj <- rbind(totaladj, sub)
+         }
+      }
+      print (dim(totaladj))
+      print (length(unique(totaladj$geneId)))
+    }
+  }
+}
+
+```
+
+# Top hits p_val_adj < 0.05
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+length(unique(totaladj$geneId))
+print(unique(totaladj$geneId))
+write.table(totaladj, file="output/s1141.isoswitch.top.csv", sep=",")
+
+```
+
+# Lower hits p_val < 0.05
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+length(unique(total$geneId))
+print(unique(total$geneId))
+write.table(total, file="output/s1141.isoswitch.csv", sep=",")
+
+```
+
+# Junctions usage switch detection
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=10}
+
+DefaultAssay(object = s1141) <- "JUNC"
+total <- data.frame()
+totaladj <- data.frame()
+for (i in (1:7)){
+  k <- i+1
+  for (j in (k:8)){
+    if(i != j){
+      print(paste(i, " ", j, " ",clusters[i], " vs ", clusters[j], sep=""))
+      
+      markers <- FindMarkers(object = s1141, ident.1=clusters[i], ident.2=clusters[j])
+      markers$cluster <- clusters[j]
+      markers$contrast <- paste(clusters[i], "vs", clusters[j], sep=" ")
+      markers[which(markers$avg_logFC>0),]$cluster <- clusters[i]
+      markers$geneId <- sapply(strsplit(rownames(markers), "\\.\\."), `[`, 1)
+      markers$junctionId <- sapply(strsplit(rownames(markers), "\\.\\."), `[`, 2)
+      markers <- markers[markers$p_val < 0.05,]
+      all.genes <- unique(markers$geneId)
+      for (k in (1:length(all.genes))){
+         sub <- markers[which(markers$geneId == all.genes[k]),]
+         nb.clusters <- unique(sub$cluster)
+         nb.junctions <- unique(sub$junctionId)
+        
+         if(length(nb.clusters) > 1 & length(nb.junctions) > 1){
+           total <- rbind(total, sub)
+         }
+      }
+      
+      markers <- markers[markers$p_val_adj < 0.05,]
+      all.genes <- unique(markers$geneId)
+      for (k in (1:length(all.genes))){
+         sub <- markers[which(markers$geneId == all.genes[k]),]
+         nb.clusters <- unique(sub$cluster)
+         nb.junctions <- unique(sub$junctionId)
+        
+         if(length(nb.clusters) > 1 & length(nb.junctions) > 1){
+           totaladj <- rbind(totaladj, sub)
+         }
+      }
+      
+      print (dim(totaladj))
+      print (length(unique(totaladj$geneId)))
+    }
+  }
+}
+
+```
+
+# Top hits p_val_adj < 0.05
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+length(unique(totaladj$geneId))
+print(unique(totaladj$geneId))
+write.table(totaladj, file="output/s1141.juncswitch.top.csv", sep=",")
+
+```
+
+# Lower hits p_val < 0.05
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+length(unique(total$geneId))
+print(unique(total$geneId))
+write.table(total, file="output/s1141.juncswitch.csv", sep=",")
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
+
+

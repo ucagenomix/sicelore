@@ -1,0 +1,163 @@
+---
+title: "E18 mouse brain, 05 - focus plots"
+author: 'K.Lebrigand, R.Waldmann'
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    code_folding: none
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 15px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = FALSE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+```
+
+# Loading data
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+#setwd(".")
+source("00.import.R")
+
+s1141 <- readRDS("output/rna.labels.rds")
+clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+
+# compute avg per clusters for ISO and JUNC and the 2 scaling methods
+avg.iso.scale <- AverageExpression(object = s1141, return.seurat = TRUE, assay="ISO")
+avg.iso.scale <- scale_my_data(avg.iso.scale, assay="ISO")
+avg.junc.scale <- AverageExpression(object = s1141, return.seurat = TRUE, assay="JUNC")
+avg.junc.scale <- scale_my_data(avg.junc.scale, assay="JUNC")
+avg.iso.seurat <- AverageExpression(object = s1141, return.seurat = TRUE, assay="ISO")
+avg.iso.seurat <- ScaleData(avg.iso.seurat, assay="ISO")
+avg.junc.seurat <- AverageExpression(object = s1141, return.seurat = TRUE, assay="JUNC")
+avg.junc.seurat <- ScaleData(avg.junc.seurat, assay="JUNC")
+
+```
+
+# Plots for interesting genes
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=8 }
+
+gene <- "Clta"
+x <- c("Clta..ENSMUST00000107851.9", "Clta..ENSMUST00000170241.7", "Clta..ENSMUST00000107849.9")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Myl6"
+x <- c("Myl6..ENSMUST00000218127.1", "Myl6..ENSMUST00000164181.1")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Gas5"
+x <- c("Gas5..ENSMUST00000162558.7", "Gas5..ENSMUST00000159706.7")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Faim"
+x <- c("Faim..ENSMUST00000035038.7", "Faim..ENSMUST00000112911.8")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Tecr"
+x <- c("Tecr..ENSMUST00000019382.16", "Tecr..ENSMUST00000165740.8")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Cdc42"
+x <- c("Cdc42..ENSMUST00000030417.9", "Cdc42..ENSMUST00000051477.12")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Gnas"
+x <- c("Gnas..ENSMUST00000109084.7", "Gnas..ENSMUST00000109087.7")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+gene <- "Psap"
+x <- c("Psap..ENSMUST00000179238.7", "Psap..ENSMUST00000105465.7")
+DefaultAssay(object = s1141) <- "ISO"
+print(FeaturePlot(s1141, features = x))
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.iso.scale@assays$ISO@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+DefaultAssay(object = s1141) <- "JUNC"
+x <- unique(rownames(avg.junc.scale@assays$JUNC@scale.data)[grep(paste("^",gene,"\\.\\.",sep=""), rownames(avg.junc.scale@assays$JUNC@scale.data))])
+print(DotPlot(s1141, features = sort(x, decreasing=FALSE)) + RotatedAxis() + theme(text = element_text(size = 8), axis.text=element_text(size = 8)))
+print(pheatmap(avg.junc.scale@assays$JUNC@scale.data[sort(x, decreasing=FALSE),], cluster_rows=FALSE, cluster_cols=FALSE, fontsize = 8, clustering_method = "complete", clustering_distance_rows = "manhattan"))
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
+
