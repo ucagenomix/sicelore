@@ -1035,11 +1035,11 @@ prefix used for output file names
 
 **DELTA=** (required)
 
-the number of extra or lacking bases allowed at exon-exon junctions (default = 2)
+Number of extra or lacking bases allowed at exon-exon junctions (default = 2)
 
 **MINEVIDENCE=** (required)
 
-the minimum number of UMIs supporting the novel isoform to keep it as novel isoform (default = 5)
+Minimum number of UMIs supporting the novel isoform not to remove it (default = 5)
 
 **CELLTAG=**
 
@@ -1063,27 +1063,27 @@ Read number tag (default=RN)
 
 **SHORT=**
 
-The short read SAM or BAM file fot junction validation
+The short read SAM or BAM file (STAR aligned external short reads dataset)
 
 **CAGE=**
 
-CAGE peaks file (.bed)
+CAGE peaks file (.bed) (Ressources/mm10.liftover.Fantom5.cage_peaks.bed)
 
 **POLYA=**
 
-POLYA sites file (.bed)
+POLYA sites file (.bed) (Ressources/mm10.gencode.vM24.polyAs.bed)
 
 **cageCo=**
 
-CAGE validation cutoff (default=50 bases)
+CAGE validation cutoff (default = 50 bases)
 
 **polyaCo=**
 
-PolyA validation cutoff (default=50 bases)
+PolyA validation cutoff (default = 50 bases)
 
 **juncCo=**
 
-Junction validation cutoff (default=1 read)
+Junction validation cutoff (default = 1 read)
 
 ```
 
@@ -1095,15 +1095,15 @@ java -jar -Xmx40g sicelor.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLA
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.txt**
 
-All knwon and novel isoforms detected classification .txt file
+All known and novel isoforms detected classification .txt file
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.gff**
 
-All knwon and all novel isoforms .gff file
+All known and all novel isoforms .gff file
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.final.gff**
 
-All knwon and all validated novel isoforms .gff file
+All known and all validated novel isoforms .gff file
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.fas**
 
