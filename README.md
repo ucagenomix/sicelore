@@ -8,7 +8,7 @@ Typically starting with a single cell short read bam file and Nanopore or PacBio
 
 just copy files.
 
-requires:
+requires: 
 
 * Java 8,
 
@@ -67,6 +67,10 @@ Calling nucleotide polymorphism cell by cell
 [11) Fusions gene calling](#fusion-calling)
 
 Detecting fusion transcripts cell by cell
+
+[12) Novel transcripts isoforms detection](#collapse-model)
+
+Indentifying novel transcripts isoforms 
 
 ## Authors
 
@@ -993,3 +997,116 @@ Total number of molecules per fusion transcripts detected in dataset
 **PREFIX**_molinfos.txt
 
 per molecules (UMI/BC) fusion information
+
+
+
+<a id="collapse-model"></a>
+
+## 10) Detecting novel transcripts isoforms
+
+**use CollaspeModel (sicelore.jar)**
+
+SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup. Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (5) UMIs are filtered out. 
+The set of novel isoforms are then validated using **CAGE* / **SHORT* / **POLYA** files if provided. Novel isoform is classify as valid if: 
+(i) all exon-exon junctions either described in Gencode or confirmed in an external short read data given as STAR aligned bam file by at least **juncCo** reads; 
+(ii) a 5’ start within **cageCo** nucleotides of a transcription start site identified by CAGE peaks given as .bed file; 
+(iii) a 3’ end within **polyaCo** nucleotides of a polyadenylation site given as .bed file.
+
+
+**INPUT=** (required)
+
+Isoforms bam file (isobam.bam) produced by IsoformMatrix pipeline
+
+**CSV=** (required)
+
+.csv file listing, one per line, the cell barcodes in quantification (e.g. brain951.barcodes.tsv in /barcodes/ dir)
+
+**REFFLAT=** (required)
+
+Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from [UCSC](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/)
+
+**OUTDIR**
+
+Output directory where output files are created
+
+**PREFIX=** (required)
+
+prefix used for output file names
+
+**DELTA=** (required)
+
+the number of extra or lacking bases allowed at exon-exon junctions (default = 2)
+
+**MINEVIDENCE=** (required)
+
+the minimum number of UMIs supporting the novel isoform to keep it as novel isoform (default = 5)
+
+**CELLTAG=**
+
+Cell tag (default = BC)
+
+**UMITAG=**
+
+UMI sequence tag (default = U8)
+
+**GENETAG=**
+
+Gene name tag (default = IG)
+
+**ISOFORMTAG=**
+
+Gene name tag (default = IT)
+
+**RNTAG=**
+
+Read number tag (default=RN)
+
+**SHORT=**
+
+The short read SAM or BAM file fot junction validation
+
+**CAGE=**
+
+CAGE peaks file (.bed)
+
+**POLYA=**
+
+POLYA sites file (.bed)
+
+**cageCo=**
+
+CAGE validation cutoff (default=50 bases)
+
+**polyaCo=**
+
+PolyA validation cutoff (default=50 bases)
+
+**juncCo=**
+
+Junction validation cutoff (default=1 read)
+
+```
+
+java -jar -Xmx40g sicelor.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=model MINEVIDENCE=5 DELTA=2 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
+
+```
+
+**output**
+
+**PREFIX.d'DELTA'.e'MINEVIDENCE'.txt**
+
+All knwon and novel isoforms detected classification .txt file
+
+**PREFIX.d'DELTA'.e'MINEVIDENCE'.gff**
+
+All knwon and all novel isoforms .gff file
+
+**PREFIX.d'DELTA'.e'MINEVIDENCE'.final.gff**
+
+All knwon and all validated novel isoforms .gff file
+
+**PREFIX.d'DELTA'.e'MINEVIDENCE'.fas**
+
+Representative sequence fasta file (require consensus sequence computation)
+
+
