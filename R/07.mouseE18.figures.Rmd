@@ -56,15 +56,6 @@ DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
 
 ```
 
-# Percentage of Illumina UMIs / Genes seen in Nanopore (1141 cells)
-
-```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
-
-100*sum(s1141@meta.data$nCount_ISOG)/sum(s1141@meta.data$nCount_RNA)
-100*sum(s1141@meta.data$nFeature_ISOG)/sum(s1141@meta.data$nFeature_RNA)
-
-```
-
 # Total UMIs / Median UMIs / median Genes in RNA / ISOG / ISO assays
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
@@ -83,13 +74,30 @@ median(s1141@meta.data$nFeature_ISO)
 
 ```
 
+# Percentage Illumina molecules / Genes profiled with Nanopore reads (1141 cells)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+s1141@meta.data$nUMIsProfiled <- s1141@meta.data$nCount_ISOG*100/s1141@meta.data$nCount_RNA
+median(s1141@meta.data$nUMIsProfiled)
+
+common.genes <- intersect(rownames(s1141@assays$RNA@data), rownames(s1141@assays$ISOG@data))
+dat <- s1141@assays$ISOG@data[common.genes,]
+s1141[["ISOGCOMMON"]] <- CreateAssayObject(counts = dat)
+
+s1141@meta.data$nFeaturesProfiled <- s1141@meta.data$nFeature_ISOGCOMMON*100/s1141@meta.data$nFeature_RNA
+median(s1141@meta.data$nFeaturesProfiled)
+
+```
+
 # Percentage Illumina molecules / Genes profiled with Nanopore reads (190 cells)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
 sub190 <- subset(s1141, subset = sample=="s190")
-100*sum(sub190@meta.data$nCount_ISOG)/sum(sub190@meta.data$nCount_RNA)
-100*sum(sub190@meta.data$nFeature_ISOG)/sum(sub190@meta.data$nFeature_RNA)
+
+median(sub190@meta.data$nUMIsProfiled)
+median(sub190@meta.data$nFeaturesProfiled)
 
 ```
 
@@ -98,8 +106,8 @@ sub190 <- subset(s1141, subset = sample=="s190")
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
 sub951 <- subset(s1141, subset = sample=="s951")
-100*sum(sub951@meta.data$nCount_ISOG)/sum(sub951@meta.data$nCount_RNA)
-100*sum(sub951@meta.data$nFeature_ISOG)/sum(sub951@meta.data$nFeature_RNA)
+median(sub951@meta.data$nUMIsProfiled)
+median(sub951@meta.data$nFeaturesProfiled)
 
 ```
 
@@ -181,6 +189,9 @@ for (i in (1:length(common.cells))){
 }
 colnames(df) <- c("type","cor")
 rownames(df) <- c()
+
+#median(df$cor)
+#ggplot(data=df, aes(cor)) + geom_histogram(breaks=seq(0.7, 1, by = 0.025),col="black")
 
 df2 <- data.frame()
 for (i in (1:length(common.cells))){
@@ -318,6 +329,15 @@ ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) +
       scale_fill_got(discrete = TRUE, option = "Daenerys") + 
       ggtitle("Clta isoforms expression")
 
+pdf("figures/barplot.clta.pdf", width=8, height=6, useDingbats=FALSE)
+ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) + 
+      geom_bar(stat="identity") + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
+      scale_fill_got(discrete = TRUE, option = "Daenerys") + 
+      ggtitle("Clta isoforms expression")
+dev.off()
+
 ```
 
 # Myl6 barplot
@@ -348,6 +368,14 @@ ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) +
       scale_fill_got(discrete = TRUE, option = "Daenerys") + 
       ggtitle("Myl6 isoforms expression")
 
+pdf("figures/barplot.myl6.pdf", width=8, height=6, useDingbats=FALSE)
+ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) + 
+      geom_bar(stat="identity") + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
+      scale_fill_got(discrete = TRUE, option = "Daenerys") + 
+      ggtitle("Myl6 isoforms expression")
+dev.off()
 ```
 
 # Consensus molecule accuracy
