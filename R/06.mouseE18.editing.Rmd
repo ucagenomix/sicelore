@@ -43,23 +43,33 @@ knitr::opts_chunk$set(
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
-#setwd(".")
+setwd("/data/10x_data/10x_rainer/")
 source("00.import.R")
 
 s1141 <- readRDS("output/rna.labels.rds")
-clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
 
-s1141[['Gria2count']] <- Matrix::colSums(s1141@assays$EDIT@counts[c("Gria2-3:80692286..G","Gria2-3:80706912..A"),])
-s1141[['Gria2.ratio.86']] <- (s1141@assays$EDIT@data["Gria2-3:80692286..G",]*100) / (s1141@assays$EDIT@data["Gria2-3:80692286..A",]+s1141@assays$EDIT@data["Gria2-3:80692286..G",])
-s1141[['Gria2.ratio.12']] <- (s1141@assays$EDIT@data["Gria2-3:80706912..G",]*100) / (s1141@assays$EDIT@data["Gria2-3:80706912..A",]+s1141@assays$EDIT@data["Gria2-3:80706912..G",])
 s1141[['editingCount']] <- Matrix::colSums(s1141@assays$EDIT@counts)
 s1141[['editA']] <- Matrix::colSums(s1141@assays$EDIT@counts[grep("..A",rownames(s1141@assays$EDIT@counts)),])
 s1141[['editG']] <- Matrix::colSums(s1141@assays$EDIT@counts[grep("..G",rownames(s1141@assays$EDIT@counts)),])
 s1141[['editRatio']] <- s1141[['editG']]*100/s1141[['editingCount']]
 
+s1141[['RGedited']] <- s1141@assays$EDIT@counts[c("Gria2-3:80692286..G"),]
+s1141[['RGnonedited']] <- s1141@assays$EDIT@counts[c("Gria2-3:80692286..A"),]
+s1141[['QRedited']] <- s1141@assays$EDIT@counts[c("Gria2-3:80706912..G"),]
+s1141[['QRnonedited']] <- s1141@assays$EDIT@counts[c("Gria2-3:80706912..A"),]
+
+s1141[['RGneQRne']] <- s1141@assays$GRIA2@counts[c("Gria2-3:80692286-80706912..AA"),]
+s1141[['RGeQRe']] <- s1141@assays$GRIA2@counts[c("Gria2-3:80692286-80706912..GG"),]
+s1141[['RGeQRne']] <- s1141@assays$GRIA2@counts[c("Gria2-3:80692286-80706912..GA"),]
+s1141[['RGneQRe']] <- s1141@assays$GRIA2@counts[c("Gria2-3:80692286-80706912..AG"),]
+
+agg <- setNames(aggregate(list(s1141@meta.data$RGedited, s1141@meta.data$RGnonedited, s1141@meta.data$QRedited, s1141@meta.data$QRnonedited), by = list(Category=s1141@meta.data$illumina.ident), sum), c("cluster","RGedited","RGnonedited","QRedited","QRnonedited"))
+
+agg2 <- setNames(aggregate(list(s1141@meta.data$RGneQRne, s1141@meta.data$RGeQRe, s1141@meta.data$RGeQRne, s1141@meta.data$RGneQRe), by = list(Category=s1141@meta.data$illumina.ident), sum), c("cluster","RGneQRne","RGeQRe","RGeQRne","RGneQRe"))
+
 ```
 
-# Viewing Gria2 editing
+# Gria2 editing
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=12}
 
@@ -77,7 +87,7 @@ for(i in 1:length(genes.liste)){
 
 ```
 
-# Global editing story
+# Global editing
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=8}
 

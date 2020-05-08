@@ -43,11 +43,10 @@ knitr::opts_chunk$set(
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
-#setwd(".")
+setwd("/data/10x_data/10x_rainer/")
 source("00.import.R")
 
 s1141 <- readRDS("output/rna.labels.rds")
-clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
 
 ```
 
@@ -81,8 +80,7 @@ for (i in (1:7)){
            total <- rbind(total, sub)
          }
       }
-      #print (dim(total))
-      #print (length(unique(total$geneId)))
+      
       markers <- markers[markers$p_val_adj < 0.05,]
       all.genes <- unique(markers$geneId)
       for (k in (1:length(all.genes))){
@@ -94,8 +92,8 @@ for (i in (1:7)){
            totaladj <- rbind(totaladj, sub)
          }
       }
-      print (dim(totaladj))
-      print (length(unique(totaladj$geneId)))
+      print (dim(total))
+      print (length(unique(total$geneId)))
     }
   }
 }
@@ -165,8 +163,8 @@ for (i in (1:7)){
          }
       }
       
-      print (dim(totaladj))
-      print (length(unique(totaladj$geneId)))
+      print (dim(total))
+      print (length(unique(total$geneId)))
     }
   }
 }

@@ -40,11 +40,11 @@ knitr::opts_chunk$set(
 
 ```
 
-# Loading data
+# Illumina data (190 cells)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
-#setwd(".")
+setwd("/data/10x_data/10x_rainer/")
 source("00.import.R")
 
 data <- Read10X("data/190c/illumina/")
@@ -76,14 +76,14 @@ length(VariableFeatures(s190))
 s190 <- RunPCA(s190, features = VariableFeatures(s190), verbose = FALSE)
 ElbowPlot(object = s190)
 
-s190 <- RunTSNE(object = s190, dims = 1:7)
-s190 <- FindNeighbors(object = s190, do.plot=TRUE, dims = 1:7)
+s190 <- RunTSNE(object = s190, dims = 1:11)
+s190 <- FindNeighbors(object = s190, do.plot=TRUE, dims = 1:11)
 s190 <- FindClusters(object = s190, resolution=0.6)
 DimPlot(object = s190, reduction = "tsne", pt.size = 2, label=TRUE)
 
 ```
 
-# Cellranger Illumina profiling (951c)
+# Illumina data (951 cells)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=14}
 
@@ -125,7 +125,7 @@ s951 <- RenameCells(s951, add.cell.id = "s951")
 
 ```
 
-# Adding Nanopore data (ISOG / ISO / JUNC / EDIT)
+# Nanopore data (ISOG / ISO / JUNC / EDIT)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
@@ -171,7 +171,7 @@ dim(data)
 s951[["JUNC"]] <- CreateAssayObject(counts = data)
 s951 <- NormalizeData(object = s951, assay = "JUNC")
 
-all = read.delim(paste(prefix951,"gria2matrix.txt",sep=""), stringsAsFactors = F)
+all = read.delim(paste(prefix951,"snpmatrix.txt",sep=""), stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s951_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -184,6 +184,14 @@ edited <- grep("\\.\\.G", rownames(s951@assays$EDIT@counts))
 nonedited <- grep("\\.\\.A", rownames(s951@assays$EDIT@counts))
 s951[['edited']] <- Matrix::colSums(s951@assays$EDIT@counts[edited,])
 s951[['nonedited']] <- Matrix::colSums(s951@assays$EDIT@counts[nonedited,])
+
+all = read.delim(paste(prefix951,"gria2matrix.txt",sep=""), stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s951_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s951@assays$RNA)
+data <- data[,vect]
+s951[["GRIA2"]] <- CreateAssayObject(counts = data)
 
 all = read.delim(paste(prefix190,"cellmetrics.txt",sep=""), stringsAsFactors = F)
 rownames(all) <- paste("s190_",all$cellBC,sep="")
@@ -224,7 +232,7 @@ dim(data)
 s190[["JUNC"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "JUNC")
 
-all = read.delim(paste(prefix190,"gria2matrix.txt",sep=""), stringsAsFactors = F)
+all = read.delim(paste(prefix190,"snpmatrix.txt",sep=""), stringsAsFactors = F)
 data = all[,3:ncol(all)]
 colnames(data) <- paste("s190_",colnames(data),sep="")
 rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
@@ -233,11 +241,28 @@ data <- data[,vect]
 s190[["EDIT"]] <- CreateAssayObject(counts = data)
 s190 <- NormalizeData(object = s190, assay = "EDIT")
 
-# Cadps   14:12475056..G
 edited <- grep("\\.\\.G", rownames(s190@assays$EDIT@counts))
 nonedited <- grep("\\.\\.A", rownames(s190@assays$EDIT@counts))
 s190[['edited']] <- Matrix::colSums(s190@assays$EDIT@counts[edited,])
 s190[['nonedited']] <- Matrix::colSums(s190@assays$EDIT@counts[nonedited,])
+
+all = read.delim(paste(prefix190,"gria2matrix.txt",sep=""), stringsAsFactors = F)
+data = all[,3:ncol(all)]
+colnames(data) <- paste("s190_",colnames(data),sep="")
+rownames(data) = paste(all$geneId, all$transcriptId, sep="-")
+vect <- colnames(s190@assays$RNA)
+data <- data[,vect]
+s190[["GRIA2"]] <- CreateAssayObject(counts = data)
+
+common.genes <- intersect(rownames(s951@assays$RNA@data), rownames(s951@assays$ISOG@data))
+dat <- s951@assays$ISOG@counts[common.genes,]
+s951[["ISOGRNA"]] <- CreateAssayObject(counts = dat)
+s951 <- NormalizeData(object = s951, assay = "ISOGRNA")
+
+common.genes <- intersect(rownames(s190@assays$RNA@data), rownames(s190@assays$ISOG@data))
+dat <- s190@assays$ISOG@counts[common.genes,]
+s190[["ISOGRNA"]] <- CreateAssayObject(counts = dat)
+s190 <- NormalizeData(object = s190, assay = "ISOGRNA")
 
 saveRDS(s190, "./output/s190.rds")
 saveRDS(s951, "./output/s951.rds")

@@ -1002,12 +1002,14 @@ per molecules (UMI/BC) fusion information
 
 <a id="collapse-model"></a>
 
-## 10) Detecting novel transcripts isoforms
+## 12) Detecting novel transcripts isoforms
 
 **use CollaspeModel (sicelore.jar)**
 
-SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup. Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (5) UMIs are filtered out. 
-The set of novel isoforms are then validated using **CAGE* / **SHORT* / **POLYA** files if provided. Novel isoform is classify as valid if: 
+SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup considering only UMI supported by RNMIN (default=1) reads. 
+Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (default=5) UMIs are filtered out. 
+Transcripts isoforms detected as potential 3p and /or 5p degradated sequence of Gencode reference transcripts or longer potential novels transcripts isoforms are filtered out.
+The set of novel isoforms are then validated using **CAGE** / **SHORT** / **POLYA** files if provided. Novel isoform is classify as valid if: 
 (i) all exon-exon junctions either described in Gencode or confirmed in an external short read data given as STAR aligned bam file by at least **juncCo** reads; 
 (ii) a 5’ start within **cageCo** nucleotides of a transcription start site identified by CAGE peaks given as .bed file; 
 (iii) a 3’ end within **polyaCo** nucleotides of a polyadenylation site given as .bed file.
@@ -1031,7 +1033,7 @@ Output directory where output files are created
 
 **PREFIX=** (required)
 
-prefix used for output file names
+prefix used for output file names (default=CollapseModel)
 
 **DELTA=** (required)
 
@@ -1039,7 +1041,11 @@ Number of extra or lacking bases allowed at exon-exon junctions (default = 2)
 
 **MINEVIDENCE=** (required)
 
-Minimum number of UMIs supporting the novel isoform not to remove it (default = 5)
+Minimum number of UMIs supporting the potential novel isoform to keep it in set (default = 5)
+
+**RNMIN=** (required)
+
+Minimum number of reads supporting the UMI to consider the UMI in novel isoform detection (default = 1)
 
 **CELLTAG=**
 
@@ -1051,7 +1057,7 @@ UMI sequence tag (default = U8)
 
 **GENETAG=**
 
-Gene name tag (default = IG)
+Gene name tag (default = GE)
 
 **ISOFORMTAG=**
 
@@ -1087,26 +1093,34 @@ Junction validation cutoff (default = 1 read)
 
 ```
 
-java -jar -Xmx40g sicelor.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=model MINEVIDENCE=5 DELTA=2 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
+java -jar -Xmx40g sicelor.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
 
 ```
 
 **output**
 
-**PREFIX.d'DELTA'.e'MINEVIDENCE'.txt**
+**PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.txt**
 
-All known and novel isoforms detected classification .txt file
+Gencode and novel isoforms detected classification .txt file
 
-**PREFIX.d'DELTA'.e'MINEVIDENCE'.gff**
+**PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.gff**
 
-All known and all novel isoforms .gff file
+Gencode and all novel isoforms .gff file
 
-**PREFIX.d'DELTA'.e'MINEVIDENCE'.final.gff**
+**PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.final.gff**
 
-All known and all validated novel isoforms .gff file
+Gencode and all validated novel isoforms .gff file
 
-**PREFIX.d'DELTA'.e'MINEVIDENCE'.fas**
+**PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.refflat.txt**
 
-Representative sequence fasta file (require consensus sequence computation)
+Gencode and all novel isoforms .refflat file
+
+**PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.final.refflat.txt**
+
+Gencode and all validated novel isoforms .refflat file (can be used for IsoformMatrix Sicelore pipeline quantification)
+
+**PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.fas**
+
+Representative sequence fasta file, poa/racon consensus sequence using top 20 best qualities UMIs (based on "de" minimap2 tag value)
 
 

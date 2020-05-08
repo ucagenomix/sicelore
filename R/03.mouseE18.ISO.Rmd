@@ -43,7 +43,7 @@ knitr::opts_chunk$set(
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
-#setwd("/data/10x_data/10x_rainer/")
+setwd("/data/10x_data/10x_rainer/")
 source("00.import.R")
 
 s190 <- readRDS("output/s190.rds")
@@ -51,7 +51,7 @@ s951 <- readRDS("output/s951.rds")
 
 ```
 
-# Integration (RNA)
+# Integration (ISO)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
@@ -66,13 +66,13 @@ s1141 <- RunTSNE(object = s1141, reduction = "pca", dims = 1:11)
 s1141 <- FindNeighbors(object = s1141, do.plot=TRUE, dims = 1:11)
 s1141 <- FindClusters(object = s1141, resolution=0.8)
 
-#pdf("clusters.pdf", width=10, height=8, useDingbats=FALSE)
-DimPlot(object = s1141, reduction = "tsne", group.by = "state")
+DimPlot(object = s1141, reduction = "tsne", group.by = "sample")
 DimPlot(object = s1141, reduction = "tsne")
-#dev.off()
 
 s1141 <- NormalizeData(object = s1141, assay = "ISOG")
 s1141 <- scale_my_data(s1141, assay="ISOG")
+s1141 <- NormalizeData(object = s1141, assay = "ISOGRNA")
+s1141 <- scale_my_data(s1141, assay="ISOGRNA")
 s1141 <- NormalizeData(object = s1141, assay = "ISO")
 s1141 <- scale_my_data(s1141, assay="ISO")
 s1141 <- NormalizeData(object = s1141, assay = "JUNC")
@@ -82,28 +82,33 @@ s1141 <- scale_my_data(s1141, assay="EDIT")
 
 ```
 
-# Clusters re-labelling, saving .rds file
-
+# Clusters re-labelling, saving .rds file (illumina.ident)
+ 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
-
-new.cluster.ids <- c("imature Glutamatergic","imature GABAergic","mature Glutamatergic","mature GABAergic", "radial glia + intermediate progenitor", "cycling radial glia","mature Glutamatergic","mature Glutamatergic","Cajal-Retzius")
-names(x = new.cluster.ids) <- levels(x = s1141)
-s1141 <- RenameIdents(object = s1141, new.cluster.ids)
-
-my_levels <- c("cycling radial glia","radial glia + intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
-# Relevel object@ident
-s1141@active.ident <- factor(x = s1141@active.ident, levels = my_levels)
-DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
 
 rna1141 <- readRDS("output/rna.labels.rds")
 s1141[['illumina.ident']] <- rna1141@active.ident
+s1141 <- SetIdent(s1141, value="illumina.ident")
 
-DimPlot(object = s1141, reduction = "tsne", group.by="illumina.ident", label = FALSE, pt.size = 2)
+DimPlot(object = s1141, reduction = "tsne", group.by="illumina.ident", cols=cell_type_color, label = FALSE, pt.size = 2)
+
 saveRDS(s1141, "output/iso.labels.rds")
 
 pdf("figures/fig.2e.pdf", width=12, height=12, useDingbats=FALSE)
-DimPlot(object = s1141, reduction = "tsne", group.by="illumina.ident", label = FALSE, pt.size = 2)
+DimPlot(object = s1141, reduction = "tsne", group.by="illumina.ident", cols=cell_type_color, label = FALSE, pt.size = 2)
 dev.off();
+
+```
+
+# Heatmap
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=10, fig.width=8}
+
+DefaultAssay(object = s1141) <- "ISO"
+s1141.markers <- FindAllMarkers(object = s1141, only.pos = TRUE)
+top5.s1141 <- s1141.markers %>% group_by(cluster) %>% top_n(5, avg_logFC)
+DoHeatmap(s1141, features=top5.s1141$gene, size=3.5)
+write.table(s1141.markers, file="output/markers.label.isoforms.csv", sep=",")
 
 ```
 

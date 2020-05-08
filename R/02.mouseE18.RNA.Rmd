@@ -43,7 +43,7 @@ knitr::opts_chunk$set(
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
-#setwd(".")
+setwd("/data/10x_data/10x_rainer/")
 source("00.import.R")
 
 s190 <- readRDS("output/s190.rds")
@@ -71,6 +71,8 @@ DimPlot(object = s1141, reduction = "tsne")
 
 s1141 <- NormalizeData(object = s1141, assay = "ISOG")
 s1141 <- scale_my_data(s1141, assay="ISOG")
+s1141 <- NormalizeData(object = s1141, assay = "ISOGRNA")
+s1141 <- scale_my_data(s1141, assay="ISOGRNA")
 s1141 <- NormalizeData(object = s1141, assay = "ISO")
 s1141 <- scale_my_data(s1141, assay="ISO")
 s1141 <- NormalizeData(object = s1141, assay = "JUNC")
@@ -124,13 +126,13 @@ s1141 <- RenameIdents(object = s1141, new.cluster.ids)
 my_levels <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
 # Relevel object@ident
 s1141@active.ident <- factor(x = s1141@active.ident, levels = my_levels)
-DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
 
 s1141[['illumina.ident']] <- s1141@active.ident
+
 saveRDS(s1141, "output/rna.labels.rds")
 
 pdf("figures/fig.2d.pdf", width=12, height=12, useDingbats=FALSE)
-DimPlot(object = s1141, reduction = "tsne", group.by="illumina.ident", label = FALSE, pt.size = 2)
+DimPlot(object = s1141, reduction = "tsne", cols=cell_type_color, label = FALSE, pt.size = 2)
 dev.off();
 
 ```

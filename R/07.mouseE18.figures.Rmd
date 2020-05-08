@@ -52,7 +52,16 @@ library(gameofthrones)
 s1141 <- readRDS("output/rna.labels.rds")
 clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
 
-DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
+DimPlot(object = s1141, reduction = "tsne", cols=cell_type_color, label = FALSE, pt.size = 2)
+pdf("figures/fig.2d.pdf", width=8, height=6, useDingbats=FALSE)
+DimPlot(object = s1141, reduction = "tsne", cols=cell_type_color, label = FALSE, pt.size = 2)
+dev.off()
+
+iso1141 <- readRDS("output/iso.labels.rds")
+DimPlot(object = iso1141, reduction = "tsne", group.by="illumina.ident", cols=cell_type_color, label = FALSE, pt.size = 2)
+pdf("figures/fig.2e.pdf", width=8, height=6, useDingbats=FALSE)
+DimPlot(object = iso1141, reduction = "tsne", group.by="illumina.ident", cols=cell_type_color, label = FALSE, pt.size = 2)
+dev.off()
 
 ```
 
@@ -62,13 +71,16 @@ DimPlot(object = s1141, reduction = "tsne", label = FALSE, pt.size = 2)
 
 sum(s1141@meta.data$nCount_RNA)
 sum(s1141@meta.data$nCount_ISOG)
+sum(s1141@meta.data$nCount_ISOGRNA)
 sum(s1141@meta.data$nCount_ISO)
 
 median(s1141@meta.data$nCount_RNA)
 median(s1141@meta.data$nCount_ISOG)
+median(s1141@meta.data$nCount_ISOGRNA)
 median(s1141@meta.data$nCount_ISO)
 
 median(s1141@meta.data$nFeature_ISOG)
+median(s1141@meta.data$nFeature_ISOGRNA)
 median(s1141@meta.data$nFeature_RNA)
 median(s1141@meta.data$nFeature_ISO)
 
@@ -79,14 +91,23 @@ median(s1141@meta.data$nFeature_ISO)
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
 s1141@meta.data$nUMIsProfiled <- s1141@meta.data$nCount_ISOG*100/s1141@meta.data$nCount_RNA
-median(s1141@meta.data$nUMIsProfiled)
+mean(s1141@meta.data$nUMIsProfiled)
 
-common.genes <- intersect(rownames(s1141@assays$RNA@data), rownames(s1141@assays$ISOG@data))
-dat <- s1141@assays$ISOG@data[common.genes,]
-s1141[["ISOGCOMMON"]] <- CreateAssayObject(counts = dat)
+s1141@meta.data$nFeaturesProfiled <- s1141@meta.data$nFeature_ISOGRNA*100/s1141@meta.data$nFeature_RNA
+mean(s1141@meta.data$nFeaturesProfiled)
 
-s1141@meta.data$nFeaturesProfiled <- s1141@meta.data$nFeature_ISOGCOMMON*100/s1141@meta.data$nFeature_RNA
-median(s1141@meta.data$nFeaturesProfiled)
+median(s1141@meta.data$nFeature_ISOGRNA)
+median(s1141@meta.data$nCount_ISOG)
+
+dim(s1141@assays$ISO@counts)
+write.table(dat, file="test.csv", sep=",")
+
+sum(s1141@meta.data$nCount_ISOG)
+
+sum(s1141@meta.data$nCount_ISO)
+
+median(s1141@meta.data$nCount_ISOG)
+median(s1141@meta.data$nCount_ISO)
 
 ```
 
@@ -95,6 +116,8 @@ median(s1141@meta.data$nFeaturesProfiled)
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
 
 sub190 <- subset(s1141, subset = sample=="s190")
+mean(sub190@meta.data$nCount_ISO)
+mean(sub190@meta.data$nFeature_ISOGRNA)
 
 median(sub190@meta.data$nUMIsProfiled)
 median(sub190@meta.data$nFeaturesProfiled)
@@ -120,35 +143,35 @@ median(sub951@meta.data$nFeaturesProfiled)
 s1141@meta.data$index <- "1"
 s1141@meta.data$index[which(s1141@meta.data$sample == "s951")] <- "2"
 
+plot1 <- ggplot(data=s1141@meta.data, aes(x=nFeature_RNA,y=nFeature_ISOGRNA)) +  geom_point(shape = 21, colour = "black", fill = col[as.numeric(s1141@meta.data$index)]) +
+      theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+      ggtitle("Fig.2a - Genes (r=0.99, r2=0.99)") +
+      geom_abline(slope=1, intercept=-15, linetype=3) +
+      labs(x="Illumina",y="Nanopore")
+
 x <- cor.test(s1141@meta.data$nCount_RNA, s1141@meta.data$nCount_ISOG, method="pearson")$estimate
 x*x
 
-ggplot(data=s1141@meta.data, aes(x=nCount_RNA,y=nCount_ISOG)) +  geom_point(shape = 21, colour = "black", fill = col[as.numeric(s1141@meta.data$index)]) +
+plot2 <- ggplot(data=s1141@meta.data, aes(x=nCount_RNA,y=nCount_ISOG)) +  geom_point(shape = 21, colour = "black", fill = col[as.numeric(s1141@meta.data$index)]) +
       theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-      ggtitle("Fig.1f - UMIs (r=0.99, r2=0.99)") +
+      ggtitle("Fig.2b - UMIs (r=0.99, r2=0.99)") +
       geom_abline(slope=1, intercept=-15, linetype=3) +
       labs(x="Illumina",y="Nanopore")
 
-x <- cor.test(s1141@meta.data$nFeature_RNA, s1141@meta.data$nFeature_ISOG, method="pearson")$estimate
+x <- cor.test(s1141@meta.data$nFeature_RNA, s1141@meta.data$nFeature_ISOGRNA, method="pearson")$estimate
 x*x
 
-ggplot(data=s1141@meta.data, aes(x=nFeature_RNA,y=nFeature_ISOG)) +  geom_point(shape = 21, colour = "black", fill = col[as.numeric(s1141@meta.data$index)]) +
-      theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-      ggtitle("Fig.1e - Genes (r=0.99, r2=0.97)") +
-      geom_abline(slope=1, intercept=-15, linetype=3) +
-      labs(x="Illumina",y="Nanopore")
+#plot2 <- plot1 <- ggplot(data=s1141@meta.data, aes(nCount_RNA)) + 
+#                geom_histogram(breaks=seq(0, 20000, by = 500),col="black",aes(fill=nGene), fill="lightsteelblue3") + 
+#                scale_fill_gradient("Count", low = "green", high = "red") +
+#                labs(title="Illumina nUMI") +
+#                labs(x="nUMI", y="Cells")
 
-plot1 <- ggplot(data=s1141@meta.data, aes(nCount_RNA)) + 
-                geom_histogram(breaks=seq(0, 20000, by = 500),col="black",aes(fill=nGene), fill="lightsteelblue3") + 
-                scale_fill_gradient("Count", low = "green", high = "red") +
-                labs(title="Illumina nUMI") +
-                labs(x="nUMI", y="Cells")
-
-plot2 <- ggplot(data=s1141@meta.data, aes(nCount_ISOG)) + 
-                geom_histogram(breaks=seq(0, 20000, by = 500),col="black",aes(fill=nGene),fill="lightsteelblue3") + 
-                scale_fill_gradient("Count", low = "green", high = "red") +
-                labs(title="Nanopore nUMI") + 
-                labs(x="nUMI", y="Cells")
+#plot2 <- ggplot(data=s1141@meta.data, aes(nCount_ISOG)) + 
+#                geom_histogram(breaks=seq(0, 20000, by = 500),col="black",aes(fill=nGene),fill="lightsteelblue3") + 
+#                scale_fill_gradient("Count", low = "green", high = "red") +
+#                labs(title="Nanopore nUMI") + 
+#                labs(x="nUMI", y="Cells")
 
 plot_grid(plot1, plot2)
 
@@ -190,7 +213,7 @@ for (i in (1:length(common.cells))){
 colnames(df) <- c("type","cor")
 rownames(df) <- c()
 
-#median(df$cor)
+median(df$cor)
 #ggplot(data=df, aes(cor)) + geom_histogram(breaks=seq(0.7, 1, by = 0.025),col="black")
 
 df2 <- data.frame()
@@ -227,11 +250,13 @@ whole <- rbind(df,df2)
 #pdf("/home/lebrigand/10x_rainer/figures/Correlation.plots.boxplots.pdf", width=10, height=8, useDingbats=FALSE)
 ggplot(whole, aes(x=type, y=cor, fill=type)) +
   geom_boxplot()+
+  ggtitle("Fig.2c (same r=0.90, different=0.54)") +
   theme_classic()
 
 pdf("figures/fig.2c.pdf", width=10, height=8, useDingbats=FALSE)
 ggplot(whole, aes(x=type, y=cor, fill=type)) +
   geom_boxplot()+
+  ggtitle("Fig.2c (same cell r=0.90, different cell r=0.54)") +
   theme_classic()
 dev.off()
 
@@ -279,7 +304,7 @@ dev.off()
 pdf("figures/sup.fig.6.pdf", width=36, height=8, useDingbats=FALSE)
 
 DefaultAssay(object = s1141) <- "ISO"
-general <- c('Myl6','Clta','Tecr','Pkm','Cdc42','Smarcb1','Rtn4','Rps24','Bin1','Ergic3','Sh3glb1','Psap','Gnas')
+general <- c('Myl6','Clta','Tecr','Pkm','Cdc42','Smarcb1','Rps24','Sh3glb1','Psap','Gnas')
 
 lst <- c()
 for (i in (1:length(general))){
@@ -287,14 +312,41 @@ for (i in (1:length(general))){
   lst <- c(lst,x)
 }
 
-DotPlot(object = s1141, features = lst, scale.max = 100) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) # RotatedAxis
+DotPlot(object = s1141, features = lst, scale.max = 100) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) # RotatedAxis
 
 DefaultAssay(object = s1141) <- "RNA"
 print(DotPlot(object = s1141, features = general, scale.max = 100, cols = c("lightgrey", "red")) + theme(axis.text.x = element_text(angle = 90, hjust = 1))) # 
 
 pdf("figures/sup.fig.6.pdf", width=36, height=8, useDingbats=FALSE)
 DefaultAssay(object = s1141) <- "ISO"
+DotPlot(object = s1141, features = lst, scale.max = 100) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+DefaultAssay(object = s1141) <- "RNA"
+print(DotPlot(object = s1141, features = general, scale.max = 100, cols = c("lightgrey", "red")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))) # 
+dev.off()
+
+```
+
+# sup.fig.7
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=24}
+
+DefaultAssay(object = s1141) <- "ISO"
+
+lst <- rev(c('Myl6..ENSMUST00000164181.1','Myl6..ENSMUST00000218127.1','Clta..ENSMUST00000107849.9','Clta..ENSMUST00000170241.7','Clta..ENSMUST00000107851.9','Tecr..ENSMUST00000165740.8','Tecr..ENSMUST00000019382.16','Pkm..ENSMUST00000034834.15','Pkm..ENSMUST00000163694.3','Cdc42..ENSMUST00000051477.12','Cdc42..ENSMUST00000030417.9','Smarcb1..ENSMUST00000121304.1','Smarcb1..ENSMUST00000000925.9','Rps24..ENSMUST00000223999.1','Rps24..ENSMUST00000169826.2','Sh3glb1..ENSMUST00000198254.4','Sh3glb1..ENSMUST00000163279.5','Psap..ENSMUST00000179238.7','Psap..ENSMUST00000105465.7','Gnas..ENSMUST00000109087.7','Gnas..ENSMUST00000109084.7','Gnas..ENSMUST00000109083.1','Zfand6..ENSMUST00000178385.8','Zfand6..ENSMUST00000209117.1','Zcrb1..ENSMUST00000076070.8','Zcrb1..ENSMUST00000162160.7','Vps29..ENSMUST00000155671.7','Vps29..ENSMUST00000118830.7','Faim..ENSMUST00000112911.8','Faim..ENSMUST00000035038.7','Gas5..ENSMUST00000159706.7','Gas5..ENSMUST00000162558.7'))
+
+DotPlot(object = s1141, features = lst, scale.max = 100) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+general <- rev(c('Myl6','Clta','Tecr','Pkm','Cdc42','Smarcb1','Rps24','Sh3glb1','Psap','Gnas','Zfand6','Zcrb1','Vps29','Faim','Gas5'))
+
+DefaultAssay(object = s1141) <- "RNA"
+print(DotPlot(object = s1141, features = general, scale.max = 100, cols = c("lightgrey", "red")) + theme(axis.text.x = element_text(angle = 90, hjust = 1))) # 
+
+pdf("figures/sup.fig.7.isoforms.pdf", width=12, height=6, useDingbats=FALSE)
+DefaultAssay(object = s1141) <- "ISO"
 DotPlot(object = s1141, features = lst, scale.max = 100) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+
+pdf("figures/sup.fig.7.genes.pdf", width=12, height=6, useDingbats=FALSE)
 DefaultAssay(object = s1141) <- "RNA"
 print(DotPlot(object = s1141, features = general, scale.max = 100, cols = c("lightgrey", "red")) + theme(axis.text.x = element_text(angle = 90, hjust = 1))) # 
 dev.off()
@@ -322,19 +374,32 @@ freq_table <- prop.table(as.matrix(df), 1)*100
 
 tmp <- melt(freq_table)
 names(tmp) <- c("clusters", "isoforms", "percentage")
-ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) + 
+
+
+#Clta-202	ENSMUST00000107846.9	1710	218aa	
+#Clta-205	ENSMUST00000107851.9	1135	248aa	
+#Clta-203	ENSMUST00000107847.9	1121	230aa	
+#Clta-204	ENSMUST00000107849.9	1099	236aa	
+#Clta-206	ENSMUST00000170241.7	1079	218aa	
+#Clta-201	ENSMUST00000107845.3	
+
+corresp <- c("ENSMUST00000107851.9"="Clta-205","ENSMUST00000107845.3"="Clta-201","ENSMUST00000170241.7"="Clta-206","ENSMUST00000107849.9"="Clta-204","ENSMUST00000107847.9"="Clta-203")
+
+tmp$ensembl <- corresp[tmp$isoforms]
+
+ggplot(tmp, aes(x=clusters, y=percentage, fill=ensembl)) + 
       geom_bar(stat="identity") + 
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
       scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
-      scale_fill_got(discrete = TRUE, option = "Daenerys") + 
+      scale_fill_got(discrete = TRUE, option = "Stark") + 
       ggtitle("Clta isoforms expression")
 
 pdf("figures/barplot.clta.pdf", width=8, height=6, useDingbats=FALSE)
-ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) + 
+ggplot(tmp, aes(x=clusters, y=percentage, fill=ensembl)) + 
       geom_bar(stat="identity") + 
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
       scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
-      scale_fill_got(discrete = TRUE, option = "Daenerys") + 
+      scale_fill_got(discrete = TRUE, option = "Stark") + 
       ggtitle("Clta isoforms expression")
 dev.off()
 
@@ -357,25 +422,96 @@ for(i in 1:length(clusters)){
 
 colnames(df) <- str_replace(isoforms, "Myl6\\.\\.", "")
 rownames(df) <- clusters
+
+df <- df[,c("ENSMUST00000218127.1","ENSMUST00000164181.1","ENSMUST00000219554.1")]
+
 freq_table <- prop.table(as.matrix(df), 1)*100
 
 tmp <- melt(freq_table)
 names(tmp) <- c("clusters", "isoforms", "percentage")
-ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) + 
+
+corresp <- c("ENSMUST00000218127.1"="Myl6-206","ENSMUST00000164181.1"="Myl6-201","ENSMUST00000219554.1"="Myl6-212")
+
+#Myl6-201	ENSMUST00000164181.1	665	151aa	
+#Myl6-202	ENSMUST00000217733.1	1668	152aa	
+#Myl6-211	ENSMUST00000219236.1	692	158aa	
+#Myl6-206	ENSMUST00000218127.1	691	151aa	
+#Myl6-205	ENSMUST00000217969.1	608	139aa	
+#Myl6-203	ENSMUST00000217776.1	562	158aa	
+#Myl6-215	ENSMUST00000220427.1	746	38aa	
+#Myl6-214	ENSMUST00000220307.1	496	46aa	
+#Myl6-213	ENSMUST00000219655.1	651	No protein
+#Myl6-210	ENSMUST00000219100.1	620	No protein
+#Myl6-208	ENSMUST00000218713.1	369	No protein	
+#Myl6-209	ENSMUST00000218813.1	3040	No protein
+#Myl6-207	ENSMUST00000218170.1	824	No protein	
+#Myl6-212	ENSMUST00000219554.1	790	No protein	
+#Myl6-204	ENSMUST00000217913.1	436	
+
+tmp$ensembl <- corresp[tmp$isoforms]
+
+ggplot(tmp, aes(x=clusters, y=percentage, fill=ensembl)) + 
       geom_bar(stat="identity") + 
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
       scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
-      scale_fill_got(discrete = TRUE, option = "Daenerys") + 
+      scale_fill_got(discrete = TRUE, option = "Stark") + 
       ggtitle("Myl6 isoforms expression")
 
-pdf("figures/barplot.myl6.pdf", width=8, height=6, useDingbats=FALSE)
-ggplot(tmp, aes(x=clusters, y=percentage, fill=isoforms)) + 
+pdf("figures/barplot.myl6.filter.pdf", width=8, height=6, useDingbats=FALSE)
+ggplot(tmp, aes(x=clusters, y=percentage, fill=ensembl)) + 
       geom_bar(stat="identity") + 
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
       scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
-      scale_fill_got(discrete = TRUE, option = "Daenerys") + 
+      scale_fill_got(discrete = TRUE, option = "Stark") + 
       ggtitle("Myl6 isoforms expression")
 dev.off()
+
+
+```
+
+# Myl6 barplot (filtered)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+# filter
+
+DefaultAssay(object = s1141) <- "ISO"
+
+#Myl6-201	ENSMUST00000164181.1	665	151aa	
+#Myl6-206	ENSMUST00000218127.1	691	151aa	
+#Myl6-214	ENSMUST00000220307.1	496	46aa	
+#Myl6-212	ENSMUST00000219554.1	790	No protein	
+
+isoforms <- c("Myl6..ENSMUST00000164181.1","Myl6..ENSMUST00000218127.1","Myl6..ENSMUST00000219554.1","Myl6..ENSMUST00000220307.1")
+  
+clusters <- unique(s1141@active.ident)
+df <- data.frame()
+for(i in 1:length(clusters)){
+  #for(j in 1:length(isoforms)){
+    y <- Matrix::rowSums(s1141@assays$ISO@counts[isoforms, WhichCells(s1141, ident=clusters[i])])
+    df<-rbind(df,y)
+  #}
+}
+
+colnames(df) <- str_replace(isoforms, "Myl6\\.\\.", "")
+rownames(df) <- clusters
+
+freq_table <- prop.table(as.matrix(df), 1)*100
+
+tmp <- melt(freq_table)
+names(tmp) <- c("clusters", "isoforms", "percentage")
+
+tmp$ensembl <- corresp[tmp$isoforms]
+
+pdf("figures/barplot.myl6.pdf", width=8, height=6, useDingbats=FALSE)
+ggplot(tmp, aes(x=clusters, y=percentage, fill=ensembl)) + 
+      geom_bar(stat="identity") + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+      scale_x_discrete(limits=c("radial glia", "cycling radial glia", "intermediate progenitor", "imature GABAergic", "mature GABAergic", "imature Glutamatergic", "mature Glutamatergic","Cajal-Retzius")) + 
+      scale_fill_got(discrete = TRUE, option = "Stark") + 
+      ggtitle("Myl6 isoforms expression")
+dev.off()
+
 ```
 
 # Consensus molecule accuracy
@@ -449,19 +585,20 @@ rownames(annotation) <- paste(annotation$Replicate,annotation$CellType,sep="_")
 
 ann_colors <- list(CellType = c("radial glia"="#E54532","cycling radial glia"="#7A5388","intermediate progenitor"="#2A76BB","imature Glutamatergic"="#38AEEF","mature Glutamatergic"="#4CB57C","imature GABAergic"="#A5A739","mature GABAergic"="#EA766B","Cajal-Retzius"="#F0E816"))
 
+clusters <- c("radial glia","cycling radial glia","intermediate progenitor", "imature Glutamatergic", "mature Glutamatergic","imature GABAergic","mature GABAergic", "Cajal-Retzius")
+
 ```
 
-## Illumina gene-level downsampled to median(Nanopore isoform-level)
+## Illumina gene-level downsampled to median (Nanopore isoform-level)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
 s1141 <- readRDS("output/rna.labels.rds")
 DefaultAssay(object = s1141) <- "RNA"
-dat <- downsampleMatrix(s1141@assays$RNA@counts, 0.45, bycol=TRUE)
+dat <- downsampleMatrix(s1141@assays$RNA@counts, 0.5, bycol=TRUE)
 s1141 <- SetAssayData(s1141, slot = "counts", dat, assay = "RNA")
 s1141 <- NormalizeData(s1141, assay="RNA",normalization.method = "LogNormalize", scale.factor = 5000)
 
-mean(s1141@meta.data$nCount_RNA)
 median(s1141@meta.data$nCount_RNA)
 
 df <- data.frame()
@@ -488,7 +625,7 @@ pheatmap::pheatmap(cormat1, cluster_rows = T, cluster_cols = T,
 
 ```
 
-## Nanopore gene-level downsampled to median(Nanopore isoform-level)
+## Nanopore gene-level downsampled to median (Nanopore isoform-level)
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
 
@@ -498,7 +635,6 @@ dat <- downsampleMatrix(s1141@assays$ISOG@counts, 0.62, bycol=TRUE)
 s1141 <- SetAssayData(s1141, slot = "counts", dat, assay = "ISOG")
 s1141 <- NormalizeData(s1141, assay="ISOG",normalization.method = "LogNormalize", scale.factor = 5000)
 
-mean(s1141@meta.data$nCount_ISOG)
 median(s1141@meta.data$nCount_ISOG)
 
 df <- data.frame()
@@ -559,17 +695,38 @@ pheatmap::pheatmap(cormat3, cluster_rows = T, cluster_cols = T,
                         angle_col = 90, annotation_legend = F, clustering_method = "ward.D")
 
 pdf("figures/sup.fig.4.pdf", width=8, height=6, useDingbats=FALSE)
-pheatmap::pheatmap(cormat1, cluster_rows = T, cluster_cols = T, 
+print(pheatmap::pheatmap(cormat1, cluster_rows = T, cluster_cols = T, 
                         annotation_col = annotation, annotation_colors = ann_colors,     
-                        angle_col = 90, annotation_legend = F, clustering_method = "ward.D")
-pheatmap::pheatmap(cormat2, cluster_rows = T, cluster_cols = T, 
+                        angle_col = 90, annotation_legend = F, clustering_method = "ward.D"))
+print(pheatmap::pheatmap(cormat2, cluster_rows = T, cluster_cols = T, 
                         annotation_col = annotation, annotation_colors = ann_colors,     
-                        angle_col = 90, annotation_legend = F, clustering_method = "ward.D")
-pheatmap::pheatmap(cormat3, cluster_rows = T, cluster_cols = T, 
+                        angle_col = 90, annotation_legend = F, clustering_method = "ward.D"))
+print(pheatmap::pheatmap(cormat3, cluster_rows = T, cluster_cols = T, 
                         annotation_col = annotation, annotation_colors = ann_colors,     
-                        angle_col = 90, annotation_legend = F, clustering_method = "ward.D")
+                        angle_col = 90, annotation_legend = F, clustering_method = "ward.D"))
 dev.off()
 
+```
+
+# CAGE peak / polyA site distribution
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+metrics <- read.delim("novel.txt", stringsAsFactors = F)
+
+pdf("figures/polya.pdf", width=8, height=6, useDingbats=FALSE)
+metrics %>% ggplot( aes(x=dist_polya)) +
+    geom_histogram(breaks=seq(-50, 50, by = 1), color="black", fill="lightsteelblue3")+
+    labs(title="Distance to polyA signal") + 
+    labs(x="Distance to polyA signal", y="Number of Novel validated")
+dev.off()
+
+pdf("figures/cage.pdf", width=8, height=6, useDingbats=FALSE)
+metrics %>% ggplot( aes(x=dist_cage)) +
+    geom_histogram(breaks=seq(-50, 50, by = 1), color="black", fill="lightsteelblue3")+
+    labs(title="Distance to CAGE peak") + 
+    labs(x="Distance to CAGE peak", y="Number of Novel validated")
+dev.off()
 
 ```
 

@@ -1,0 +1,398 @@
+---
+title: "E18 mouse brain, 08 - review"
+author: 'K.Lebrigand, R.Waldmann'
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    code_folding: none
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 15px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = FALSE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+```
+
+# Loading data
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=4, fig.width=6}
+
+setwd("/data/10x_data/10x_rainer/")
+source("00.import.R")
+
+s1141 <- readRDS("output/rna.labels.rds")
+
+```
+
+# Multi-isoforms genes (bulk level)
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+gg <- unique(rownames(s1141@assays$ISOG@counts))
+
+dat <- data.frame()
+dat2 <- data.frame()
+for(i in 1:length(gg)){
+  idx <- grep(paste0("^",gg[i],"\\.\\."),rownames(s1141@assays$ISO@counts))
+  if(length(idx) > 1){
+    iso <- Matrix::rowSums(s1141@assays$ISO@counts[idx,])
+    
+    if(sum(iso)>1000){
+      x <- max(iso)/sum(iso)
+      
+      if(x < 0.75){
+         #print(paste(i,gg[i],sum(iso),x,sep=" "))
+         de <- data.frame(gg[i],sum(iso),x)
+         names(de)<-c("gene","total","ratiomax")
+         dat <- rbind(dat, de)
+      }
+      else{
+         de <- data.frame(gg[i],sum(iso),x)
+         names(de)<-c("gene","total","ratiomax")
+         dat2 <- rbind(dat2, de)
+         print(paste(i,gg[i],sum(iso),x,sep=" "))
+      }
+    }
+  }
+}
+
+vals <- data.frame()
+for (j in (1:dim(dat)[1])){
+  g <- dat$gene[j]
+  print(paste(j,g,sep=" "))
+  for (i in (1:1121)){
+    idx <- grep(paste0("^",g,"\\.\\."),rownames(s1141@assays$ISO@counts))
+    df <- as.data.frame(s1141@assays$ISO@counts[idx,i])
+    colnames(df) <- "umi"
+    if(sum(df$umi) > 9){
+        df$ratio <- (100*df$umi) / sum(df$umi)
+        de <- data.frame(colnames(s1141@assays$ISO@counts)[i],g,sum(df$umi),max(df$ratio))
+        names(de)<-c("cell","gene","umi","ratio")
+        vals <- rbind(vals, de)
+    }
+  }
+}
+
+t <- as.data.frame(table(vals$gene))
+length(unique(t[t$Freq>19,]$Var1))
+
+tablo <- vals[vals$gene %in% unique(t[t$Freq>19,]$Var1),]
+
+head(tablo)
+nb <- as.data.frame(table(tablo$gene))
+tablo$nbcells <- nb$Freq[match(tablo$gene, nb$Var1)]
+
+agg <- aggregate(tablo$umi, list(tablo$gene), mean)
+tablo$meanUMI <- agg$x[match(tablo$gene, agg$Group.1)]
+head(tablo)
+
+tablo$ratiomax <- dat$ratiomax[match(tablo$gene, dat$gene)]
+
+
+tablo$celltype <- s1141@active.ident[tablo$cell]
+
+ordered.data <- tablo[order(tablo$meanUMI),]
+tablo$gene <- factor(tablo$gene, levels = unique(ordered.data$gene))
+
+pdf("figures/pct.majiso.order.meanUMI.pdf", width=12, height=6, useDingbats=FALSE)
+ggplot(tablo, aes(x=gene, y=ratio, fill=meanUMI)) +
+  geom_boxplot(outlier.colour=NA, lwd=0.1)+
+  ggtitle("Percentage of most expressed isoform") +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_gradient(low="white", high="red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  geom_point(data = tablo, mapping = aes(x = gene, y = 100*ratiomax))
+
+dev.off()
+
+# Pkm cell types plot
+dddd <- tablo[tablo$gene %in% c("Nnat","Clta","Myl6","Pkm"),]
+table(dddd$celltype)
+pdf("figures/pct.majiso.4genes.pdf", width=12, height=6, useDingbats=FALSE)
+gg <- ggplot(dddd, aes(x=gene, y=ratio, fill=celltype)) +
+  geom_boxplot(outlier.colour=NA, lwd=0.1)+
+  ggtitle("Percentage of most expressed isoform per cell types") +
+  coord_cartesian(ylim = c(0, 100)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+gg + scale_fill_manual(values=c("#E54532", "#7A5388", "#2A76BB", "#38AEEF", "#4CB57C", "#A5A739", "#EA766B", "#F0E816"))
+
+dev.off()
+
+
+```
+
+# Expressing cells, UMIs/cell Novel and gencode
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+# Novel 4,405
+
+all = read.delim("/data/10x_data/sicelore/novel.190.final_isomatrix.txt", stringsAsFactors = F)
+data.190 = all[,4:ncol(all)]
+rownames(data.190) = paste(all$geneId, all$transcriptId, sep="..")
+colnames(data.190) <- paste("s190_",colnames(data.190),sep="")
+idx <- grep("undef", rownames(data.190), invert = TRUE)
+data.190 <- data.190[idx,]
+
+all = read.delim("/data/10x_data/sicelore/novel.951.final_isomatrix.txt", stringsAsFactors = F)
+data.951 = all[,4:ncol(all)]
+rownames(data.951) = paste(all$geneId, all$transcriptId, sep="..")
+colnames(data.951) <- paste("s951_",colnames(data.951),sep="")
+idx <- grep("undef", rownames(data.951), invert = TRUE)
+data.951 <- data.951[idx,]
+
+data.1141 <- merge(data.190,data.951,by=0,all=T)
+data.1141[is.na(data.1141)] <- 0
+rownames(data.1141) <- data.1141$Row.names
+data.1141 <- data.1141[,-c(1)]
+
+idx <- grep("Novel", rownames(data.1141), invert = TRUE)
+data.1141.gencode <- data.1141[idx,]
+dim(data.1141.gencode)
+median(colSums(data.1141.gencode))
+
+idx <- grep("Novel", rownames(data.1141))
+data.1141.novel <- data.1141[idx,]
+dim(data.1141.novel)
+median(colSums(data.1141.novel))
+
+vect <- colnames(s1141@assays$RNA)
+data.1141.gencode <- data.1141.gencode[,vect]
+s1141[["Gencode"]] <- CreateAssayObject(counts = data.1141.gencode)
+data.1141.novel <- data.1141.novel[,vect]
+s1141[["Novel"]] <- CreateAssayObject(counts = data.1141.novel)
+
+median(s1141@meta.data$nCount_Gencode)
+median(s1141@meta.data$nCount_Novel)
+
+dfn <- as.data.frame(rowSums(as.matrix(s1141@assays$Novel@counts) != 0))
+colnames(dfn) <- c("cells")
+dim(dfn)
+mean(dfn$cells)
+
+dfg <- as.data.frame(rowSums(as.matrix(s1141@assays$Gencode@counts) != 0))
+colnames(dfg) <- c("cells")
+dim(dfg)
+mean(dfg$cells)
+
+df <- rbind(dfn,dfg)
+
+# get categories
+all = read.delim("novel.cells.txt", stringsAsFactors = F)
+all <- all[all$is_valid == "true",]
+dim(all)
+table (all$subcategorie)
+rownames(all) <- paste(all$geneId, all$transcriptId, sep="..")
+all <- all[rownames(df),]
+df$subcategory <- all$subcategorie
+head(df)
+
+pdf("figures/boxplot.expressing.cells.50.pdf", width=8, height=6, useDingbats=FALSE)
+ggplot(df, aes(x=subcategory, y=cells, fill=subcategory)) +
+  geom_boxplot(outlier.colour=NA)+
+  ggtitle("Number of expressing cells per category") +
+  coord_cartesian(ylim = c(0, 50)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+
+kj <- as.vector(rownames(df[df$subcategory == "combination_of_known_junctions",]))
+data.1141.novel.kj <- data.1141.novel[kl,]
+kss <- as.vector(rownames(df[df$subcategory == "combination_of_known_splicesites",]))
+data.1141.novel.kss <- data.1141.novel[kss,]
+nss <- as.vector(rownames(df[df$subcategory == "at_least_one_novel_splicesite",]))
+data.1141.novel.nss <- data.1141.novel[nss,]
+
+
+# Novel 10,748
+all = read.delim("/data/10x_data/sicelore/novel.190_isomatrix.txt", stringsAsFactors = F)
+data.190 = all[,4:ncol(all)]
+rownames(data.190) = paste(all$geneId, all$transcriptId, sep="..")
+colnames(data.190) <- paste("s190_",colnames(data.190),sep="")
+idx <- grep("undef", rownames(data.190), invert = TRUE)
+data.190 <- data.190[idx,]
+
+all = read.delim("/data/10x_data/sicelore/novel.951.new_isomatrix.txt", stringsAsFactors = F)
+data.951 = all[,4:ncol(all)]
+rownames(data.951) = paste(all$geneId, all$transcriptId, sep="..")
+colnames(data.951) <- paste("s951_",colnames(data.951),sep="")
+idx <- grep("undef", rownames(data.951), invert = TRUE)
+data.951 <- data.951[idx,]
+
+data.1141 <- merge(data.190,data.951,by=0,all=T)
+data.1141[is.na(data.1141)] <- 0
+rownames(data.1141) <- data.1141$Row.names
+data.1141 <- data.1141[,-c(1)]
+
+idx <- grep("Novel", rownames(data.1141), invert = TRUE)
+data.1141.gencode <- data.1141[idx,]
+dim(data.1141.gencode)
+median(colSums(data.1141.gencode))
+
+idx <- grep("Novel", rownames(data.1141))
+data.1141.novel <- data.1141[idx,]
+dim(data.1141.novel)
+median(colSums(data.1141.novel))
+
+vect <- colnames(s1141@assays$RNA)
+data <- data.1141.gencode[,vect]
+s1141[["Gencode10k"]] <- CreateAssayObject(counts = data)
+data <- data.1141.novel[,vect]
+s1141[["Novel10k"]] <- CreateAssayObject(counts = data)
+
+median(s1141@meta.data$nCount_Gencode10k)
+median(s1141@meta.data$nCount_Novel10k)
+
+dfn <- as.data.frame(rowSums(as.matrix(s1141@assays$Novel10k@counts) != 0))
+colnames(dfn) <- c("cells")
+dim(dfn)
+mean(dfn$cells)
+tmp <- as.data.frame(rowSums(as.matrix(s1141@assays$Novel10k@counts)))
+colnames(tmp) <- c("umis")
+dfn$umis <- tmp$umis
+colnames(dfn) <- c("cells","umis")
+write.table(dfn, file="output/novels.csv", sep=",")
+
+dfg <- as.data.frame(rowSums(as.matrix(s1141@assays$Gencode10k@counts) != 0))
+colnames(dfn) <- c("cells")
+dim(dfg)
+mean(dfg$cells)
+tmp <- as.data.frame(rowSums(as.matrix(s1141@assays$Gencode10k@counts)))
+colnames(tmp) <- c("umis")
+dfg$umis <- tmp$umis
+colnames(dfg) <- c("cells","umis")
+write.table(dfg, file="output/gencode.csv", sep=",")
+
+```
+
+# Multi-isoforms genes most expressed quantification
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, eval=T, fig.height=6, fig.width=8}
+
+dat <- data.frame()
+for (i in (1:1121)){
+  
+  #print(i)
+  df <- as.matrix(s1141@assays$ISO@counts[,i])
+  df <- as.data.frame(df[which(rowSums(df) > 0),])
+  df <- tibble::rownames_to_column(df, "isokey")
+  setDT(df)[, paste0("isokey", 1:2) := tstrsplit(isokey, "\\.\\.")]
+  colnames(df)<-c("isokey","umi","geneId","transcriptId")
+  
+  x <- table(df$geneId)
+  x <- x[x>1]
+  for (j in (1:length(x))){
+    tmp <- df[df$geneId == names(x[j])]
+    if(sum(tmp$umi) > 9){
+      tmp$ratio <- (100*tmp$umi) / sum(tmp$umi)
+      de <- data.frame(colnames(s1141@assays$ISO@counts)[i],names(x[j]),sum(tmp$umi),max(tmp$ratio))
+      names(de)<-c("cell","gene","umi","ratio")
+      dat <- rbind(dat, de)
+    }
+  }
+  print(paste(i, dim(x), dim(dat), sep=" "))
+}
+
+t <- as.data.frame(table(dat$gene))
+length(unique(t[t$Freq>19,]$Var1))
+
+dat.20cells <- dat[dat$gene %in% unique(t[t$Freq>19,]$Var1),]
+median(dat.20cells$ratio)
+mean(dat.20cells$ratio)
+
+dat.20cells$cat <- round_any(dat.20cells$umi, 5, f = ceiling)
+breaks = c("10","15","20","25","30","35","40","45","50","55","60","65","70","75","80","85","90","95","100")
+pdf("figures/boxplot.pct.iso.majo.f.umis.pdf", width=8, height=6, useDingbats=FALSE)
+ggplot(dat.20cells, aes(x=as.factor(cat), y=ratio, fill=as.factor(cat))) +
+  geom_boxplot(outlier.colour=NA, lwd=0.1)+
+  ggtitle("Percentage of most expressed isoform") +
+  scale_x_discrete(breaks=breaks, labels=breaks,limits=breaks) +
+  coord_cartesian(ylim = c(0, 100)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+
+head(dat.20cells)
+nb <- as.data.frame(table(dat.20cells$gene))
+dat.20cells$nbcells <- nb$Freq[match(dat.20cells$gene, nb$Var1)]
+
+agg <- aggregate(dat.20cells$umi, list(dat.20cells$gene), mean)
+dat.20cells$meanUMI <- agg$x[match(dat.20cells$gene, agg$Group.1)]
+head(dat.20cells)
+
+dat.20cells$celltype <- s1141@active.ident[dat.20cells$cell]
+
+ordered.data <- dat.20cells[order(dat.20cells$nbcells),]
+dat.20cells$gene <- factor(dat.20cells$gene, levels = unique(ordered.data$gene))
+
+pdf("figures/boxplot.pct.iso.majo.per.gene.order.cells.pdf", width=16, height=6, useDingbats=FALSE)
+ggplot(dat.20cells, aes(x=gene, y=ratio, fill=nbcells)) +
+  geom_boxplot(outlier.colour=NA, lwd=0.1)+
+  ggtitle("Percentage of most expressed isoform") +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_gradient(low="white", high="red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+
+ordered.data <- dat.20cells[order(dat.20cells$meanUMI),]
+dat.20cells$gene <- factor(dat.20cells$gene, levels = unique(ordered.data$gene))
+
+pdf("figures/boxplot.pct.iso.majo.per.gene.order.meanUMI.pdf", width=16, height=6, useDingbats=FALSE)
+ggplot(dat.20cells, aes(x=gene, y=ratio, fill=meanUMI)) +
+  geom_boxplot(outlier.colour=NA, lwd=0.1)+
+  ggtitle("Percentage of most expressed isoform") +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_gradient(low="white", high="red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+
+# Nnat cell types plot
+dddd <- dat.20cells[dat.20cells$gene == "Nnat",]
+table(dddd$celltype)
+gg <- ggplot(dddd, aes(x=celltype, y=ratio, fill=celltype)) +
+  geom_boxplot(outlier.colour=NA, lwd=0.1)+
+  ggtitle("Nnat - percentage of most expressed isoform") +
+  coord_cartesian(ylim = c(0, 100)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+gg + scale_fill_manual(values=c("#E54532", "#7A5388", "#2A76BB", "#38AEEF", "#4CB57C", "#A5A739", "#EA766B", "#F0E816"))
+
+ggplot(dddd, aes(x=umi, y=ratio, group=umi)) +
+  geom_boxplot(outlier.colour=NA, lwd=1)+
+  ggtitle("Nnat - percentage of most expressed isoform") +
+  coord_cartesian(ylim = c(0, 100)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+```
+
+# Session Info
+
+```{r sessinf}
+sessionInfo()
+```
