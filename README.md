@@ -867,12 +867,13 @@ Molecules bam file (molecules.tags.GE.bam) including cell barcode and UMI tags
 
 **SNP=** (required)
 
-SNPs descriptor comma-separated .csv file (snp_description.csv), one position or 2-positions per line as follow:
+SNPs descriptor comma-separated .csv file (snp_description.csv), 1-position or x-positions per line as follow:
 
 ```
 chromosome,position,strand,name
-17,45662949,-,Tmem63b          // SNP call at one position
-7,25010643|25010650,-,Grik5    // SNP association call at 2-positions (limited to 2)
+3,80692286,-,Gria2_RG                   // SNP call at one position
+3,80706912,-,Gria2_QR                   // SNP call at one position
+3,80692286|80706912,-,Gria2_RGQR        // SNP association call at 2-positions ("|" separator, no limit on number of positions)
 ...
 ```
 
@@ -890,7 +891,7 @@ Prefix for _matrix.txt and _metrics.txt tab-delimited output text files
 
 ```
 
-java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
+java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam RN_min=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
 
 ```
 
@@ -898,15 +899,15 @@ java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam CSV=barcodes.csv SNP
 
 **PREFIX_matrix.txt**
 
-Cell Barcode / SNP matrix molecules count.
+[Cell] x [SNP position - base] matrix molecule count.
 
 **PREFIX_metrics.txt**
 
-Number of total molecules in datasets per SNP / bases observed
+Total number of molecules per SNP position - base observed in dataset
 
 **PREFIX**_molinfos.txt
 
-per molecules (UMI/BC) SNP information
+Per molecule information
 
 <a id="fusion-calling"></a>
 
