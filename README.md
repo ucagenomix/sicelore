@@ -637,9 +637,9 @@ samtools index GEUS10xAttributes.umifound.bam
 
 The pipeline allows to compute the consensus sequence for molecule in .bam file. First step is loading all the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
 
-Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value (smaller value = better match); (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using all reads for the molecule. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the whole set of reads for the molecule.
+Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value; (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using a set of reads for the molecule. By default the top MAXREADS (default=20) reads having the lowest divergence to the reference ("de" minimap2 SAMrecord tag value) are taken for consensus calling. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the same set of reads for the molecule.
 
-The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 200k UMIs/hour/node on a 20 core compute node. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
+The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 250k UMIs/hour on a 20 core compute node using 20 threads. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
 
 MINIMAP2, POA and RACON path are detected from your PATH variable, please add executables path to your PATH variable.
 
@@ -669,6 +669,10 @@ Consensus sequence in fasta format for all molecules detected. Name of each mole
 **THREADS=,T=** (required)
 
 Number of threads for multi-threading (typically number of cores of compute node)
+
+**MAXREADS=,** (required)
+
+Maximum number of reads per UMI to use for consensus sequence calling (default=20)
 
 **TMPDIR=** (required)
 
