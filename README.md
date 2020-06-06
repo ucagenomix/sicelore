@@ -270,7 +270,7 @@ command shown is for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index 0001.sub.GE.bam
 
 ```
@@ -722,7 +722,7 @@ Add gene name tag (GE) to molecules SAM records
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE
 samtools index molecules.GE.bam
 
 ```
@@ -952,8 +952,7 @@ samtools sort unsorted.bam -o clipped_reads.bam
 samtools index clipped_reads.bam
 
 # add gene names to Nanopore SAM records
-cd ~/Drop-seq_tools-1.13/jar/
-java -jar -Xmx12g dropseq.jar TagReadWithGeneExon I=clipped_reads.bam O=clipped_reads.GE.bam ANNOTATIONS_FILE=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index clipped_reads.GE.bam
 
 # add read sequence and QV values to Nanopore SAM records
