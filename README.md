@@ -676,13 +676,13 @@ Maximum number of reads per UMI to use for consensus sequence calling (default=2
 
 **TMPDIR=** (required)
 
-Temporary directory
+Full path to temporary directory
 
 **example below is for chromosome 1, repeat for all chromosomes**
 
 ```
 
-java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa T=20 TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
+java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa T=20 TMPDIR=/scracth/tmp/
 
 ```
 
