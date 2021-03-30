@@ -8,7 +8,7 @@ samtools=`which samtools`
 output_dir="${PWD}/output_dir"
 tmp_dir="${output_dir}/tmp/"
 
-if [ -z "$java" ] || [ -z "$poa" ] || [ -z "$samtools" ] || [ -z "$minimap2" ] || [ -z "$racon" ]
+if [ -z "$java" ] || [ -z "$spoa" ] || [ -z "$samtools" ] || [ -z "$minimap2" ]
 then
     echo -e "\nMissing path to required softwares:"
     echo -e "\tjava=$java"
