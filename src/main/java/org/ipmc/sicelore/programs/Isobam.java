@@ -35,7 +35,7 @@ public class Isobam extends CommandLineProgram
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
     public String UMITAG = "U8";
-    @Argument(shortName = "ISOTAG", doc = "The gene tag (default=IG)")
+    @Argument(shortName = "GENETAG", doc = "The gene tag (default=IG)")
     public String GENETAG = "IG";
     @Argument(shortName = "ISOTAG", doc = "The isoform tag (default=IT)")
     public String ISOTAG = "IT";

@@ -24,7 +24,7 @@ public class SplitBamPerCell extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output directory")
     public File OUTPUT;
-    @Argument(shortName = "CSV", doc = "The .csv cell barcode file (barcodes.tsv)")
+    @Argument(shortName = "CSV", doc = "The .csv cell barcode file (barcodes.tsv) no header !")
     public File CSV;
     @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
     public String CELLTAG = "BC";

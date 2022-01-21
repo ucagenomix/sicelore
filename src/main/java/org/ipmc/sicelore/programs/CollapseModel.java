@@ -105,7 +105,7 @@ public class CollapseModel extends CommandLineProgram
         //String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
         
         if(SPOAPATH == null)
-            log.info(new Object[]{"\t# Unable to find poa, please add it to your PATH"});
+            log.info(new Object[]{"\t# Unable to find spoa, please add it to your PATH"});
         //else if(RACONPATH == null)
         //    log.info(new Object[]{"\t# Unable to find racon, please add it to your PATH"});
         //else if(MINIMAP2PATH == null)

@@ -9,11 +9,9 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.*;
 import java.util.*;
-import java.math.BigDecimal;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import org.ipmc.sicelore.utils.CellList;
 import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Histogram of molecule length distribution.", oneLineSummary = "Histogram of molecule length distribution.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)

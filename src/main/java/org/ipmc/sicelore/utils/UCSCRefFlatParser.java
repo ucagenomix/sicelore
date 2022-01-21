@@ -349,6 +349,8 @@ public class UCSCRefFlatParser implements GeneModelParser {
                     t.setIs_valid_junction(is_junction_valid);
                     t.setJunctionReads(totalSupportReads);
                     
+                    //System.out.println(t.getIs_valid_cage() + "," + t.getIs_valid_polya() + "," + t.getIs_valid_junction());
+                    
                     if(t.getIs_valid_cage() && t.getIs_valid_polya() && t.getIs_valid_junction())
                         t.setIs_valid(true);
                 }

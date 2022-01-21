@@ -113,14 +113,14 @@ public class IsoformMatrix extends CommandLineProgram
 
         Matrix matrix = dataset.produceMatrix(this.cellList);
         
-        log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
-        matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});
         matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS, MOLINFOS, dataset.getModel());
         log.info(new Object[]{"\twriteGeneMatrix\t\t[start]"});
         matrix.writeGeneMatrix(GENEMATRIX, GENEMETRICS);
         log.info(new Object[]{"\twriteCellMetrics\t[start]"});
         matrix.writeCellMetrics(CELLMETRICS);
+        log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
+        matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);
         
         log.info(new Object[]{"\tMatrix cells size\t[" + matrix.getCellMetrics().size() + "]"});
         log.info(new Object[]{"\tMatrix genes size\t[" + matrix.getGeneMetrics().size() + "]"});

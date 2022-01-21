@@ -24,13 +24,15 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output BAM file")
     public File OUTPUT;
-    @Argument(shortName = "FASTQ", doc = "The .FASTQ file")
-    public File FASTQ;
-    @Argument(shortName = "SEQTAG", doc = "The sequence tag <default=US>")
+    @Argument(shortName = "FASTQDIR", doc = "The .fastq files directory")
+    public File FASTQDIR;
+    @Argument(shortName = "SEQTAG", doc = "The sequence tag <default=US, use CS if added using ParseFastq input>")
     public String SEQTAG = "US";
     @Argument(shortName = "QVTAG", doc = "The QV tag <default=UQ>")
     public String QVTAG = "UQ";
-
+    @Argument(shortName = "addQV", doc = "Wheter or not add the QV tag <default=true>")
+    public boolean addQV = true;
+    
     public AddBamReadSequenceTag() {
         log = Log.getInstance(AddBamReadSequenceTag.class);
         pl = new ProgressLogger(log);
@@ -39,11 +41,11 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
     protected int doWork()
     {
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsReadable(FASTQ);
+        //IOUtil.assertFileIsReadable(FASTQDIR);
         IOUtil.assertFileIsWritable(OUTPUT);
 
         log.info(new Object[]{"loadFastq\tSTART..."});
-        FastqLoader localFastqLoader = new FastqLoader(FASTQ);
+        FastqLoader localFastqLoader = new FastqLoader(FASTQDIR, addQV);
         
         log.info(new Object[]{"loadFastq\t" + localFastqLoader.getMap().size() + " reads loaded"});
 
@@ -58,10 +60,17 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
                 
                 //log.info(new Object[]{name});
                 
-                String seq = new String((byte[]) localFastqLoader.getMap().get(name));
-                localSAMRecord.setAttribute(SEQTAG, seq);
-                String qv = new String((byte[]) localFastqLoader.getMapQV().get(name));
-                localSAMRecord.setAttribute(QVTAG, qv);
+                if(localFastqLoader.getMap().containsKey(name)){
+                    String seq = new String((byte[]) localFastqLoader.getMap().get(name));
+                    localSAMRecord.setAttribute(SEQTAG, seq);
+                    if(addQV){
+                        String qv = new String((byte[]) localFastqLoader.getMapQV().get(name));
+                        localSAMRecord.setAttribute(QVTAG, qv);
+                    }
+                }
+                else{
+                    log.info(new Object[]{"Error: read " + name + " not found !!!"});
+                }
                 
                 localSAMFileWriter.addAlignment(localSAMRecord);
             }

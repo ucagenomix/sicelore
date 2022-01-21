@@ -8,6 +8,9 @@ package org.ipmc.sicelore.programs;
 import java.io.*;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -23,14 +26,20 @@ public class FilterMoleculeBam extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output SAM or BAM file")
     public File OUTPUT;
+    @Argument(shortName = "CHECKRN", doc = "Wether or not to check RN value (Default=true)")
+    public boolean CHECKRN = true;
+    @Argument(shortName = "CHECKUNDEF", doc = "Wether or not to check and filter molecules isoform level undefined (ISOTAG=\"undef\") (Default=true)")
+    public boolean CHECKUNDEF = true;
+    @Argument(shortName = "CHECKGEIG", doc = "Wether or not to check GE/IG compatibility, if true should filter misasigned chimeric SAM records (Default=true)")
+    public boolean CHECKGEIG = true;
     @Argument(shortName = "RNTAG", doc = "The read number tag (default=RN)")
     public String RNTAG = "RN";
     @Argument(shortName = "VALUE", doc = "The value cutoff (default=1)")
     public int VALUE=1; 
     @Argument(shortName = "ISOTAG", doc = "The isoform tag (default=IT)")
     public String ISOTAG = "IT";
-    @Argument(shortName = "UNDEF", doc = "Wether or not to keep molecules not define at the isoform level (ISOTAG=\"undef\") (Default=true)")
-    public boolean UNDEF = true;
+    @Argument(shortName = "ISOGENETAG", doc = "The isoform gene name tag (default=IG)")
+    public String ISOGENETAG = "IG";
 
     public FilterMoleculeBam() {
         log = Log.getInstance(FilterMoleculeBam.class);
@@ -47,16 +56,31 @@ public class FilterMoleculeBam extends CommandLineProgram {
         try {
             for (SAMRecord r : localSamReader) {
                 pl.record(r);
+                String IG = (String)r.getAttribute(ISOGENETAG);
                 String IT = (String)r.getAttribute(ISOTAG);
-                int rn = (Integer) r.getAttribute(RNTAG);
                 
-                //if(rn > VALUE)
-                if(rn >= VALUE){
-                    if(!UNDEF && !"undef".equals(IT))
-                        localSAMFileWriter.addAlignment(r);
-                    else if(UNDEF)
-                        localSAMFileWriter.addAlignment(r);
+                boolean keepit = true;
+                
+                if(CHECKGEIG){
+                    if(r.getAttribute("GE") != null){
+                        String[] GEs = ((String)r.getAttribute("GE")).split(",");
+                        Set<String> set = new HashSet<>(Arrays.asList(GEs));
+                        if(!set.contains(IG))
+                            keepit = false;
+                    }
+                    else
+                        keepit = false; 
                 }
+                if(CHECKRN){
+                    int rn = (Integer) r.getAttribute(RNTAG);
+                    if(rn < VALUE)
+                        keepit = false;
+                }
+                if(CHECKUNDEF && "undef".equals(IT))
+                    keepit = false;
+                    
+                if(keepit)
+                    localSAMFileWriter.addAlignment(r);
             }
             localSamReader.close();
             localSAMFileWriter.close();

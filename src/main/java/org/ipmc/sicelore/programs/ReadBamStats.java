@@ -5,14 +5,15 @@ package org.ipmc.sicelore.programs;
  * @author kevin lebrigand
  * 
  */
+import gnu.trove.THashMap;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.File;
-import java.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import org.ipmc.sicelore.utils.CellList;
+import org.ipmc.sicelore.utils.ReadInfo;
 import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Compute reads statistics for Illumina or Nanopore bam file.", oneLineSummary = "Compute reads statistics for Illumina or Nanopore bam file.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
@@ -33,22 +34,13 @@ public class ReadBamStats extends CommandLineProgram {
     public String GENETAG = "GN";
 
     public CellList cellList;
-    
-    public HashSet<String> reads;
-    public HashSet<String> unmapped;
-    public HashSet<String> incells;
-    public HashSet<String> incellsGN;
-    public HashSet<String> outcells;
+    public THashMap<String, ReadInfo> hashReads;
     
     public ReadBamStats() {
         log = Log.getInstance(ReadBamStats.class);
         pl = new ProgressLogger(log);
         
-        this.reads = new HashSet<String>();
-        this.unmapped = new HashSet<String>();
-        this.incells = new HashSet<String>();
-        this.incellsGN = new HashSet<String>();
-        this.outcells = new HashSet<String>();
+        this.hashReads = new THashMap<String, ReadInfo>();
     }
 
     protected int doWork()
@@ -66,40 +58,62 @@ public class ReadBamStats extends CommandLineProgram {
             for (SAMRecord r : inputSam) {
                 pl.record(r);
                 records++;
-                String readName = r.getReadName();
-                String referenceName = r.getReferenceName();
+                String readName = r.getReadName();String referenceName = r.getReferenceName();
                 String cb = ((String)r.getAttribute(CELLTAG) != null)?(String)r.getAttribute(CELLTAG):"nocelltag";
                 String ub = (String)r.getAttribute(UMITAG);
                 String gn = (String)r.getAttribute(GENETAG);
                 cb=cb.replace("-1","");
                 
-                this.reads.add(readName);
-                
-                if("*".equals(referenceName))
-                    this.unmapped.add(readName);
-                
-                if(this.cellList.contains(cb)){
-                    this.incells.add(readName);
-                    if(gn != null)
-                        this.incellsGN.add(readName);
+                if(! hashReads.containsKey(readName)){
+                    hashReads.put(readName, new ReadInfo());
                 }
-                else
-                    this.outcells.add(readName);
                 
-                if(records%1000000 == 0)
-                    log.info(new Object[]{"[records="+records+", reads=" + this.reads.size() + ", unmapped=" + this.unmapped.size() + ", inCells=" + this.incells.size() + ", inCellsGene=" + this.incellsGN.size() + ", outCells=" + this.outcells.size() + "]"});
+                if(! "*".equals(referenceName)){
+                    ((ReadInfo)hashReads.get(readName)).setIs_mapped(true);
                 
+                    if(this.cellList.contains(cb)){
+                        ((ReadInfo)hashReads.get(readName)).setIs_incell(true);
+                        
+                        if(ub != null){
+                            ((ReadInfo)hashReads.get(readName)).setIs_umi(true);
+                            
+                            if(gn != null)
+                                ((ReadInfo)hashReads.get(readName)).setIs_ingene(true);
+                        }
+                    }
+                    else
+                        ((ReadInfo)hashReads.get(readName)).setIs_incell(false);
+                }
             }
             inputSam.close();
         } catch (Exception e) {
             e.printStackTrace();
         } finally { try {inputSam.close(); } catch (Exception e) { System.err.println("can not close stream"); } }
         
-        log.info(new Object[]{"Reads\t\t\t[" + this.reads.size() + "]"});
-        log.info(new Object[]{"Reads unmapped\t\t[" + this.unmapped.size() + "]"});
-        log.info(new Object[]{"Reads in cells\t\t[" + this.incells.size() + "]"});
-        log.info(new Object[]{"Reads in cells in gene\t[" + this.incellsGN.size() + "]"});
-        log.info(new Object[]{"Reads out of cells\t[" + this.outcells.size() + "]"});
+        Integer mapped = 0;
+        Integer incell = 0;
+        Integer outcell = 0;
+        Integer ingene = 0;
+        Integer inumi = 0;
+        for(String key : hashReads.keySet()){
+            ReadInfo r = (ReadInfo)hashReads.get(key);
+            if(r.getIs_mapped())
+                 mapped++;
+            if(r.getIs_incell())
+                 incell++;
+            else
+                outcell++;
+            
+            if(r.getIs_ingene())
+                 ingene++;
+            if(r.getIs_umi())
+                 inumi++;            
+        }
+        log.info(new Object[]{"Total reads\t" + this.hashReads.size()});
+        log.info(new Object[]{"Reads mapped\t" + mapped});
+        log.info(new Object[]{"AND in cells\t" + incell});
+        log.info(new Object[]{"AND with UMI\t" + inumi});
+        log.info(new Object[]{"AND in gene\t" + ingene});
         
         return 0;
     }

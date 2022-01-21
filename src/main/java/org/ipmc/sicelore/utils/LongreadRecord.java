@@ -38,7 +38,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     private Float de;
     private int mapqv;
     //private boolean isSoftOrHardClipped = false;
-    //private boolean isSecondaryOrSupplementary = false;
+    private boolean isSecondaryOrSupplementary = false;
     //private int sizeStartToClip;
     //private int sizeEndToClip;
     //private boolean is_associated = false;
@@ -48,11 +48,12 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     protected static String CELLTAG = "BC"; // BC
     protected static String UMITAG = "U8"; // U8
     protected static String RNTAG = "RN"; // RN
-    protected static String GENETAG = "IG"; //IG
+    protected static String GENETAG = "GE"; //GE
     protected static String TSOENDTAG = "TE"; //TE
     protected static String UMIENDTAG = "UE"; //UE
     protected static String POLYAENDTAG = "PE"; //PE
     protected static String USTAG = "US"; // US
+    protected static String CDNATAG = "CS"; // CS
     protected static int MAXCLIP = 150; // 150
     
     //FastqLoader fastq;
@@ -104,7 +105,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             record.txEnd = r.getAlignmentEnd();
             record.strand = Strand.toStrand((r.getReadNegativeStrandFlag()) ? "-" : "+");
             
-            //record.isSecondaryOrSupplementary = r.isSecondaryOrSupplementary();
+            record.isSecondaryOrSupplementary = r.isSecondaryOrSupplementary();
             record.de = ((Float) r.getAttribute("de") != null) ? (Float) r.getAttribute("de") : (Float) r.getAttribute("df"); // minimap 2.17 (de) versus 2.10 (df)
             if(record.de == null)
                 record.de = new Float(1);
@@ -114,11 +115,6 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             int umiEnd = ((Integer) r.getAttribute(UMIENDTAG) != null) ? (Integer) r.getAttribute(UMIENDTAG) : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
             int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
             int polyAEnd = ((Integer) r.getAttribute(POLYAENDTAG) != null) ? (Integer) r.getAttribute(POLYAENDTAG) : 0;
-            
-            // we would need a tag instead
-            int polyAStart = polyAStartFromReadName(record.name);
-            if(polyAStart > 0)
-                polyAEnd = polyAStart-1;
             
             //boolean isSoftOrHardClipped = false;
             int sizeStartToClip = 0;
@@ -130,73 +126,77 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             String[] cigartype = cigar.split("[0-9]+");
             String[] cigarsize = cigar.split("[A-Z]");
             
-            String str = null;
-            String readSequence = null;
-            if(load_sequence){
-                //System.out.println(record.name+","+tsoEnd+","+polyAStart+","+polyAEnd+","+r.getReadString());
-                readSequence = r.getReadString();
-                if((String)r.getAttribute(USTAG) != null)
-                    readSequence = (String)r.getAttribute(USTAG);
-                //else
-                //    readSequence = new String(record.fastq.getMap().get(record.name));
-            }
-            
             // detect softclipping starting or ending reads
             if ("H".equals(cigartype[1]) || "S".equals(cigartype[1])){ sizeStartToClip = new Integer(cigarsize[0]).intValue(); }
             if ("H".equals(cigartype[cigartype.length - 1]) || "S".equals(cigartype[cigartype.length - 1])) { sizeEndToClip = new Integer(cigarsize[cigarsize.length - 1]).intValue(); }
-
-            // Strand "+" process
-            if(! r.getReadNegativeStrandFlag()){
-                if(sizeEndToClip < MAXCLIP){
-                    if(load_sequence){
-                        // need to trim sizeStartToClip bases at start in case of chimeria
-                        if(sizeStartToClip > MAXCLIP){
-                            if(sizeStartToClip > polyAEnd)
-                                record.isReversed = true;
-                            else
-                                str = readSequence.substring(sizeStartToClip, polyAEnd);
-                        }
-                        else{
-                           if(tsoEnd > polyAEnd)
-                               record.isReversed = true;
-                           else
-                               str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, polyAEnd);
-                        }
-                    }
-                }
-                else{ record.isChimeria = true; }
-            }
-            // Strand "-" process
-            else{
-                if(sizeStartToClip < MAXCLIP){
-                    if(load_sequence){
-                        // need to trim sizeStartToClip bases at start in case of chimeria
-                        if(sizeEndToClip > MAXCLIP){
-                            if(sizeEndToClip > polyAEnd)
-                                record.isReversed = true;
-                            else
-                               str = readSequence.substring(sizeEndToClip, polyAEnd);
-                        }
-                        else{
-                           if(tsoEnd > polyAEnd)
-                               record.isReversed = true;
-                           else
-                               str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, polyAEnd);
-                        }
-                    }
-                }
-                else{ record.isChimeria = true; }
-            }
-
+            
             if(sizeStartToClip > MAXCLIP || sizeEndToClip > MAXCLIP)
                 record.isChimeria = true;
-
+            
+            // added 01/09/2021 -> cDNA tag added after barcodes assignment
+            // using AddBamReadSequenceTag SEQTAG=CS
             if(load_sequence && !record.isChimeria && !record.isReversed){
-                record.cdna = str.getBytes();
-                if("".equals(str))
-                    record.cdna = readSequence.getBytes();
+                
+                // directly get the cDNA sequence (sicelore v3)
+                if((String)r.getAttribute(CDNATAG) != null)
+                    record.cdna = ((String)r.getAttribute(CDNATAG)).getBytes();
+                // else compute it by substring 
+                else{
+                    // we would need a tag instead
+                    int polyAStart = polyAStartFromReadName(record.name);
+                    if(polyAStart > 0)
+                        polyAEnd = polyAStart-1;
+                    
+                    String str = "";
+                    String readSequence = (String)r.getAttribute(USTAG);
+                    
+                    // Strand "+" process
+                    if(! r.getReadNegativeStrandFlag()){
+                        if(sizeEndToClip < MAXCLIP){
+                            if(load_sequence){
+                                // need to trim sizeStartToClip bases at start in case of chimeria
+                                if(sizeStartToClip > MAXCLIP){
+                                    if(sizeStartToClip > polyAEnd)
+                                        record.isReversed = true;
+                                    else
+                                        str = readSequence.substring(sizeStartToClip, polyAEnd);
+                                }
+                                else{
+                                   if(tsoEnd > polyAEnd)
+                                       record.isReversed = true;
+                                   else
+                                       str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, polyAEnd);
+                                }
+                            }
+                        }
+                    }
+                    // Strand "-" process
+                    else{
+                        if(sizeStartToClip < MAXCLIP){
+                            if(load_sequence){
+                                // need to trim sizeStartToClip bases at start in case of chimeria
+                                if(sizeEndToClip > MAXCLIP){
+                                    if(sizeEndToClip > polyAEnd)
+                                        record.isReversed = true;
+                                    else
+                                       str = readSequence.substring(sizeEndToClip, polyAEnd);
+                                }
+                                else{
+                                   if(tsoEnd > polyAEnd)
+                                       record.isReversed = true;
+                                   else
+                                       str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, polyAEnd);
+                                }
+                            }
+                        }
+                    }
+                    
+                    record.cdna = str.getBytes();
+                    if("".equals(str))
+                        record.cdna = readSequence.getBytes();
+                }
             }
-
+            
             cigar = cigar.replaceAll("[0-9]+[IS]","");
             cigartype = cigar.split("[0-9]+");
             cigarsize = cigar.split("[A-Z]");
@@ -251,7 +251,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                 record.junctions.add(new Junction(j, k));
             }
             
-        } catch (Exception e) { throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: "); }
+        } catch (Exception e) { e.printStackTrace(); throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: "); }
 
         return record;
     }
@@ -354,7 +354,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         return isReversed;
     }
     
-    //public boolean getIsSecondaryOrSupplementary() { return isSecondaryOrSupplementary; }
+    public boolean getIsSecondaryOrSupplementary() { return isSecondaryOrSupplementary; }
 
     public List<int[]> getExons() { return this.exons; }
     

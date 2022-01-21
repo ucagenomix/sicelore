@@ -25,7 +25,7 @@ public class SplitBamPerCluster extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output directory")
     public File OUTPUT;
-    @Argument(shortName = "CSV", doc = "The \"cellBC,clusterName\" cluster file (.csv)")
+    @Argument(shortName = "CSV", doc = "The \"cellBC,clusterName\" cluster file (.csv) no header !")
     public File CSV;
     @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
@@ -49,7 +49,6 @@ public class SplitBamPerCluster extends CommandLineProgram {
         htsjdk.samtools.SAMFileHeader localSAMFileHeader = localSamReader.getFileHeader();
         try {
             BufferedReader br = new BufferedReader(new java.io.FileReader(CSV));
-            str1 = br.readLine();
             str1 = br.readLine();
             while(str1 != null) {
                 

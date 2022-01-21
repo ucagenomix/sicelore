@@ -38,7 +38,7 @@ public class HistoFastqMeanQV extends CommandLineProgram {
         int[] mymeans = new int[51]; 
         
         log.info(new Object[]{"loadFastq\tSTART..."});
-        FastqLoader fastqLoader = new FastqLoader(FASTQ);
+        FastqLoader fastqLoader = new FastqLoader(FASTQ, true);
         THashMap mapQV = fastqLoader.getMapQV();
         log.info(new Object[]{"loadFastq\t" + mapQV.size() + " reads loaded"});
 

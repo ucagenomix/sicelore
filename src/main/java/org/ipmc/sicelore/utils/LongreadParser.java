@@ -104,7 +104,15 @@ public class LongreadParser implements LongreadModelParser {
         if(record.getIsReversed()) { unvalid_records++; reversed_records++; return null; }
         if(this.is_gene_mandatory && (record.getGeneId() == null || "undef".equals(record.getGeneId()))) { unvalid_records++; gene_unset++; return null; }
         if(this.is_umi_mandatory && record.getUmi() == null) { unvalid_records++; umi_unset++; return null; }
-        if(!this.keep_mapqv0 && record.getMapqv() == 0) { unvalid_records++; mapqv0_records++; return null; }
+        
+        if(!this.keep_mapqv0 && record.getMapqv() == 0) {
+            // added 14/09/2021 to keep mapqv=0 primary records (yes it happens)
+            if(record.getIsSecondaryOrSupplementary()){
+                unvalid_records++;
+                mapqv0_records++;
+                return null;
+            }
+        }
         
         return record;
     }
