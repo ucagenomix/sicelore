@@ -40,7 +40,7 @@ $java -jar -Xmx4g Jar/Sicelore-2.0.jar AddGeneNameTag I=$output_dir/minimap.bam 
 $samtools index $output_dir/GE.bam
 
 # tag reads with fastq sequence
-$java -jar -Xmx4g Jar/Sicelore-2.0.jar AddBamReadSequenceTag I=$output_dir/GE.bam O=$output_dir/GEUS.bam FASTQ=$output_dir/passed/190c.clta.nanopore.readsFWD.fq VALIDATION_STRINGENCY=SILENT
+$java -jar -Xmx4g Jar/Sicelore-2.0.jar AddBamReadSequenceTag I=$output_dir/GE.bam O=$output_dir/GEUS.bam FASTQDIR=$output_dir/passed/ VALIDATION_STRINGENCY=SILENT
 $samtools index $output_dir/GEUS.bam
 
 # tag reads with cellBC/UMI barcodes
