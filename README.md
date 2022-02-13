@@ -279,7 +279,7 @@ can be generated with **`paftools.js gff2bed -j ann.gtf'** (Paftools is part of 
 
 Add gene names to Nanopore SAMrecords GE tag using **AddGeneNameTag** (Sicelore-2.0.jar) pipeline, long read optimization of code from [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/).
 
-If another tag is used for gene names, the Gene name SAM tag needs to be changed using the TAG argument in command line.
+If another tag is used for gene names, the Gene name SAM tag needs to be changed using the GENETAG argument in command line.
 
 Rapid, all jobs can be run on one compute node or distributed on a cluster.
 
@@ -288,7 +288,7 @@ command shown is for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g Sicelore-2.0.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g Sicelore-2.0.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt GENETAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index 0001.sub.GE.bam
 
 ```
@@ -303,7 +303,7 @@ The input SAM or BAM file to analyze
 
 The output BAM, written with new Gene/Exon tag
 
-**TAG=** (required)
+**GENETAG=** (required)
 
 The tag name to use. When there are multiple genes, they will be comma seperated (Default value: GE)
 
@@ -339,7 +339,7 @@ command shown for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g Sicelore-2.0.jar AddBamReadSequenceTag I=0001.sub.GE.bam O=0001.sub.GEUS.bam FASTQ=0001.sub.fastq
+java -jar -Xmx12g Sicelore-2.0.jar AddBamReadSequenceTag I=0001.sub.GE.bam O=0001.sub.GEUS.bam FASTQDIR=/path/to/fastq/directory/
 samtools index 0001.sub.GEUS.bam
 
 ```
@@ -651,7 +651,7 @@ samtools index GEUS10xAttributes.umifound.bam
 
 ## 6) Generate consensus sequences
 
-**use ComputeConsensus (sicelore.jar)**
+**use ComputeConsensus (Sicelore-2.0.jar)**
 
 The pipeline allows to compute the consensus sequence for molecule in .bam file. First step is loading all the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
 
@@ -713,7 +713,7 @@ java -jar -Xmx22g Sicelore-2.0.jar ComputeConsensus I=GEUS10xAttributes.umifound
 
 If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from genes having multiple copies in the genome.
 
-First we need to concatenate all chromosomes fasta file then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
+First we need to concatenate all chromosomes fasta file then use ***DeduplicateMolecule*** pipeline (Sicelore-2.0.jar)
 
 ```
 
@@ -743,7 +743,7 @@ Add gene name tag (GE) to molecules SAM records
 
 ```
 
-java -jar -Xmx12g Sicelore-2.0.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE
+java -jar -Xmx12g Sicelore-2.0.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt GENETAG=GE
 samtools index molecules.GE.bam
 
 ```
@@ -763,7 +763,7 @@ samtools index molecules.GE.tags.bam
 
 ## 9) Transcript isoform expression quantification
 
-**uses IsoformMatrix (sicelore.jar)**
+**uses IsoformMatrix (Sicelore-2.0.jar)**
 
 This step can be done at the reads level but prefer using it at the molecules level after consensus calling as describes in the protocole. In case of processing at the read level here is the algotithm used.
 
@@ -878,7 +878,7 @@ java -jar -Xmx44g Sicelore-2.0.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG
 
 ## 10) Calling Single Nucleotide Polymorphisms cell by cell
 
-**use SNPMatrix (sicelore.jar)**
+**use SNPMatrix (Sicelore-2.0.jar)**
 
 Consensus sequence show higher sequence accuracy than raw nanopore reads and we can now call SNPs using the generated molecules bam file (molecules.tags.GE.bam)
 
@@ -938,7 +938,7 @@ Per molecule information
 
 ## 11) Detecting fusion transcripts cell by cell
 
-**use ExportClippedReads and FusionDetector (sicelore.jar)**
+**use ExportClippedReads and FusionDetector (Sicelore-2.0.jar)**
 
 First step is exporting hard and soft clipped reads from dataset. A fusion transcript read map the genome in more than one unique location. It gives two differents minimap2 SAM records each including a portion of starting or ending clipping. Those reads might also comes from chimeric molecules produced during amplification step (i.e. PCR artefacts). Those PCR artefacts are arising mainly between transcripts having a high sequence similarity  and might preferentially happens wih highly expressed genes.
 
@@ -973,7 +973,7 @@ samtools sort unsorted.bam -o clipped_reads.bam
 samtools index clipped_reads.bam
 
 # add gene names to Nanopore SAM records
-java -jar -Xmx12g Sicelore-2.0.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g Sicelore-2.0.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt GENETAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index clipped_reads.GE.bam
 
 # add read sequence and QV values to Nanopore SAM records
@@ -1029,7 +1029,7 @@ per molecules (UMI/BC) fusion information
 
 ## 12) Detecting novel transcripts isoforms
 
-**use CollaspeModel (sicelore.jar)**
+**use CollaspeModel (Sicelore-2.0.jar)**
 
 SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup considering only UMI supported by RNMIN (default=1) reads. 
 Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (default=5) UMIs are filtered out. 
