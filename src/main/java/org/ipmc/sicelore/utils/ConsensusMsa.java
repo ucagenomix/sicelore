@@ -3,6 +3,7 @@ package org.ipmc.sicelore.utils;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashSet;
+import java.util.regex.Pattern;
 
 /**
  * 
@@ -27,7 +28,9 @@ public class ConsensusMsa
             BufferedReader input = new BufferedReader(new FileReader(file));
             String line = input.readLine();
             while(line != null && !"".equals(line)){
-                if(">Consensus".equals(line))
+                if(Pattern.matches("^>Consensus.*", line))
+                    this.cons = input.readLine();
+                else if(Pattern.matches("^Consensus.*", line))
                     this.cons = input.readLine();
                 else
                     msa.add(input.readLine().toCharArray());

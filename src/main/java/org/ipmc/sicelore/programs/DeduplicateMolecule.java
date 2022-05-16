@@ -117,7 +117,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
                 
                     if(!"null".equals(seq)){
                         count++;
-                        seq = cleanTso(seq);
+                        //seq = cleanTso(seq);
                         
                         line = line.replace(">", "");
                         line = line.replace("\\|", "-");
@@ -274,7 +274,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
                     if(!"null".equals(seq)){
                         count++;
                         FastqRecord f = new FastqRecord("x",seq,qual);
-                        f = cleanTso(f);
+                        //f = cleanTso(f);
                         
                         line = line.replace("@", "");
                         line = line.replace("\\|", "-");
