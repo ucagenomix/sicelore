@@ -5,7 +5,7 @@ SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode /
 
 Typically starting with a single cell short read bam file and Nanopore or PacBio long reads, the workflow integrates several sequential steps for cell barcode and UMI assignment to long reads (guided by short read data), transcript isoform identification, generation of molecules consensus sequences (UMI-guided error-correction) and production of [isoforms / junctions / SNPs x cells] count matrices for new modalities integration into standard single cell RNA-seq statistical analysis.
 
-<strong><span style="color:red">Access new release providing short-read free analysis compatible with 10x Genomics Visium and single-cell 3' and 5' protocols : <a href="https://github.com/ucagenomix/sicelore-2.1">SiCeLoRe v2.1</a></font></strong>
+<strong>![#f03c15](Access new release providing short-read free analysis compatible with 10x Genomics Visium and single-cell 3' and 5' protocols:) <a href="https://github.com/ucagenomix/sicelore-2.1">SiCeLoRe v2.1</a></font></strong>
 
 
 # Installation
